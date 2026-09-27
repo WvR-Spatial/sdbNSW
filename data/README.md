@@ -70,11 +70,31 @@ The processing-baseline offset has already been applied and checked against
 water physics, so nothing downstream should apply it again. `provenance.json`
 records which conversion was used.
 
-### 4. MHL NSW tide data
+Two more commands put the lidar on that scene's grid:
+
+```
+python -m sdb.coreg --scene <item id>        # measure image-to-lidar offset (~25 s)
+python -m sdb.reference --scene <item id>    # aggregate lidar onto the scene grid (~6 s)
+```
+
+`reference` applies the offset from `coreg` when its verdict is `apply`, and
+adds to `raw/scenes/<item id>/`:
+
+| File | Contents |
+|---|---|
+| `reference.tif` | `z_mean` (m AHD), `coverage` (0–1), `relief` (std of the 5 m cells in each pixel, m), `land_frac` (0–1 at the water level used) — float32, on the scene's own grid |
+| `mask.tif` | uint8 bit flags, 0 = usable: 1 lidar incomplete · 2 land · 4 outside depth window · 8 cloud/shadow · 16 bright NIR over lidar water · 32 no image |
+
+The small records that explain them — offset measured, datum operation, water
+level assumed, pixel counts by depth band — go to `outputs/` and are committed.
+
+### 4. Tide data
 
 Water level at scene acquisition time, for the vertical offset between
-instantaneous depth and AHD. Source: [MHL](http://new.mhl.nsw.gov.au/).
-Save to `raw/`.
+instantaneous depth and AHD. Candidate source: [MHL](http://new.mhl.nsw.gov.au/).
+Not yet obtained — until it is, `reference` assumes 0 m AHD and says so. The
+image itself implies about −0.45 m AHD at the Jervis Bay overpass (see the
+brief). Save to `raw/`.
 
 ---
 

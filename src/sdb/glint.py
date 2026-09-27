@@ -14,9 +14,10 @@ whenever the required facet is steep.
 The reported index is `glint_sigma`: how many standard deviations of the
 Cox-Munk slope distribution the glinting facet sits out. Lower means more
 glint-prone. Glint probability scales as exp(-sigma^2 / 2), so a step from 5 to
-4 sigma is ~30x and from 4 to 3 another ~30x. At Jervis Bay the one scene with
-visible glint streaks (12 Sep 2018) sat at 3.7-3.9 sigma; the clean scenes at
-4.5-6.4. That is one discriminating observation, not a calibration.
+4 sigma is ~30x and from 4 to 3 another ~30x. At Jervis Bay six scenes separate
+cleanly: glint at 2.6, 3.4 and 3.7-3.9 sigma, clean water at 4.5-6.4 (three of
+them predicted before viewing). Below ~4 sigma, expect glint -- a rule of thumb
+from one bay, not a calibration.
 
 What the index is and is not.
   * A RANKING index. It is reported in sigma rather than as a reflectance or a

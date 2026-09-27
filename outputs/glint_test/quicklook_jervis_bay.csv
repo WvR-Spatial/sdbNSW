@@ -1,0 +1,4 @@
+id,datetime_utc,days_from_lidar,tile_cloud_pct,aoi_valid_pct,aoi_cloud_pct,aoi_water_pct,clipped
+S2A_56HKG_20180828_0_L2A,2018-08-28 00:02,11,19.4,100.0,0.41,60.31,False
+S2A_56HKG_20180818_1_L2A,2018-08-18 00:06,21,0.1,100.0,0.14,60.71,False
+S2B_56HKG_20181022_0_L2A,2018-10-22 00:02,43,5.9,100.0,6.38,37.21,False

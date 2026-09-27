@@ -1,9 +1,11 @@
 # Satellite-Derived Bathymetry on an Exposed Temperate Coast — project brief
 
-**Status:** Phase 1 in progress — reference DEM verified; Jervis Bay scene
-`S2A_56HKG_20180907_0_L2A` fetched (EPSG:32756, 1962 × 2292 px at 10 m) and
-passes the water check (median red 0.0039, NIR 0.0025). Next: aggregate the
-lidar onto the scene grid and measure co-registration. **Updated:** 27 Sep 2026 · **Repo:** `sdbNSW`
+**Status:** Phase 1 nearly complete — scene `S2A_56HKG_20180907_0_L2A`
+fetched and checked; image-to-lidar misregistration **measured at 21.6 m**
+(E −18.5, N −11.1) and corrected; lidar aggregated onto the scene grid:
+**91.6 km² usable in 0–20 m**. Outstanding for the gate: QGIS check against an
+independent basemap, and the tide at overpass (`waterlevel.py`, next).
+**Updated:** 27 Sep 2026 · **Repo:** `sdbNSW`
 **Portfolio slot:** replaces *Revealing the Ancient Murray via REM*.
 
 This is a living document. Revise it as decisions change — do not let the repo
@@ -114,7 +116,9 @@ Report, per site:
 | Reference (IHO Order 1b) | ±0.52 m at 10 m, ±0.56 m at 20 m | TVU = √(a² + (b·d)²), a=0.5, b=0.013, 95% |
 | Reference horizontal | 5 m + 5% depth ≈ 5.5 m | Sub-pixel at 10 m S2 |
 | Expected SDB error | 1.3–2.2 m clear water; unknown here | The quantity being measured |
-| Water level correction | Tide gauge + interpolation | Scalar offset |
+| Water level correction | Not yet measured. Image implies ~−0.45 m AHD at overpass vs 0 m assumed | Scalar offset. Now the leading open term |
+| **Co-registration** | 21.6 m before correction; after: ±2.9 m E, ±5.8 m N (1σ) | On a 1:10 seabed slope 5 m of misregistration is 0.5 m of depth. North is weakest; re-estimate once the tide is known |
+| Sub-pixel relief | Median 0.01–0.09 m, p90 ≤ 0.24 m by depth band | Std of the 5 m cells inside each 10 m pixel. Minor except on reef edges; kept for stratification |
 | **Seabed change 2018→scene** | **The real constraint** | See below |
 
 Reference is 2.5–4× more precise than the error being measured. Gate passes.
@@ -160,7 +164,8 @@ sdbNSW/
 │       ├── stac.py             # scene discovery + selection
 │       ├── glint.py            # Cox–Munk glint index from ERA5 wind (selection only)
 │       ├── fetch.py            # quicklooks; AOI reflectance stack + SCL
-│       ├── reference.py        # lidar load, clip, align to S2 grid
+│       ├── coreg.py            # image-to-lidar offset from steep shorelines
+│       ├── reference.py        # exact area-weighted lidar -> scene grid; masks
 │       ├── waterlevel.py       # tide at acquisition time
 │       ├── sdb.py              # Stumpf ratio transform, calibration
 │       ├── validate.py         # blocked CV, statistics, stratification
@@ -197,6 +202,7 @@ SDB-versus-lidar comparison, plus the repo. Limitations panel above results.
 
 - [x] Repo name `sdbNSW`
 - [x] Jervis Bay scene — `S2A_56HKG_20180907_0_L2A` (see decisions register)
+- [ ] **Water level at overpass** — gauge source for Jervis Bay (MHL, or a BOM gauge with a datum tie to AHD). Next
 - [ ] Confirm site 3 (Batemans vs Richmond) after checking lidar tile coverage
 - [ ] Atmospheric correction: L2A as supplied, or test whether it matters (one paper found it optional)
 - [ ] Sun glint correction method
@@ -224,6 +230,12 @@ defensible piece of work.
 | 27 Sep | Wind-aware glint index in scene discovery (`glint.py`, on by default, `--no-wind` to skip), reported as **`glint_sigma`** — slope needed to glint in standard deviations, lower = more glint-prone. **Reported, never scored** | The first version reported glint relative to the calmest scene: near calm the Gaussian tail gives ~10⁻¹⁶ reflectance and the ratios reached 10⁷ — meaningless. Sigma is bounded, monotonic and readable. Winds below 1 m/s are evaluated at 1 m/s, so sigma is then a lower bound. Out of the score: one discriminating observation does not justify a weight. Fails soft if the API is unreachable; refuses km/h (the API default) |
 | 27 Sep | Lidar grid **does not nest** in the S2 10 m grid: origin E 286500.454, N 6127921.421, pixel 5.000000011 m. **Aggregate by area-weighted average** onto the scene grid, not 2×2 block means | Offset (0.45, 1.42) m from a 5 m lattice — consistent with a round GDA94 grid shifted to GDA2020 by editing the georeferencing, not resampling (good: values untouched). Block means would misplace the reference by up to 1.4 m. GDA2020 vs WGS84 at the 2018 epoch is ~0.1 m — negligible |
 | 27 Sep | **Co-registration is measured, not assumed.** Estimate the image-to-lidar shift before any depth comparison; the Phase 1 alignment gate becomes a number | ESA's July 2018 L1C quality report: S2A absolute geolocation ~12 m at 95%, no ground control. GRI refinement (8 m at 95%) arrived with baseline 03.00 and the Collection-1 reprocessing; the chosen scene is baseline 00.01, so unrefined. Up to a pixel of misregistration would dominate error on slopes. If the shift cannot be measured confidently, fetch the Collection-1 version from Copernicus Data Space instead |
+| 27 Sep | **Glint index passed a prediction test.** Predictions committed in `e5955e7` before viewing: 22 Oct (2.6σ) glint, 28 Aug (3.4σ) glint, 18 Aug (5.0σ) clean. Quicklooks: all three as predicted | Across six scenes glint shows at ≤3.9σ, clean water at ≥4.5σ. Tentative rule for sites 2–3: **below ~4σ expect glint**. Six scenes, one bay — a rule of thumb, not a calibration |
+| 27 Sep | **Aggregation by exact per-axis overlap areas**, not GDAL resampling | PROJ treats GDA2020 → WGS84 here as a null operation (checked at run time: 0.1 mm), so the lidar lies in the scene's plane, offset 0.454 m E / 1.421 m N. Exact, GDAL-version independent, and cheap enough (0.5 s) to repeat at every trial shift. Tested against closed forms: a plane averages to its centre value, a step to its area fraction. 91.6 km² usable in 0–20 m vs 95.6 km² at 5 m — the difference is shoreline-mixed pixels, cloud and flags |
+| 27 Sep | **Misregistration measured: E −18.5 ± 2.9 m, N −11.1 ± 5.8 m (21.6 m, ~2 px) — applied, provisionally.** Image features are drawn ~18 m east and ~11 m north of where they are | Steep shores only (waterline ≥30°): 7 segments, all on Beecroft Peninsula — Bowen Island and the southern headlands are fringed by rock platforms (median waterline slope 10°), which the filter correctly excludes. Independent all-shoreline cross-check: (−17.0, −5.3); correlation 0.613 → 0.684. Supporting diagnostics: shifting halves the land pixels that read as water; the opposite shift makes both measures markedly worse. ~2× ESA's 12 m (95%) figure — large but supported by two estimators. **Provisional** because no steep shore faces north or south: re-estimate with gentle shores admitted once the tide is known |
+| 27 Sep | Cross-check agreement rule: per component within max(3 m, 2 × steep-shore stderr) | Conventional 2σ with a floor. Codified *after* an exploratory all-shore run on this scene, so not blind — but not tuned: the scene passes by a wide margin (E 1.5 of 5.8 m, N 5.8 of 11.6 m) |
+| 27 Sep | Why steep shores only — **shown, not argued**: synthetic island, true shift 8.4 m, tide assumed 0.6 m too high | Steep-only estimate 0.7 m out. All-shore estimate 5.0 m out *and called the shift negligible* — the tide error on beaches nearly hid a real misregistration. Pinned in `tests/test_coreg.py` |
+| 27 Sep | **The tide was below 0 m AHD at overpass.** The image prefers a water level of **~−0.45 m AHD** (all-shore correlation peaks there, with or without the shift), and 73% of 0–1 m pixels read bright in NIR at 0 m whatever the shift | Prediction for `waterlevel.py`: the gauge should read about **−0.3 to −0.5 m AHD** at 00:02 UTC 7 Sep 2018 — NIR sees through the first ~0.2 m of water, so the image estimate is biased slightly low |
 | 27 Sep | Glint geometry: closed form `cos(2ω)=…` **replaced** with the vector derivation | The closed form is wrong off the principal plane (~0.8° at θs=20°, θv=30°, Δφ=90°). Immaterial at S2's near-nadir view, but wrong. Pinned by a grid test against an independent derivation |
 
 ## Sources

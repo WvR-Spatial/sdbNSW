@@ -1,0 +1,179 @@
+{
+  "scene": "S2A_56HKG_20180907_0_L2A",
+  "verdict": "apply",
+  "reason": "|shift| 21.55 m, consistent across segments and with the all-shoreline cross-check",
+  "n_segments_used": 7,
+  "segments_dropped": [],
+  "shift_m": {
+    "east": -18.47,
+    "north": -11.11
+  },
+  "stderr_m": {
+    "east": 2.9,
+    "north": 5.82
+  },
+  "magnitude_m": 21.55,
+  "residual_rms_m": 4.78,
+  "normal_spread_deg": 179.0,
+  "residuals": {
+    "0": 6.04,
+    "1": -3.29,
+    "2": -2.37,
+    "3": 4.07,
+    "4": 4.56,
+    "5": -8.33,
+    "6": 0.68
+  },
+  "cross_check": {
+    "peak_m": {
+      "east": -16.99,
+      "north": -5.31
+    },
+    "peak_corr": 0.6841,
+    "corr_at_nominal": 0.6131,
+    "tolerance_m": {
+      "east": 5.8,
+      "north": 11.64
+    },
+    "difference_m": {
+      "east": 1.48,
+      "north": 5.8
+    },
+    "n_px": 107971,
+    "agrees": true,
+    "reason": "differs by E +1.5, N +5.8 m; tolerance E 5.8, N 11.6 m"
+  },
+  "segments": [
+    {
+      "segment": 0,
+      "n_px": 23,
+      "facing_deg": 269.0,
+      "centroid_e": 299460.2,
+      "centroid_n": 6115313.3,
+      "normal": [
+        0.9999,
+        0.0172
+      ],
+      "n_band_px": 388,
+      "offset_m": -12.62,
+      "peak_corr": 0.925,
+      "status": "ok"
+    },
+    {
+      "segment": 1,
+      "n_px": 42,
+      "facing_deg": 271.9,
+      "centroid_e": 299385.2,
+      "centroid_n": 6114867.4,
+      "normal": [
+        0.9995,
+        -0.0325
+      ],
+      "n_band_px": 526,
+      "offset_m": -21.39,
+      "peak_corr": 0.901,
+      "status": "ok"
+    },
+    {
+      "segment": 2,
+      "n_px": 25,
+      "facing_deg": 87.6,
+      "centroid_e": 302579.0,
+      "centroid_n": 6120990.6,
+      "normal": [
+        -0.9991,
+        -0.0426
+      ],
+      "n_band_px": 341,
+      "offset_m": 16.55,
+      "peak_corr": 0.951,
+      "status": "ok"
+    },
+    {
+      "segment": 3,
+      "n_px": 26,
+      "facing_deg": 93.8,
+      "centroid_e": 302534.2,
+      "centroid_n": 6120496.2,
+      "normal": [
+        -0.9978,
+        0.0661
+      ],
+      "n_band_px": 397,
+      "offset_m": 21.76,
+      "peak_corr": 0.85,
+      "status": "ok"
+    },
+    {
+      "segment": 4,
+      "n_px": 62,
+      "facing_deg": 131.2,
+      "centroid_e": 301474.2,
+      "centroid_n": 6115941.5,
+      "normal": [
+        -0.7524,
+        0.6587
+      ],
+      "n_band_px": 821,
+      "offset_m": 11.14,
+      "peak_corr": 0.878,
+      "status": "ok"
+    },
+    {
+      "segment": 5,
+      "n_px": 26,
+      "facing_deg": 133.0,
+      "centroid_e": 300682.3,
+      "centroid_n": 6115190.8,
+      "normal": [
+        -0.7309,
+        0.6824
+      ],
+      "n_band_px": 402,
+      "offset_m": -2.41,
+      "peak_corr": 0.868,
+      "status": "ok"
+    },
+    {
+      "segment": 6,
+      "n_px": 28,
+      "facing_deg": 128.6,
+      "centroid_e": 300421.1,
+      "centroid_n": 6114896.4,
+      "normal": [
+        -0.7811,
+        0.6244
+      ],
+      "n_band_px": 429,
+      "offset_m": 8.17,
+      "peak_corr": 0.808,
+      "status": "ok"
+    }
+  ],
+  "water_level_m_ahd": 0.0,
+  "params": {
+    "min_slope_deg": 30.0,
+    "search_m": 30.0,
+    "step_m": 1.0,
+    "band_half_width_px": 5,
+    "min_segment_px": 20,
+    "cross_check_half_m": 9.0,
+    "cross_check_step_m": 3.0,
+    "agree_floor_m": 3.0,
+    "min_peak_corr": 0.5,
+    "apply_threshold_m": 2.0,
+    "max_residual_rms_m": 5.0
+  },
+  "datum": {
+    "operation": "Inverse of Map Grid of Australia zone 56 + GDA2020 to WGS 84 (2) + UTM zone 56S",
+    "stated_accuracy_m": 3.0,
+    "translation_m": [
+      0.0,
+      -0.0001
+    ],
+    "nonuniformity_m": 0.0
+  },
+  "sign_convention": "shift = ground position of image pixel minus nominal; apply by aggregating lidar onto the scene grid translated by shift",
+  "written_utc": "2026-09-27T08:23:02+00:00",
+  "sdb_version": "0.1.0"
+}

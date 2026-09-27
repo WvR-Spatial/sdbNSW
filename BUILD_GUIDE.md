@@ -71,23 +71,42 @@ stack to `data/raw/scenes/<id>/`. It refuses to write if the reflectance fails
 the water plausibility check — that means the offset is wrong, and nothing
 downstream should be built on it.
 
-**→ CLAUDE** — `src/sdb/reference.py`: load the lidar and **aggregate** it onto
-the Sentinel-2 10 m grid (never upsample the imagery to 5 m), mask land and the
-surf zone, produce an aligned reference array.
+**→ CLAUDE** — `coreg.py` measures how far the image sits from the lidar, from
+the waterline on steep shores; `reference.py` aggregates the lidar onto the
+scene's 10 m grid (never the other way round), applying that offset, and writes
+the masks. *Done.*
 
-**→ YOU · QGIS** — the visual check, and it matters more than it sounds.
-Load the scene and the lidar together:
-- Can you actually see the seabed in the imagery? If not, no method will.
-- Do features line up — reef edges, channel margins? A half-pixel
-  misregistration is worth several metres of apparent error.
-- Where is the surf zone, and is it masked?
+**→ YOU** — run both, in this order:
+```
+python -m sdb.coreg --scene S2A_56HKG_20180907_0_L2A
+python -m sdb.reference --scene S2A_56HKG_20180907_0_L2A
+```
+Expected at Jervis Bay: shift **E −18.47, N −11.11 m**, verdict `APPLY`, and
+**916,351** usable pixels. Different numbers mean a different environment or
+input — stop and bring them back.
+
+**→ YOU · QGIS** — the visual check, and it matters more than it sounds. Load
+`reflectance.tif` as RGB (bands 3, 2, 1), a hillshade of the lidar DEM, and an
+**independent basemap** (NSW Spatial Services imagery, or ESRI World Imagery):
+- At Point Perpendicular and the Beecroft cliffs, the Sentinel-2 image should
+  sit **~18 m east and ~11 m north** of both the lidar and the basemap, while
+  the lidar and basemap agree. If instead the *lidar* disagrees with the
+  basemap, stop: the correction is being applied to the wrong dataset.
+- Can you see the seabed in the imagery? If not, no method will.
+- Load `mask.tif` over the bay: flag 16 (bright NIR) should hug the beaches
+  (tide) and sit on reefs and the outer coast (whitewater), not open water.
 
 QGIS via MCP is fine for this looking-and-poking. **Nothing that touches the
 pipeline gets done in the GUI** — anything GUI-driven is not reproducible by a
 reader, which is the exact criticism that sinks the Murray REM piece.
 
-**Gate:** seabed visible, alignment confirmed. Otherwise try another scene
-before laying a finger on the method.
+**Gate:** seabed visible; offset confirmed against the basemap. Otherwise try
+another scene — or the geometrically refined Collection-1 version of this one
+from Copernicus Data Space — before laying a finger on the method.
+
+**Then** — `waterlevel.py`, the tide at overpass. The image implies about
+−0.45 m AHD; a gauge should read −0.3 to −0.5 m. With the tide known, `coreg`
+is re-run admitting gentle shores, which pins down the north component.
 
 ---
 
