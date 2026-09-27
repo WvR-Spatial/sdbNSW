@@ -1,12 +1,14 @@
 # Satellite-Derived Bathymetry on an Exposed Temperate Coast — project brief
 
-**Status:** Phase 1 — gate **passed on geometry, provisional on water level**.
-Co-registration rebuilt against NSW orthoimagery on land: **E −7.4 ± 1.0,
+**Status:** Phase 1 gate **passed on geometry, provisional on water level**.
+Co-registration against NSW orthoimagery on land: **E −7.4 ± 1.0,
 N −1.0 ± 1.1 m** (8 windows agree), applied. Water level at overpass
 **−0.50 m AHD, provisional** (image estimate, biased low ~0.1–0.2 m); the
 observed record from MHL's Jervis Bay gauge has been requested. Reference on
-the scene grid: **93.8 km² usable in 0–20 m**. Next: Phase 2, Stumpf SDB —
-water level enters only through the depth bands and masks, so it need not wait.
+the scene grid: **93.8 km² usable in 0–20 m**.
+**Phase 2: protocol pre-registered** (see *Phase 2 protocol*) — committed
+before any depth model is fitted to real data. Water level enters only
+through band membership and masks, so Phase 2 does not wait for the gauge.
 **Updated:** 27 Sep 2026 · **Repo:** `sdbNSW`
 **Portfolio slot:** replaces *Revealing the Ancient Murray via REM*.
 
@@ -73,7 +75,8 @@ built in `narrabeen-stage1`.
 | MHL tide gauge 216470, Jervis Bay (HMAS Creswell) | Observed water level at overpass; AEST; chart datum, AHD offset −1.07 m | MHL data request (form or data-request@mhl.nsw.gov.au) | CC BY 4.0, attribute NSW DCCEEW | Raw file no (`data/raw/tide/`); derived value yes |
 | NSW Imagery (Spatial Services) | Orthophoto windows for co-registration only | ArcGIS REST Export Map, anonymous | Catalogue: CC BY 3.0 AU; Spatial Services excludes images from its CC licence | **No** — cached in `data/raw/ortho/`, never redistributed or drawn |
 | ERA5 10 m wind | Scene selection only — glint pre-screen | [Open-Meteo](https://open-meteo.com/) archive API, anonymous | CC BY 4.0 | No — fetched at run time |
-| NSW seagrass / substrate mapping | Stratification variable | SEED | Check per dataset | Clipped subsets |
+| NSW DPI Fisheries *Estuarine Macrophytes* (candidate) | Seagrass stratum: *Posidonia*, *Zostera*, *Halophila*. Jervis Bay from **Aug 2019** aerial imagery (object-based classification), field-checked **May 2020** (project MEMS) | ArcGIS REST (`Fisheries_Portal/Estuarine_Macrophytes`) | © NSW DPI Fisheries; IMAS copy CC BY-NC 4.0 | No — derived statistics only |
+| DCCEEW *NSW seabed reef extent* (candidate) | Reef stratum, classified from **the same 2018 marine lidar** (plus 2017 subtidal reef mapping) | ArcGIS REST / zip | CC BY 4.0 | Derived statistics |
 
 **The CC BY licence on the reference data is a structural advantage.** Unlike
 the Narrabeen survey (registration-gated, non-commercial, un-committable), a
@@ -87,12 +90,15 @@ against a subset of the lidar, validated on held-out data. Water level at
 acquisition time applied as a **scalar vertical offset** to reconcile
 instantaneous depth with AHD. This is much simpler and less error-prone than
 the horizontal, slope-dependent tidal correction in the shoreline work.
+Exact specification: *Phase 2 protocol* below.
 
 **v2 — ML, in scope only if v1 earns it.** Random forest / gradient boosting
 regression on the same bands, same folds, same reference. The question is not
 "can ML do SDB" (it can) but **does the ML advantage survive degraded water
 clarity, or does it evaporate?** Literature says ~0.5 m advantage in clear
 water and is silent on turbid. Interesting either way, including if ML loses.
+**Never give the model coordinates as features** — that is how a flexible model
+memorises the site and how random splits flatter it.
 
 Defer ML until site 1 has an empirical number. A comparison with nothing to
 compare against is a demo.
@@ -105,12 +111,108 @@ data inflates accuracy badly. A large slice of the ML-for-SDB literature gets
 this wrong. Getting it right — and explaining why in the write-up — is worth
 more than any accuracy number.
 
+Expect little difference for Stumpf: two global parameters cannot memorise
+location, so blocked ≈ random is the likely v1 result. That is the **control**:
+the leakage story is shown when a flexible model (v2) diverges on the same folds.
+
 Report, per site:
 
-- RMSE, bias and R², stratified by **depth band** (0–2, 2–5, 5–10, 10–15, 15–20 m)
+- RMSE, bias and R², stratified by **depth band** (0–2, 2–5, 5–10, 10–15, 15–20 m), by lidar depth **and by predicted depth** (a map user only has the latter)
 - Error stratified by **substrate** — dark seagrass reads as deeper water, the classic SDB failure mode
-- Error against **sea state / turbidity proxy** at acquisition
+- Error against **exposure**: inside the bay vs open coast within a scene; sea state and turbidity mainly *between* sites (Phase 4)
 - The depth at which error exceeds a stated threshold — the **breakdown depth**
+- The **denominators**: how much reference water in each band could not be assessed, and why
+
+## Phase 2 protocol — pre-registered 27 Sep 2026
+
+Committed before any depth model is fitted to real data. Anything changed
+after the first run is logged in the decisions register as a **deviation**,
+with the reason, and both results are reported. Implemented in
+`src/sdb/sdb.py` (maths) and `src/sdb/validate.py` (folds, statistics, CLI).
+
+**Data.** Scene `S2A_56HKG_20180907_0_L2A`; pixels whose `mask.tif` flag is 0.
+Depth `d = WL − z_mean`, with WL read from `outputs/reference_<scene>.json`
+so depth and mask always share one water level. Surface reflectance as
+supplied (Sen2Cor L2A, baseline 00.01). **No glint correction** (register, 27 Sep).
+
+**Model.** pSDB = ln(1000·ρ_blue) / ln(1000·ρ_green) (Stumpf et al. 2003).
+Both logarithms are positive in every usable pixel (minimum 0.34); a pixel
+where either is ≤ 0 is excluded and counted. Depth = m1·pSDB − m0, ordinary
+least squares of depth on pSDB. **One calibration for the whole site** —
+inside bay and open coast alike, as a user of the method would apply it.
+
+**Calibration — inside each training fold, never on held-out pixels.**
+
+1. Median pSDB in 1 m depth bins over 0–20 m (bins with fewer than 200
+   pixels ignored), smoothed with a 3-bin running median.
+2. Fitting limit **D_cal** = upper edge of the shallowest bin whose smoothed
+   median reaches 95% of the rise from the shallowest bin to the peak — the
+   depth where the ratio stops rising. 20 m if it rises throughout.
+3. Calibration sample: up to 5,000 pixels drawn at random from each 1 m bin
+   below D_cal — **depth-balanced**, because 70% of usable pixels lie in
+   10–20 m and 2.7% in 0–2 m; an unweighted fit would be set by the depths
+   where the signal is weakest.
+4. OLS on that sample. D_cal per fold is reported: it is the **optical
+   saturation depth**, a finding in itself.
+
+**Validation.**
+
+- **Primary:** blocked 5-fold cross-validation. 2 km square blocks aligned to
+  the scene grid (67 blocks hold usable pixels). Blocks are shuffled and dealt
+  to folds in turn; **10 repeats**, fold seeds 0–9. Each pixel's prediction
+  is the mean of its 10 out-of-fold predictions — none from a model that saw
+  its block. Every statistic below is computed on these.
+- **Naive:** pixel-level random 5-fold, same repeats, reported alongside.
+- **Block-size curve:** pooled RMSE for random, 0.5, 1, 2 and 4 km blocks
+  (mean and range over repeats).
+- **Residual correlogram** at lags 10 m – 8 km; its *range* is the shortest
+  lag at which correlation falls below 0.1. If the range exceeds 2 km, the
+  primary result carries that caveat.
+
+**Statistics.** Error e = SDB − lidar (positive = SDB reads too deep). For each
+group: n, bias, RMSE, MAE, median |e|, 95th percentile |e|, R².
+
+- **Pooled** over all usable pixels — for the gate and literature comparison
+- **Depth-balanced RMSE** = mean of the five depth-band RMSEs — pooled RMSE is
+  as much a property of the depth histogram as of the method
+- By 1 m bin, and by depth band of lidar depth and of predicted depth
+- **Inside bay vs open coast**: polygon `strata.inside_bay` in
+  `config/sites.yml` (the only water it crosses is the entrance line, Point
+  Perpendicular – Bowen Island – Governor Head; checked by connectivity).
+  823,009 vs 114,490 usable pixels at the provisional water level
+- By sub-pixel relief tercile; by distance to shore (0–50, 50–100, 100–200,
+  200–500, 500–1000, > 1000 m) within depth band — a darker NIR rim along every
+  shore suggests adjacency over-correction, which would bias shallow water
+- By substrate, once a layer is adopted (below)
+- **95% confidence intervals by block bootstrap**: 2 km blocks resampled with
+  replacement, 1,000 draws, percentile intervals, for bias, RMSE, MAE and R²
+- **Exclusions per depth band**: reference water that could not be assessed,
+  by reason. The bright-NIR flag alone removes 32% of 0–2 m pixels, so the
+  0–2 m result describes calm water only
+
+**Breakdown depth.** The lower edge of the shallowest 1 m lidar-depth bin whose
+95th-percentile |e| exceeds **IHO CATZOC C: 2.0 m + 5% of depth** (95%
+confidence), evaluated at the bin's mid-depth. CATZOC B (1.0 m + 2%) is
+reported the same way. The full curve is published; "not reached" if no bin in
+0–20 m exceeds it.
+
+**Gate.** Pooled RMSE < 4 m (Phase 2 gate). On failure, diagnose water level,
+glint, then atmospheric correction, in that order — no tuning.
+
+**Not in v1.** The red/green switching model (Caballero & Stumpf 2019) improves
+0–5 m, which is not the question here; if added later it is labelled
+exploratory. Glint correction and ACOLITE — only as diagnosis if the gate fails.
+ML — v2, same folds.
+
+**When the gauge record arrives.** Re-run `waterlevel` → `reference` →
+`validate` and report both. For a fixed set of pixels a constant water-level
+error changes only m0 and leaves every residual unchanged (pinned by a test);
+what moves is which pixels fall in each band and inside 0–20 m.
+
+**Substrate — adopted before substrate results are read, not before the run.**
+Substrate never enters the model; it only groups out-of-fold errors, so adding
+it after the run cannot flatter the fit. The class rules (which classes, how
+mixed pixels are labelled) are fixed before errors by class are computed.
 
 ## Error budget
 
@@ -177,8 +279,9 @@ sdbNSW/
 ├── tests/                      # every statistic against an analytic answer
 ├── scripts/                    # one-off provenance checks (network), not pipeline
 ├── config/
-│   └── sites.yml               # the three bboxes and their pairing windows
+│   └── sites.yml               # bboxes, pairing windows, tide gauge, strata polygons
 ├── data/
+│   ├── README.md               # provenance: how to obtain each input, licences, what is committed
 │   ├── reference/              # committed: block index, CC BY lidar subsets
 │   └── raw/                    # gitignored: ELVIS delivery, scenes/<id>/
 ├── outputs/                    # figures, paired observations, metrics
@@ -208,9 +311,11 @@ SDB-versus-lidar comparison, plus the repo. Limitations panel above results.
 - [x] Jervis Bay scene — `S2A_56HKG_20180907_0_L2A` (see decisions register)
 - [ ] **Observed water level at overpass** — MHL Jervis Bay (216470) record for 6–8 Sep 2018 requested; replaces the provisional image estimate when it arrives
 - [ ] Confirm site 3 (Batemans vs Richmond) after checking lidar tile coverage
-- [ ] Atmospheric correction: L2A as supplied, or test whether it matters (one paper found it optional)
-- [ ] Sun glint correction method
-- [ ] Whether ML enters v1
+- [x] Atmospheric correction — **L2A as supplied** for v1; ACOLITE only as diagnosis if the gate fails
+- [x] Sun glint correction — **none** for v1 (register, 27 Sep)
+- [x] Whether ML enters v1 — **no**; v2, same folds, no coordinates as features
+- [x] Breakdown threshold — **CATZOC C** (2.0 m + 5% of depth, 95%); CATZOC B alongside
+- [ ] **Substrate layer** — candidates: NSW DPI *Estuarine Macrophytes* (seagrass) and DCCEEW *seabed reef extent* (lidar-derived). Fetch, check dates, coverage of the usable area and alignment, then fix the class rules before errors by substrate are read
 
 ## Decisions register
 
@@ -251,6 +356,15 @@ defensible piece of work.
 | 27 Sep | **Provisional water level −0.50 m AHD** from the image (whole-shoreline NIR vs lidar land fraction, co-registration applied) | Consistent with a near-spring low: new moon 9 Sep; MLWS 2018-19 is −0.515 m AHD. Biased low by ~0.1–0.2 m (NIR reads through very shallow water), so the gauge should read about −0.3 to −0.4 m. Estimator exact on curved synthetic shorelines; worst case one straight grid-aligned beach, ~6 cm |
 | 27 Sep | **Phase 2 does not wait for the gauge** | A constant water-level error is absorbed by the Stumpf intercept; it moves depth-band membership and masks. Re-run `reference` when the gauge value arrives and report both |
 | 27 Sep | Glint geometry: closed form `cos(2ω)=…` **replaced** with the vector derivation | The closed form is wrong off the principal plane (~0.8° at θs=20°, θv=30°, Δφ=90°). Immaterial at S2's near-nadir view, but wrong. Pinned by a grid test against an independent derivation |
+| 27 Sep | **Phase 2 protocol pre-registered** before any depth model sees real data. Pre-fit checks deliberately did **not** look at the band ratio against depth | The co-registration lesson: a rule set after seeing the data is not blind, however honest. Every choice that could be tuned to the answer — calibration range, sample, blocks, thresholds — is fixed by rule in advance, and data-driven choices are made inside each training fold |
+| 27 Sep | **No glint correction for v1.** Optically deep water (> 25 m, 197,785 px): NIR detail finer than 90 m has std 0.0012 and blue follows it at slope 0.78 (R² 0.28) — glint-like but ~0.001 in blue, ~4% of the median. The blue–NIR covariance a Hedley regression would fit is dominated by a **km-scale field** (810 m means: slope 4.9, R² 0.93) | Glint is spectrally near-flat, so a slope of ~5 is water type or atmosphere, not glint: Hedley would subtract real signal. The only lidar-covered deep water is at the entrance and outer coast, a different water mass from the bay. Sentinel-2's band-to-band timing also decorrelates pixel-scale glint (Harmel et al. 2018) |
+| 27 Sep | **Depth-balanced calibration and reporting** | 70% of usable pixels are 10–20 m, 2.7% are 0–2 m. Unweighted, both the fit and the headline RMSE would describe the deep, weak-signal end |
+| 27 Sep | **Breakdown threshold: CATZOC C**, not an invented one | An external charting standard (2.0 m + 5% of depth at 95%) that a hydrographer recognises. CATZOC B alongside. The curve is published so a reader can apply any other |
+| 27 Sep | **Red/green switching model left out of v1** | It improves 0–5 m (Caballero & Stumpf 2019); the question is where the method stops working, which the blue/green ratio sets. Added later only as exploratory |
+| 27 Sep | **Inside bay vs open coast defined by polygon**, checked by water connectivity | A first rectangle split mislabelled Wreck Bay and Summercloud Bay (south-facing ocean coast at the scene's southern edge) as bay. The polygon crosses water only on the entrance line (Point Perpendicular – Bowen Island – Governor Head): 823,009 bay vs 114,490 open-coast usable pixels (2,623 open-coast in 0–2 m) |
+| 27 Sep | **2 km blocks** | 67 blocks with usable pixels; 4 km leaves 24, and 1 in 20 random fold draws then gets almost no 0–2 m pixels. Deep-water blue varies on km scales, so blocks must be ≥ 1 km; the correlogram checks it |
+| 27 Sep | **Bright-NIR flag removes 32% of 0–2 m pixels** (11,717 of 36,842) — kept, but reported | The 0–2 m result therefore describes calm, non-breaking water. Stated with the denominators, not hidden in a mask |
+| 27 Sep | **Substrate candidates found; none adopted yet.** NSW DPI *Estuarine Macrophytes* covers the whole bay (Aug 2019 aerial, field May 2020; *Posidonia*/*Zostera*/*Halophila*); DCCEEW *seabed reef extent* is classified from the same 2018 lidar. GA's 2007–08 video and grabs cover only the southern bay; the 2018 lidar reflectivity is raw LAS | The seagrass map is 11 months after the scene: *Posidonia* is persistent, *Zostera*/*Halophila* are not. It is aerial-optical, so it may miss seagrass exactly where Sentinel-2 fails (deep, sparse *Halophila*); "not mapped as vegetated" is not "sand". The reef layer is independent of the imagery and contemporaneous |
 
 ## Sources
 
@@ -270,3 +384,12 @@ defensible piece of work.
 - Cox & Munk (1954), roughness of the sea surface from sun glitter, *JOSA* 44(11) — https://doi.org/10.1364/JOSA.44.000838
 - Hersbach et al. (2020), the ERA5 global reanalysis, *QJRMS* 146 — https://doi.org/10.1002/qj.3803
 - Open-Meteo historical weather API — https://open-meteo.com/en/docs/historical-weather-api
+- Stumpf, Holderied & Sinclair (2003), water depth from high-resolution imagery over variable bottom types, *Limnol. Oceanogr.* 48(1, part 2) — https://doi.org/10.4319/lo.2003.48.1_part_2.0547
+- Caballero & Stumpf (2019), nearshore bathymetry from Sentinel-2A/2B, South Florida — https://www.researchgate.net/publication/334085536
+- Hedley et al. (2005), simple and robust removal of sun glint — deglint specification in ESA SNAP — https://step.esa.int/main/wp-content/help/versions/9.0.0/snap-supported-plugins/org.esa.sen2coral.sen2coral.algorithms/deglint/DeglintAlgoSpec.html
+- Harmel et al. (2018), sunglint correction of Sentinel-2 MSI from SWIR bands, *RSE* 204 — https://www.sciencedirect.com/science/article/abs/pii/S0034425717304856
+- Roberts et al. (2017), cross-validation strategies for structured data, *Ecography* 40 — https://doi.org/10.1111/ecog.02881
+- CATZOC definitions (S-57 attribute) — https://docs.teledynecaris.com/s-57/S57Cat/S57CatSite/attribut/catzoc.htm
+- NSW DPI Fisheries Estuarine Macrophytes (REST) — https://spatial.industry.nsw.gov.au/arcgis/rest/services/Fisheries_Portal/Estuarine_Macrophytes/MapServer/0
+- DCCEEW NSW seabed reef extent — https://mapprod3.environment.nsw.gov.au/arcgis/rest/services/Marine/NSW_seabed_reef_extent/MapServer
+- GA Record 2009/10, Jervis Bay soft-sediment habitats — https://www.ga.gov.au/bigobj/GA14300.pdf

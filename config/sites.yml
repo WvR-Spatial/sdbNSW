@@ -32,6 +32,27 @@ sites:
       islw_ahd: -0.776
       hhwss_ahd: 1.028
       source: "Manly Hydraulics Laboratory for NSW DCCEEW, CC BY 4.0; times AEST"
+    # Reporting strata (never model inputs). Pre-registered with the Phase 2
+    # protocol, PROJECT_BRIEF.md. Scene CRS; vertices other than the entrance
+    # run through land. The only water the polygon crosses is the bay entrance:
+    # Point Perpendicular -> Bowen Island -> Governor Head (checked by water
+    # connectivity on the lidar mask). Outside it: the Beecroft north and east
+    # coasts, the Booderee coast south of Bowen Island, Wreck/Summercloud Bay.
+    strata:
+      inside_bay:
+        epsg: 32756
+        polygon:
+          - [285960, 6128400]
+          - [296900, 6128400]
+          - [297100, 6127500]
+          - [298300, 6125000]
+          - [299300, 6121000]
+          - [299600, 6114550]    # Point Perpendicular
+          - [296600, 6112500]    # Bowen Island, north
+          - [296300, 6111300]    # Bowen Island, south-west
+          - [296000, 6110500]    # Governor Head
+          - [295500, 6108000]
+          - [285960, 6108000]
     max_depth_m: 42.70
     testable_area_km2: 95.55     # 0-20 m band
     status: reference_in_hand
