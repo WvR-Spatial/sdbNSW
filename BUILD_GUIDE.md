@@ -121,13 +121,43 @@ geometry; water level provisional until the gauge record arrives.*
 
 ## Phase 2 — Empirical SDB, first number
 
-**→ CLAUDE** — `src/sdb/sdb.py` (Stumpf ratio transform, calibration against
-a reference subset) and `src/sdb/waterlevel.py` (tide at acquisition time as a
-scalar vertical offset). Plus `tests/` — every function checked against an
-analytically known answer, in the style of `narrabeen-stage1`.
+The method is fixed in advance: *Phase 2 protocol* in `PROJECT_BRIEF.md`,
+committed in `8332154` before any model saw real data. The code implements it
+and records any departure as a deviation.
 
-**→ YOU** — fetch the MHL tide series for the site and period. Run `pytest`.
-Run the pipeline. Bring back the first RMSE.
+**→ CLAUDE (done)** — `src/sdb/sdb.py` (Stumpf transform and the calibration
+rule), `src/sdb/validate.py` (blocked cross-validation, statistics, breakdown
+depth, CLI), `src/sdb/viz.py` (figures). Tests: `tests/test_sdb.py`,
+`tests/test_validate.py` — including the water-level invariance and a leakage
+demonstration. **199 tests.**
+
+**→ YOU** —
+
+```
+pytest -q
+python -m sdb.validate --scene S2A_56HKG_20180907_0_L2A
+```
+
+~40 s. Expected at the provisional water level (−0.496 m AHD), from inputs with
+md5 `bb441e91…` (reflectance), `5e165671…` (reference), `b3188e21…` (mask):
+
+| | |
+|---|---|
+| Pooled RMSE (2 km blocks, 5-fold × 10) | **2.70 m** [2.32, 3.15], bias −0.41 m, R² 0.688 |
+| Naive random split | 2.67 m (blocked / naive 1.009) |
+| Depth-balanced RMSE | 2.48 m |
+| Inside bay / open coast | 2.28 m / 4.72 m |
+| Breakdown depth, CATZOC C and B | **0 m** — exceeded from the shallowest bin |
+| Saturation depth D_cal | 16–20 m (median 20) |
+| Residual correlation range | 4000 m — exceeds the block: caveat applies |
+| Gate | **PASS** |
+
+It writes `outputs/sdb_<scene>.json`, three figures in `outputs/figures/`,
+and `sdb.tif` (out-of-fold depth and residual) beside the scene. Commit the
+JSON and figures; `sdb.tif` stays in gitignored `data/raw/`.
+
+**When the gauge record arrives:** `waterlevel --gauge-file …` → `reference` →
+`validate`, and report both runs.
 
 **Gate:** site 1 RMSE within roughly 2× the literature (< ~4 m). If it is
 wildly worse, the fault is almost always water level, sun glint, or
@@ -138,11 +168,15 @@ look better.** Find the cause.
 
 ## Phase 3 — Validation done properly
 
-**→ CLAUDE** — `src/sdb/validate.py`: spatially blocked cross-validation,
-error stratified by depth band and substrate, the breakdown-depth statistic.
-Report the naive random-split number alongside the blocked one.
+Blocked cross-validation, the naive split and the breakdown statistic already
+run in `validate.py` (Phase 2). What remains here is substrate, and ML (v2).
 
-**→ YOU** — obtain the substrate/seagrass layer for the site from SEED.
+**→ YOU + CLAUDE** — substrate: fetch the NSW DPI *Estuarine Macrophytes*
+(seagrass) and DCCEEW *seabed reef extent* layers for Jervis Bay into
+`data/raw/substrate/` (their ArcGIS REST services are reachable from your
+machine, not from the cloud workspace). Then: check the mapping dates, how much
+of the usable area each class covers by depth band, and alignment against the
+scene; fix the class rules **before** errors by substrate are computed.
 
 **→ YOU** — read the output and decide whether you believe it. The gap
 between the naive and blocked numbers is a result in its own right and

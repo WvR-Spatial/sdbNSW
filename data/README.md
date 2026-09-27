@@ -89,6 +89,12 @@ the water level from `waterlevel`, and adds to `raw/scenes/<item id>/`:
 The small records that explain them — offset measured, datum operation, water
 level assumed, pixel counts by depth band — go to `outputs/` and are committed.
 
+`python -m sdb.validate --scene <item id>` (Phase 2) adds `sdb.tif` beside
+them — `oof_depth` (out-of-fold SDB depth, m) and `residual` (SDB − lidar, m,
+positive = reads too deep), float32, NaN outside assessed pixels. Its record
+(`outputs/sdb_<item id>.json`) and figures (`outputs/figures/`) are committed;
+the raster is not.
+
 ### 4. Orthoimagery for co-registration  *(fetched automatically, never committed)*
 
 `coreg` fetches 2 km windows of NSW Imagery (Spatial Services) through its
@@ -115,6 +121,20 @@ attribute NSW DCCEEW. Save the CSV to `raw/tide/`.
 
 Until it arrives, `waterlevel --from-image` gives a provisional estimate
 (−0.50 m AHD at Jervis Bay, biased low by ~0.1–0.2 m).
+
+### 6. Substrate layers  *(candidates — not yet fetched)*
+
+Used only to group validation errors, never as model inputs. Save to
+`raw/substrate/`; commit derived statistics only.
+
+- **NSW DPI Fisheries — Estuarine Macrophytes** (seagrass: *Posidonia*,
+  *Zostera*, *Halophila*). Jervis Bay mapped from Aug 2019 aerial imagery,
+  field-checked May 2020. ArcGIS REST:
+  `spatial.industry.nsw.gov.au/arcgis/rest/services/Fisheries_Portal/Estuarine_Macrophytes/MapServer/0`.
+  © NSW DPI Fisheries; the IMAS copy is CC BY-NC 4.0.
+- **DCCEEW — NSW seabed reef extent**, classified from the 2018 marine lidar.
+  ArcGIS REST: `mapprod3.environment.nsw.gov.au/arcgis/rest/services/Marine/NSW_seabed_reef_extent/MapServer`.
+  CC BY 4.0.
 
 ---
 

@@ -6,9 +6,13 @@ N −1.0 ± 1.1 m** (8 windows agree), applied. Water level at overpass
 **−0.50 m AHD, provisional** (image estimate, biased low ~0.1–0.2 m); the
 observed record from MHL's Jervis Bay gauge has been requested. Reference on
 the scene grid: **93.8 km² usable in 0–20 m**.
-**Phase 2: protocol pre-registered** (see *Phase 2 protocol*) — committed
-before any depth model is fitted to real data. Water level enters only
-through band membership and masks, so Phase 2 does not wait for the gauge.
+**Phase 2: protocol pre-registered** (`8332154`), then run once. **Gate
+passed: pooled RMSE 2.70 m** [95% CI 2.32–3.15], bias −0.41 m, R² 0.69
+(inside the bay 2.28 m, open coast 4.72 m). Worse than the ~1.8 m clear-water
+Stumpf literature, as expected. **Does not meet CATZOC C at any depth**; error
+is flat near 2 m RMSE to ~14 m, then climbs as the ratio saturates. SDB reads
+~1 m too deep in 0–10 m, in spatially coherent patches — substrate is next.
+Provisional water level; rerun when the gauge record arrives.
 **Updated:** 27 Sep 2026 · **Repo:** `sdbNSW`
 **Portfolio slot:** replaces *Revealing the Ancient Murray via REM*.
 
@@ -214,6 +218,38 @@ Substrate never enters the model; it only groups out-of-fold errors, so adding
 it after the run cannot flatter the fit. The class rules (which classes, how
 mixed pixels are labelled) are fixed before errors by class are computed.
 
+### Phase 2 result — Jervis Bay, 7 Sep 2018 (provisional water level −0.496 m AHD)
+
+The pre-registered run, unchanged. `outputs/sdb_S2A_56HKG_20180907_0_L2A.json`.
+
+| | Result |
+|---|---|
+| Pooled, 2 km blocks, 5-fold × 10 | RMSE **2.70 m** [2.32, 3.15] · bias −0.41 m [−0.95, +0.07] · R² 0.69 [0.57, 0.77] · n 937,499 |
+| Depth-balanced RMSE | 2.48 m |
+| Naive random split | 2.67 m — blocked/naive **1.009**, as predicted for a two-parameter model |
+| Block-size curve (random, 0.5, 1, 2, 4 km) | 2.67, 2.70, 2.70, 2.71, 2.73 m |
+| By depth band (bias / RMSE, m) | 0–2 **+0.98** / 2.09 · 2–5 **+1.23** / 2.67 · 5–10 **+0.82** / 2.08 · 10–15 +0.12 / 2.08 · 15–20 **−2.10** / 3.50 |
+| Inside bay / open coast | RMSE 2.28 [2.01, 2.55] / **4.72** [3.64, 5.89]; open coast 15–20 m bias −5.75 |
+| Breakdown depth | CATZOC C and B both **exceeded from the shallowest bin**: 95th-percentile error 3.2–3.9 m through 0–13 m against an allowance of 2.0–2.7 m |
+| Saturation depth D_cal | 20 m in 46 of 50 folds, 16–17 m in 4 |
+| Residual correlation | 0.69 at 10 m, 0.16 at 2 km, below 0.1 by **4 km** — longer than the blocks |
+| Assessed share of reference water | 0–2 m 66%, 2–5 m 97%, deeper ≥ 99% |
+
+What it says: the method passes the gate but is not charting-grade anywhere in
+this bay, and it fails in two distinct ways — a ~2 m error floor from the
+surface down, carrying a +1 m (too deep) bias in 0–10 m, and a saturation
+failure beyond ~14 m where SDB reads too shallow. The residual map puts the
+shallow over-reading in coherent patches on the western and northern shelves,
+where seagrass is expected: the substrate stratification is the test of that.
+Exposure matters as much as depth — the open coast doubles the error.
+
+Caveats on this run: the residual correlation outlasts the 2 km blocks, so the
+bootstrap intervals are probably too narrow (the RMSE itself barely moves with
+block size, 2.71 → 2.73 m at 4 km). Within-band R² is negative and not
+meaningful — the depth range inside a band is small relative to the error.
+Pixels within 50 m of shore carry RMSE of 6–8 m at 2–15 m depth (cliff-foot
+rock, few pixels).
+
 ## Error budget
 
 | Term | Magnitude | Note |
@@ -364,6 +400,10 @@ defensible piece of work.
 | 27 Sep | **Inside bay vs open coast defined by polygon**, checked by water connectivity | A first rectangle split mislabelled Wreck Bay and Summercloud Bay (south-facing ocean coast at the scene's southern edge) as bay. The polygon crosses water only on the entrance line (Point Perpendicular – Bowen Island – Governor Head): 823,009 bay vs 114,490 open-coast usable pixels (2,623 open-coast in 0–2 m) |
 | 27 Sep | **2 km blocks** | 67 blocks with usable pixels; 4 km leaves 24, and 1 in 20 random fold draws then gets almost no 0–2 m pixels. Deep-water blue varies on km scales, so blocks must be ≥ 1 km; the correlogram checks it |
 | 27 Sep | **Bright-NIR flag removes 32% of 0–2 m pixels** (11,717 of 36,842) — kept, but reported | The 0–2 m result therefore describes calm, non-breaking water. Stated with the denominators, not hidden in a mask |
+| 27 Sep | **Implementation note on calibration step 2**, recorded before the run: its two sentences conflict for a steadily rising curve — 95% of the rise is reached one bin early (19 m), while the second sentence says 20 m. Implemented **as written**: peak in the deepest bin = "rises throughout" = 20 m; otherwise the 95% rule. Pinned in `tests/test_sdb.py` | Not a deviation: the committed text was followed. On the real data the exception decided **46 of 50 folds** — the median ratio keeps creeping upward to 20 m even where the error curve shows saturation from ~14 m. The pure 95% rule would likely have stopped earlier. Any rerun with it is **exploratory**, reported beside the pre-registered result, not instead of it |
+| 27 Sep | **Phase 2 run once, as registered: gate passed**, pooled RMSE 2.70 m [2.32, 3.15]. Full table under *Phase 2 result* | Code written and tested on synthetic data after commit `8332154`, then run on the real pairs. The pattern is the model's, not the validation's: in-sample band biases from the all-data line match the out-of-fold ones to within 0.2 m |
+| 27 Sep | **Breakdown depth = 0 m** for CATZOC C and B — the pre-registered statistic, reported as is | The rule finds the first bin that fails; here every bin fails, so its answer is "never meets CATZOC C", itself the finding. The shape — a flat ~2 m RMSE floor to ~14 m, then saturation — is described from the curve, not by inventing a new threshold after the fact |
+| 27 Sep | **Residual correlation range 4 km > 2 km blocks: caveat applies**, as the protocol requires | Mostly systematic structure — depth-dependent bias, the open-coast offset and shelf-scale patches — rather than leakage: RMSE is flat across block sizes (2.67–2.73 m). The bootstrap intervals, which resample 2 km blocks, are the part most likely to be optimistic |
 | 27 Sep | **Substrate candidates found; none adopted yet.** NSW DPI *Estuarine Macrophytes* covers the whole bay (Aug 2019 aerial, field May 2020; *Posidonia*/*Zostera*/*Halophila*); DCCEEW *seabed reef extent* is classified from the same 2018 lidar. GA's 2007–08 video and grabs cover only the southern bay; the 2018 lidar reflectivity is raw LAS | The seagrass map is 11 months after the scene: *Posidonia* is persistent, *Zostera*/*Halophila* are not. It is aerial-optical, so it may miss seagrass exactly where Sentinel-2 fails (deep, sparse *Halophila*); "not mapped as vegetated" is not "sand". The reef layer is independent of the imagery and contemporaneous |
 
 ## Sources
