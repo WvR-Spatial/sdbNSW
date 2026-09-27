@@ -1,0 +1,49 @@
+NS_ID,LOCATION,COMPCODE,CAPT_END,ZONE,OBJECT_5m,PRIMCOMP,LOCN_2,MDATA_URL
+4,Broadwater,NSW010103,2018-07-08,56,Broadwater2018_DEM_5406779_01_005,NSW North Coast,BroadwaterRichmondRiverEvansHead,https://iar.environment.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018
+10,MacleayCoast,NSW010205,2018-07-13,56,MacleayCoast2018_DEM_4976584_01_005,NSW Northern Rivers,MacleayCoastNambuccaNorthHeadLaggersPoint,https://iar.environment.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018
+1,GoldCoast,QLD050302,2018-07-15,56,GoldCoast2018_DEM_5426883_01_005,Moreton-Stradbroke-Gold Coast,GoldCoastPointLookoutPointDanger,https://iar.environment.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018
+11,HastingsCoast,NSW010301,2018-07-18,56,HastingsCoast2018_DEM_4886515_01_005,NSW Mid-north Coast,HastingsCoastLaggersPointTackingPoint,https://iar.environment.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018
+12,CamdenHaven,NSW010302,2018-07-19,56,CamdenHaven2018_DEM_4736475_01_005,NSW Mid-north Coast,CamdenHavenTackingPointCrowdyHead,https://iar.environment.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018
+14,ForsterTuncurry,NSW010304,2018-07-19,56,ForsterTuncurry2018_DEM_4516435_01_005,NSW Mid-north Coast,ForsterTuncurryBlackHeadCapeHawke,https://iar.environment.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018
+13,ManningCoast,NSW010303,2018-07-21,56,ManningCoast2018_DEM_4536451_01_005,NSW Mid-north Coast,ManningCoastCrowdyHeadBlackHead,https://iar.environment.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018
+15,WallisLake,NSW020101,2018-07-23,56,WallisLake2018_DEM_4496407_01_005,Port Stephens,WallisLakeCapeHawkeSealRocks,https://iar.environment.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018
+17,PortStephens,NSW020103,2018-07-26,56,PortStephens2018_DEM_3986374_01_005,Port Stephens,PortStephensYacaabaHeadTomareeHead,https://iar.environment.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018
+16,MyallLakes,NSW020102,2018-07-26,56,MyallLakes2018_DEM_4186382_01_005,Port Stephens,MyallLakesSealRocksYacaabaHead,https://iar.environment.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018
+18,AnnaBay,NSW020104,2018-07-27,56,AnnaBay2018_DEM_4106369_01_005,Port Stephens,AnnaBayTomareeHeadBirubiPoint,https://iar.environment.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018
+19,StocktonBight,NSW020105,2018-08-03,56,StocktonBight2018_DEM_3846356_01_005,Port Stephens,StocktonBightBirubiPointNobbysHead,https://iar.environment.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018
+2,Tweed,NSW010101,2018-08-04,56,Tweed2018_DEM_5546805_01_005,NSW North Coast,TweedPointDangerCapeByron,https://iar.environment.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018
+3,ByronBallina,NSW010102,2018-08-04,56,ByronBallina2018_DEM_5496831_01_005,NSW North Coast,ByronBallinaCapeByronRichmondRiver,https://iar.environment.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018
+5,Bundjalung,NSW010104,2018-08-10,56,Bundjalung2018_DEM_5306742_01_005,NSW North Coast,BundjalungEvansHeadYambaPoint,https://iar.environment.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018
+6,Yuraygir,NSW010201,2018-08-12,56,Yuraygir2018_DEM_5226688_01_005,NSW Northern Rivers,YuraygirYambaPointWooli,https://iar.environment.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018
+7,Woolgoolga,NSW010202,2018-08-12,56,Woolgoolga2018_DEM_5166661_01_005,NSW Northern Rivers,WoolgoolgaWooliBareBluff,https://iar.environment.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018
+25,SydneyEast,NSW020304,2018-08-17,56,SydneyEast2018_DEM_3326236_01_005,Sydney,SydneyEastSouthHeadCapeBanks,https://iar.environment.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018
+26,SydneySouth,NSW020305,2018-08-18,56,SydneySouth2018_DEM_3266226_01_005,Sydney,SydneySouthCapeBanksPortHackingPoint,https://iar.environment.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018
+24,SydneyHarbour,NSW020303,2018-08-18,56,SydneyHarbour2018_DEM_3336250_01_005,Sydney,SydneyHarbourNorthHeadSouthHead,https://iar.environment.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018
+27,IllawarraNorth,NSW020401,2018-08-18,56,IllawarraNorth2018_DEM_3076195_01_005,Illawarra,IllawarraNorthPortHackingPointBellambi,https://iar.environment.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018
+22,BrokenBay,NSW020301,2018-08-24,56,BrokenBay2018_DEM_3376281_01_005,Sydney,BrokenBayThirdPointBarrenjoeyHead,https://iar.environment.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018
+39,BatemansBay,NSW020602,2018-08-24,56,BatemansBay2018_DEM_2436036_01_005,NSW South Coast,BatemansBayThreeIsletPointSouthHead,https://iar.environment.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018
+20,NewcastleCoast,NSW020201,2018-09-01,56,NewcastleCoast2018_DEM_3636357_01_005,NSW Central Coast,NewcastleCoastNobbysHeadNorahHead,https://iar.environment.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018
+41,Montague,NSW020604,2018-09-05,56,Montague2018_DEM_2405978_01_005,NSW South Coast,MontagueBingieBingiePointCapeDromedary,https://iar.environment.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018
+29,IllawarraSouth,NSW020403,2018-09-05,56,IllawarraSouth2018_DEM_3036169_01_005,Illawarra,IllawarraSouthRedPointBassPoint,https://iar.environment.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018
+28,Wollongong,NSW020402,2018-09-05,56,Wollongong2018_DEM_3056180_01_005,Illawarra,WollongongBellambiRedPoint,https://iar.environment.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018
+30,Kiamacoast,NSW020404,2018-09-05,56,Kiamacoast2018_DEM_2976147_01_005,Illawarra,KiamaCoastBassPointBlackHead,https://iar.environment.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018
+40,MoruyaCoast,NSW020603,2018-09-05,56,MoruyaCoast2018_DEM_2416011_01_005,NSW South Coast,MoruyaCoastSouthHeadBingieBingiePoint,https://iar.environment.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018
+38,Murramurang,NSW020601,2018-09-06,56,Murramurang2018_DEM_2506041_01_005,NSW South Coast,MurramurangWaspHeadThreeIsletPoint,https://iar.environment.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018
+33,JervisBay,NSW020502,2018-09-08,56,JervisBay2018_DEM_2866107_01_005,Shoalhaven,JervisBayPointPerpendicularBowenIsland,https://iar.environment.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018
+34,Booderee,NSW020503,2018-09-08,56,Booderee2018_DEM_2896102_01_005,Shoalhaven,BoodereeBowenIslandStGeorgesHead,https://iar.environment.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018
+31,Shoalhaven,NSW020405,2018-09-08,56,Shoalhaven2018_DEM_2906121_01_005,Illawarra,ShoalhavenBlackHeadBeecroftHead,https://iar.environment.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018
+35,WreckBay,NSW020504,2018-09-09,56,WreckBay2018_DEM_2836096_01_005,Shoalhaven,WreckBayStGeorgesHeadRedHead,https://iar.environment.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018
+21,CentralCoast,NSW020202,2018-09-09,56,CentralCoast2018_DEM_3496288_01_005,NSW Central Coast,CentralCoastNorahHeadThirdPoint,https://iar.environment.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018
+32,BeecroftPeninsula,NSW020501,2018-09-09,56,BeecroftPeninsula2018_DEM_2986114_01_005,Shoalhaven,BeecroftPeninsulaBeecroftHeadPointPerpendicular,https://iar.environment.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018
+9,BellingerCoast,NSW010204,2018-09-13,56,BellingerCoast2018_DEM_4986609_01_005,NSW Northern Rivers,BellingerCoastCoffsHarbourNambuccaNorthHead,https://iar.environment.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018
+8,CoffsHarbour,NSW010203,2018-09-13,56,CoffsHarbour2018_DEM_5106642_01_005,NSW Northern Rivers,CoffsHarbourBareBluffCoffsHarbour,https://iar.environment.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018
+37,TabourieCoast,NSW020506,2018-09-15,56,TabourieCoast2018_DEM_2436035_01_005,Shoalhaven,TabourieCoastWardenHeadWaspHead,https://iar.environment.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018
+36,ConjolaCoast,NSW020505,2018-09-15,56,ConjolaCoast2018_DEM_2676082_01_005,Shoalhaven,ConjolaCoastRedHeadWardenHead,https://iar.environment.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018
+23,SydneyNorth,NSW020302,2018-09-18,56,SydneyNorth2018_DEM_3376256_01_005,Sydney,SydneyNorthBarrenjoeyHeadNorthHead,https://iar.environment.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018
+45,TwofoldBay,NSW020608,2018-10-01,55,TwofoldBay2018_DEM_7545887_01_005,NSW South Coast,TwofoldBayWorangPointRedPoint,https://iar.environment.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018
+42,Bermagui,NSW020605,2018-10-01,56,Bermagui2018_DEM_2355951_01_005,NSW South Coast,BermaguiCapeDromedaryGoalenHead,https://iar.environment.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018
+48,NadgeeCoast,NSW020611,2018-10-02,55,NadgeeCoast2018_DEM_7605843_01_005,NSW South Coast,NadgeeCoastJaneSpiersBeachCapeHowe,https://iar.environment.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018
+47,DisasterBay,NSW020610,2018-10-02,55,DisasterBay2018_DEM_7595862_01_005,NSW South Coast,DisasterBayGreenCapeJaneSpiersBeach,https://iar.environment.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018
+44,MerimbulaBay,NSW020607,2018-10-02,55,MerimbulaBay2018_DEM_7585896_01_005,NSW South Coast,MerimbulaBayTathraWorangPoint,https://iar.environment.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018
+43,BegaCoast,NSW020606,2018-10-02,56,BegaCoast2018_DEM_2285931_01_005,NSW South Coast,BegaCoastGoalenHeadTathra,https://iar.environment.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018
+46,BenBoydCoast,NSW020609,2018-10-03,55,BenBoydCoast2018_DEM_7585871_01_005,NSW South Coast,BenBoydCoastRedPointGreenCape,https://iar.environment.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018

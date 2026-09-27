@@ -1,0 +1,13 @@
+# Raw downloads — manual, large, and re-orderable. See data/README.md
+data/raw/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.ipynb_checkpoints/
+.pytest_cache/
+
+# Scratch
+outputs/cache/
