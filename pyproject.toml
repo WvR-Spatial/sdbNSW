@@ -1,0 +1,42 @@
+# Installing the package removes the need for PYTHONPATH:
+#
+#   conda activate sdbnsw
+#   pip install -e . --no-deps
+#
+# --no-deps matters. The conda env already has GDAL, rasterio and geopandas
+# from conda-forge; letting pip resolve them would install PyPI wheels with
+# their own bundled GDAL alongside conda's, which is the classic way to break
+# a working geospatial environment on Windows.
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sdbnsw"
+version = "0.1.0"
+description = "Satellite-derived bathymetry validated against airborne lidar, NSW"
+requires-python = ">=3.11"
+dependencies = [
+    "pystac-client>=0.8",
+    "pandas>=2.0",
+    "pyyaml>=6.0",
+    "rasterio>=1.3",
+    "rioxarray>=0.15",
+    "geopandas>=1.0",
+    "scikit-learn>=1.4",
+    "matplotlib>=3.8",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+sdb-scenes = "sdb.stac:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

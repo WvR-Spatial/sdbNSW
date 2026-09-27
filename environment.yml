@@ -1,0 +1,31 @@
+# conda env create -f environment.yml
+# conda activate sdbnsw
+#
+# conda-forge only, strict priority. Mixing channels is the usual cause of
+# broken GDAL/rasterio installs on Windows.
+name: sdbnsw
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  - python=3.12
+  - gdal
+  - rasterio
+  - rioxarray
+  - xarray
+  - geopandas
+  - shapely
+  - pyproj
+  - numpy
+  - scipy
+  - pandas
+  - scikit-learn
+  - matplotlib
+  - pystac-client
+  - odc-stac
+  - pyyaml
+  - requests
+  - jupyterlab
+  - ipykernel
+  - pytest
+  - tabulate

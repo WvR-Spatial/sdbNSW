@@ -1,0 +1,11 @@
+# Prefer environment.yml (conda-forge) on Windows -- GDAL via pip is painful.
+# This file exists so CI and non-conda users have a path.
+pystac-client>=0.8
+pandas>=2.0
+pyyaml>=6.0
+rasterio>=1.3
+rioxarray>=0.15
+geopandas>=1.0
+scikit-learn>=1.4
+matplotlib>=3.8
+pytest>=8.0

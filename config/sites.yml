@@ -1,0 +1,39 @@
+# Study sites, ordered by expected water clarity: best case first.
+# Bounding boxes are MEASURED from the NSW Marine LiDAR 2018 coverage index
+# (data/reference/jervisbay_lidar_blocks.geojson), not estimated.
+
+defaults:
+  collection: sentinel-2-l2a
+  stac_url: https://earth-search.aws.element84.com/v1
+  window_days: 45          # +/- around each capture date
+  max_cloud: 40            # scene-level %, deliberately loose: scene cloud is a
+                           # poor proxy for cloud over a small AOI. Filter hard later.
+  max_nodata: 5            # % of scene that is swath-edge nodata
+
+sites:
+  jervis_bay:
+    label: "Jervis Bay"
+    role: "best case — sheltered, clear, mixed substrate"
+    # JervisBay2018_DEM_2866107_01_005, block NSW020502
+    bbox: [150.6607, -35.1504, 150.8083, -34.9735]
+    # The delivered DEM mosaic actually spans a wider AOI than the block:
+    delivered_bbox: [150.655764, -35.170992, 150.864709, -34.968777]
+    capture_dates: ["2018-09-08", "2018-09-09"]   # JervisBay + Beecroft
+    reference_crs: "EPSG:7856"
+    max_depth_m: 42.70
+    testable_area_km2: 95.55     # 0-20 m band
+    status: reference_in_hand
+
+  narrabeen_long_reef:
+    label: "Narrabeen - Long Reef"
+    role: "exposed, surf-dominated"
+    bbox: null                   # TODO: measure from the coverage index
+    capture_dates: []
+    status: not_ordered
+
+  batemans_bay:
+    label: "Batemans Bay / Clyde mouth"
+    role: "worst case — estuarine turbidity"
+    bbox: null                   # TODO: measure from the coverage index
+    capture_dates: ["2018-08-24"]   # block NSW020602, from the coverage index
+    status: not_ordered
