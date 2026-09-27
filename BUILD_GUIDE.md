@@ -85,6 +85,11 @@ Expected at Jervis Bay: shift **E −18.47, N −11.11 m**, verdict `APPLY`, and
 **916,351** usable pixels. Different numbers mean a different environment or
 input — stop and bring them back.
 
+> **Superseded (27 Sep).** The QGIS gate showed this waterline estimate is
+> biased: against NSW orthoimagery the true offset is ~7–8 m (E −6.5, N −3.5).
+> `coreg` is being rebuilt to register against orthoimagery on land. Until
+> then, do not use `reference.tif` for anything downstream.
+
 **→ YOU · QGIS** — the visual check, and it matters more than it sounds. Load
 `reflectance.tif` as RGB (bands 3, 2, 1), a hillshade of the lidar DEM, and an
 **independent basemap** (NSW Spatial Services imagery, or ESRI World Imagery):

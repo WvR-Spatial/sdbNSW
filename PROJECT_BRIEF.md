@@ -1,10 +1,12 @@
 # Satellite-Derived Bathymetry on an Exposed Temperate Coast — project brief
 
-**Status:** Phase 1 nearly complete — scene `S2A_56HKG_20180907_0_L2A`
-fetched and checked; image-to-lidar misregistration **measured at 21.6 m**
-(E −18.5, N −11.1) and corrected; lidar aggregated onto the scene grid:
-**91.6 km² usable in 0–20 m**. Outstanding for the gate: QGIS check against an
-independent basemap, and the tide at overpass (`waterlevel.py`, next).
+**Status:** Phase 1 — gate **not yet passed**. Scene fetched and checked;
+lidar aggregated onto the scene grid (91.6 km² usable in 0–20 m). The QGIS gate
+**overturned the waterline co-registration**: against NSW Spatial Services
+orthoimagery, on land, the image is offset **~7–8 m (E −6.5, N −3.5)**, not
+21.6 m. `reference.tif` currently carries the wrong shift — do not build on
+it. Next: co-registration against reference orthoimagery (plan below), then
+the tide at overpass.
 **Updated:** 27 Sep 2026 · **Repo:** `sdbNSW`
 **Portfolio slot:** replaces *Revealing the Ancient Murray via REM*.
 
@@ -117,7 +119,7 @@ Report, per site:
 | Reference horizontal | 5 m + 5% depth ≈ 5.5 m | Sub-pixel at 10 m S2 |
 | Expected SDB error | 1.3–2.2 m clear water; unknown here | The quantity being measured |
 | Water level correction | Not yet measured. Image implies ~−0.45 m AHD at overpass vs 0 m assumed | Scalar offset. Now the leading open term |
-| **Co-registration** | 21.6 m before correction; after: ±2.9 m E, ±5.8 m N (1σ) | On a 1:10 seabed slope 5 m of misregistration is 0.5 m of depth. North is weakest; re-estimate once the tide is known |
+| **Co-registration** | ~7–8 m before correction (land features vs NSW orthoimagery); ±~2 m after, pending the orthoimagery-based `coreg` | On a 1:10 seabed slope 5 m of misregistration is 0.5 m of depth. The waterline method's 21.6 m was biased — see register |
 | Sub-pixel relief | Median 0.01–0.09 m, p90 ≤ 0.24 m by depth band | Std of the 5 m cells inside each 10 m pixel. Minor except on reef edges; kept for stratification |
 | **Seabed change 2018→scene** | **The real constraint** | See below |
 
@@ -236,6 +238,10 @@ defensible piece of work.
 | 27 Sep | Cross-check agreement rule: per component within max(3 m, 2 × steep-shore stderr) | Conventional 2σ with a floor. Codified *after* an exploratory all-shore run on this scene, so not blind — but not tuned: the scene passes by a wide margin (E 1.5 of 5.8 m, N 5.8 of 11.6 m) |
 | 27 Sep | Why steep shores only — **shown, not argued**: synthetic island, true shift 8.4 m, tide assumed 0.6 m too high | Steep-only estimate 0.7 m out. All-shore estimate 5.0 m out *and called the shift negligible* — the tide error on beaches nearly hid a real misregistration. Pinned in `tests/test_coreg.py` |
 | 27 Sep | **The tide was below 0 m AHD at overpass.** The image prefers a water level of **~−0.45 m AHD** (all-shore correlation peaks there, with or without the shift), and 73% of 0–1 m pixels read bright in NIR at 0 m whatever the shift | Prediction for `waterlevel.py`: the gauge should read about **−0.3 to −0.5 m AHD** at 00:02 UTC 7 Sep 2018 — NIR sees through the first ~0.2 m of water, so the image estimate is biased slightly low |
+| 27 Sep | **QGIS gate: the 21.6 m co-registration is wrong. Superseded.** Screenshot pairs at identical extents, cross-correlated here (four preprocessing variants each). Airfield: S2 − NSW Imagery **E +7.0, N +3.7 m**; S2 − ESRI E +9.0, N +3.0; ESRI − NSW −1.3 to −2.4 E, ~+0.5 N — the three close. Huskisson (noisier, roofs): S2 − NSW E +4.6 to +8.2, N +1.1 to +5.2; ESRI − NSW ≈ −2 m again | True misregistration ≈ **E −6.5, N −3.5 m (≈ 7–8 m, ±~2 m)** — within ESA's 12 m (95%). NSW Imagery is authoritative but may be served with GDA94 treated as WGS84, a ~1.5 m ambiguity; ESRI agrees with it to ~2 m. The shift applied to `reference.tif` (−18.47, −11.11) is ~14 m wrong — worse than none. Nothing downstream used it |
+| 27 Sep | **Why the waterline method failed: its biases all pointed east in this scene** | West-facing cliffs are in shadow under a north-easterly sun, so their image edge reads landward (east). East-facing ocean cliffs carry whitewater at the base, so their edge reads seaward (east). The bay's long beaches mostly face east, so a low tide and NIR seeing through the first ~0.2 m of water push their edge seaward (east). Different mechanisms, one direction. The QGIS view shows the shadow band directly |
+| 27 Sep | **Lesson: agreement between two estimators that share a signal is not independence** | Steep-shore and all-shore estimates agreed (−18.5 vs −17.0 E) and I treated that as confirmation. Both read the same water edge and inherited the same biases. The test that caught it used a different signal entirely — land features against an independent orthophoto. The gate worked because it was a different kind of check, not a second opinion from the same kind |
+| 27 Sep | **Proposed: co-register against reference orthoimagery, on land**, with the waterline method demoted to a diagnostic | Fetch NSW Imagery windows through its public ArcGIS REST `export` endpoint directly in EPSG:32756; aggregate to 10 m; sub-pixel phase correlation against S2 over several land windows spread across the scene (runways, roads, clearings, towns); median shift, window scatter as the error bar. Licence to be confirmed before use. **Awaiting approval** |
 | 27 Sep | Glint geometry: closed form `cos(2ω)=…` **replaced** with the vector derivation | The closed form is wrong off the principal plane (~0.8° at θs=20°, θv=30°, Δφ=90°). Immaterial at S2's near-nadir view, but wrong. Pinned by a grid test against an independent derivation |
 
 ## Sources
