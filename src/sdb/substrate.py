@@ -170,12 +170,18 @@ def main(argv: Sequence[str] | None = None) -> int:
                    help=f"GeoPackage of substrate layers (default <root>/{DEFAULT_GPKG})")
     p.add_argument("--boot", type=int, default=N_BOOT)
     p.add_argument("--no-figures", action="store_true")
+    p.add_argument("--tag", default=None,
+                   help="exploratory variant name, e.g. rule95: reads sdb_<tag>.tif and writes to "
+                        "<out>/exploratory/")
     a = p.parse_args(argv)
+    tag = f"_{a.tag}" if a.tag else ""
+    res_dir = a.out / "exploratory" if a.tag else a.out
 
     gpkg = a.substrate or a.root / DEFAULT_GPKG
     scene_dir = a.root / "data" / "raw" / "scenes" / a.scene
     rpath = a.out / f"reference_{a.scene}.json"
-    for need in (gpkg, rpath, scene_dir / "sdb.tif"):
+    resid_path = scene_dir / f"sdb{tag}.tif"
+    for need in (gpkg, rpath, resid_path):
         if not need.exists():
             print(f"missing {need}", file=sys.stderr)
             return 2
@@ -184,7 +190,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     shift = tuple(float(v) for v in (rrec.get("coregistration") or {}).get("shift_applied_m", (0, 0)))
     site_cfg = yaml.safe_load(a.config.read_text(encoding="utf-8"))["sites"][a.site]
 
-    with rasterio.open(scene_dir / "sdb.tif") as s:
+    with rasterio.open(resid_path) as s:
         resid = s.read(2).astype(np.float64)
         grid = Grid.from_transform(s.transform, s.shape)
         crs = s.crs
@@ -249,13 +255,16 @@ def main(argv: Sequence[str] | None = None) -> int:
     layers = {"class_majority": cls[MAJORITY].astype(np.float32),
               "class_core": cls[CORE].astype(np.float32),
               "seagrass_frac": frac["seagrass_any"], "reef_frac": frac["reef"]}
-    write_layers(scene_dir / "substrate.tif", layers, grid, crs, tuple(layers))
+    if not a.tag:                        # the classes do not depend on the residuals
+        write_layers(scene_dir / "substrate.tif", layers, grid, crs, tuple(layers))
     record = {
         "scene": a.scene,
         "addendum": "PROJECT_BRIEF.md, Substrate addendum (pre-registered 27 Sep 2026)",
         "addendum_commit": _git_commit(a.root, "PROJECT_BRIEF.md", ADDENDUM_MARKER),
         "substrate": {"path": str(gpkg), "md5": md5(gpkg)},
-        "residuals": {"path": str(scene_dir / "sdb.tif"), "md5": md5(scene_dir / "sdb.tif")},
+        "residuals": {"path": str(resid_path), "md5": md5(resid_path)},
+        "exploratory": ({"name": a.tag, "status": "EXPLORATORY: residuals from an exploratory "
+                         "variant of validate.py; not confirmatory"} if a.tag else None),
         "water_level_m_ahd": wl, "coregistration_shift_m": list(shift),
         "classes": list(CLASSES), "reference_class": CLASSES[REFERENCE],
         "rules": {"majority": MAJORITY, "core": CORE, "trace": TRACE, "supersample_m": grid.dx / SUPERSAMPLE,
@@ -270,12 +279,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     if not a.no_figures:
         from sdb import viz
 
-        figs = [viz.substrate_contrasts(a.out / "figures" / f"substrate_{a.scene}_bias_vs_sediment.png",
+        figs = [viz.substrate_contrasts(res_dir / "figures" / f"substrate_{a.scene}{tag}_bias_vs_sediment.png",
                                         record_rules[f"threshold_{MAJORITY:g}"]["vs_reference_inside_bay"],
                                         COMPARED, band_names)]
     record["figures"] = [str(f) for f in figs]
-    a.out.mkdir(parents=True, exist_ok=True)
-    jpath = a.out / f"substrate_{a.scene}.json"
+    res_dir.mkdir(parents=True, exist_ok=True)
+    jpath = res_dir / f"substrate_{a.scene}{tag}.json"
     jpath.write_text(json.dumps(_r(record), indent=2), encoding="utf-8")
 
     print(f"\n  inside the bay, bias vs '{CLASSES[REFERENCE]}' (majority rule; core rule in brackets):")
@@ -292,7 +301,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         if "bias_diff" in c:
             b = c["bias_diff"]
             print(f"    {c['band_m']:>6} m  {b['point']:+.2f} m [{b['lo']:+.2f}, {b['hi']:+.2f}]")
-    print(f"\n  record -> {jpath}\n  layers -> {scene_dir / 'substrate.tif'}")
+    print(f"\n  record -> {jpath}" + ("" if a.tag else f"\n  layers -> {scene_dir / 'substrate.tif'}"))
     return 0
 
 

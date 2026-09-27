@@ -163,3 +163,14 @@ def test_a_constant_water_level_error_moves_only_the_intercept():
     np.testing.assert_allclose(predict(r, m1b, m0b) - (d + delta), predict(r, m1, m0) - d, atol=1e-9)
     # ...and the bathymetry in AHD, z = WL - depth, is identical
     np.testing.assert_allclose((wl + delta) - predict(r, m1b, m0b), wl - predict(r, m1, m0), atol=1e-9)
+
+
+def test_exploratory_rule95_drops_the_rises_throughout_exception():
+    """EXPLORATORY variant: a steady rise reaches 95% one bin early; plateaus are unchanged."""
+    d = _depths()
+    d_cal, info = saturation_depth(d, 1 + 0.02 * d, rises_throughout_exception=False)
+    assert d_cal == 19.0 and info["rule"] == "95% of rise"
+    plateau = 1 + 0.02 * np.minimum(d, 12)
+    assert saturation_depth(d, plateau, rises_throughout_exception=False)[0] == 12.0
+    cal = calibrate(d, 1 + 0.02 * d, np.random.default_rng(0), rises_throughout_exception=False)
+    assert cal.d_cal == 19.0

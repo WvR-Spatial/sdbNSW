@@ -132,12 +132,16 @@ def running_median(values: np.ndarray, width: int = SMOOTH_BINS) -> np.ndarray:
 
 def saturation_depth(depth: np.ndarray, ratio: np.ndarray, *, bin_m: float = BIN_M,
                      max_depth: float = MAX_DEPTH_M, min_count: int = MIN_BIN_COUNT,
-                     rise_fraction: float = RISE_FRACTION) -> tuple[float, dict]:
+                     rise_fraction: float = RISE_FRACTION,
+                     rises_throughout_exception: bool = True) -> tuple[float, dict]:
     """D_cal: where the smoothed median ratio stops rising (see module docstring).
 
     Returns (d_cal, info). info["degenerate"] is True when the ratio never rises
     above its shallowest bin -- no usable depth signal -- in which case d_cal is
     the upper edge of the shallowest bin.
+
+    rises_throughout_exception=False drops the protocol's second sentence and
+    applies the 95% rule everywhere. EXPLORATORY only -- the registered rule is True.
     """
     med, counts = binned_medians(depth, ratio, bin_m=bin_m, max_depth=max_depth,
                                  min_count=min_count)
@@ -152,7 +156,7 @@ def saturation_depth(depth: np.ndarray, ratio: np.ndarray, *, bin_m: float = BIN
     if kp <= k0 or s[kp] <= s[k0]:
         info.update(degenerate=True, rule="no rise")
         return (k0 + 1) * bin_m, info
-    if kp == int(fin[-1]):
+    if rises_throughout_exception and kp == int(fin[-1]):
         # The protocol's exception, as written: peak in the deepest bin = the
         # ratio "rises throughout", so the whole range is used.
         info["rule"] = "rises throughout"
@@ -200,14 +204,15 @@ class Calibration:
 def calibrate(depth: np.ndarray, ratio: np.ndarray, rng: np.random.Generator, *,
               bin_m: float = BIN_M, max_depth: float = MAX_DEPTH_M,
               min_count: int = MIN_BIN_COUNT, rise_fraction: float = RISE_FRACTION,
-              cap: int = PER_BIN_CAP) -> Calibration:
-    """The whole pre-registered rule on one training set."""
+              cap: int = PER_BIN_CAP, rises_throughout_exception: bool = True) -> Calibration:
+    """The whole pre-registered rule on one training set (exception off = exploratory)."""
     d = np.asarray(depth, dtype=np.float64)
     r = np.asarray(ratio, dtype=np.float64)
     ok = np.isfinite(d) & np.isfinite(r)
     d, r = d[ok], r[ok]
     d_cal, info = saturation_depth(d, r, bin_m=bin_m, max_depth=max_depth,
-                                   min_count=min_count, rise_fraction=rise_fraction)
+                                   min_count=min_count, rise_fraction=rise_fraction,
+                                   rises_throughout_exception=rises_throughout_exception)
     idx = balanced_sample(d, d_max=d_cal, rng=rng, bin_m=bin_m, cap=cap)
     m1, m0 = fit_linear(r[idx], d[idx])
     return Calibration(m1, m0, d_cal, int(idx.size), info["degenerate"], info)

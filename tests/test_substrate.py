@@ -150,3 +150,40 @@ def test_cli_refuses_without_the_substrate_file(tmp_path):
     (tmp_path / "outputs").mkdir()
     assert SB.main(["--scene", "S", "--root", str(tmp_path), "--out", str(tmp_path / "outputs"),
                     "--substrate", str(tmp_path / "nope.gpkg")]) == 2
+
+
+def test_cli_tag_reads_exploratory_residuals_and_writes_apart(tmp_path):
+    import geopandas as gpd
+    import yaml
+
+    from sdb.reference import write_layers
+
+    n, x0, y0 = 60, 300000.0, 6120000.0
+    g = Grid(x0, y0, 10.0, 10.0, n, n)
+    sd = tmp_path / "data" / "raw" / "scenes" / "S"
+    sd.mkdir(parents=True)
+    depth = np.full((n, n), 3.0)
+    resid = np.zeros((n, n))
+    resid[:40, :40] = 0.7
+    write_layers(sd / "reference.tif", {"z_mean": -0.5 - depth}, g, "EPSG:32756", ("z_mean",))
+    write_layers(sd / "sdb_rule95.tif", {"oof_depth": depth + resid, "residual": resid}, g,
+                 "EPSG:32756", ("oof_depth", "residual"))
+    box_ = box(x0, y0 - 400, x0 + 400, y0)
+    gpkg = tmp_path / "sub.gpkg"
+    gpd.GeoDataFrame({"Habitat": ["Seagrass"], "Macrophyte": ["Posidonia"]},
+                     geometry=[box_], crs=7856).to_file(gpkg, layer="macrophytes")
+    gpd.GeoDataFrame({"REEF": ["Unconsolidated"]}, geometry=[box(x0, y0 - 600, x0 + 600, y0)],
+                     crs=7856).to_file(gpkg, layer="reef_extent")
+    out = tmp_path / "outputs"
+    out.mkdir()
+    (out / "reference_S.json").write_text(json.dumps({"water_level_m_ahd": -0.5}))
+    cfg = tmp_path / "sites.yml"
+    cfg.write_text(yaml.safe_dump({"sites": {"t": {}}}))
+    assert SB.main(["--site", "t", "--config", str(cfg), "--scene", "S", "--root", str(tmp_path),
+                    "--out", str(out), "--substrate", str(gpkg), "--boot", "50",
+                    "--tag", "rule95"]) == 0
+    rec = json.loads((out / "exploratory" / "substrate_S_rule95.json").read_text())
+    assert rec["exploratory"]["name"] == "rule95"
+    comp = {(c["band_m"], c["class"]): c for c in rec["threshold_0.5"]["vs_reference_inside_bay"]}
+    assert comp[("2-5", "Posidonia")]["bias_diff"]["point"] == pytest.approx(0.7)
+    assert not (sd / "substrate.tif").exists() and not (out / "substrate_S.json").exists()

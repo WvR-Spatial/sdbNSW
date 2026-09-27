@@ -147,6 +147,41 @@ def residual_map(path: Path, resid_img: np.ndarray, grid: Any, block_m: float, t
     return path
 
 
+def ratio_depth_curve(path: Path, depth: np.ndarray, ratio: np.ndarray, inside: np.ndarray,
+                      lines: dict[str, tuple[float, float]], bin_m: float = 0.5) -> Path:
+    """Median Stumpf ratio (and interquartile band) by lidar depth, with fitted lines.
+
+    Shows the model's form directly: a straight line in depth against a curve
+    that flattens as the green signal from the seabed fades.
+    """
+    plt = _style()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    edges = np.arange(0, 20 + bin_m / 2, bin_m)
+    mid = (edges[:-1] + edges[1:]) / 2
+    fig, ax = plt.subplots(figsize=(7.0, 4.4), dpi=150)
+    for (name, sel), col in zip((("inside bay", inside), ("open coast", ~inside)), SERIES):
+        k = np.digitize(depth[sel], edges) - 1
+        rr = ratio[sel]
+        q = np.full((len(mid), 3), np.nan)
+        for i in range(len(mid)):
+            v = rr[k == i]
+            if v.size >= 200:
+                q[i] = np.percentile(v, [25, 50, 75])
+        ax.fill_between(mid, q[:, 0], q[:, 2], color=col, alpha=0.12, lw=0)
+        ax.plot(mid, q[:, 1], color=col, lw=1.6, label=f"{name}: median, IQR")
+        last = np.flatnonzero(np.isfinite(q[:, 1]))[-1]
+        ax.text(mid[last] + 0.3, q[last, 1], name, color=INK_2, fontsize=8, va="center")
+    for (name, (m1, m0)), ls in zip(lines.items(), ("-", "--", ":")):
+        ax.plot(edges, (edges + m0) / m1, color=INK_2, lw=1.0, ls=ls, label=f"line: {name}")
+    ax.set(xlim=(0, 23), xlabel="Lidar depth (m)", ylabel="Stumpf ratio ln(1000·blue) / ln(1000·green)",
+           title="Stumpf ratio against depth, and the calibrated lines")
+    ax.legend(loc="upper left", fontsize=7.5)
+    fig.tight_layout()
+    fig.savefig(path)
+    plt.close(fig)
+    return path
+
+
 def substrate_contrasts(path: Path, comps: list[dict[str, Any]], classes: Sequence[str],
                         bands: Sequence[str]) -> Path:
     """Small multiples: bias of each class minus sediment, by depth band, with 95% CIs."""

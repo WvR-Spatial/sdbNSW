@@ -14,8 +14,11 @@ is flat near 2 m RMSE to ~14 m, then climbs as the ratio saturates. SDB reads
 ~1 m too deep in 0–10 m. **Substrate (pre-registered addendum): reef reads
 ~1.7 m deeper than sediment at 5–20 m; seagrass makes little difference at
 2–10 m; and bare shallow sediment itself reads 2.2 m too deep** — so the
-shallow over-reading is mostly not substrate. Provisional water level; rerun
-when the gauge record arrives.
+shallow over-reading is mostly not substrate. **Exploratory follow-up:** the
+fitting-depth wording was immaterial (95%-only rule: RMSE 2.82 m); the bias
+pattern is regression toward the mean plus a ratio curve that bends, and bends
+differently on the open coast. Provisional water level; rerun when the gauge
+record arrives.
 **Updated:** 27 Sep 2026 · **Repo:** `sdbNSW`
 **Portfolio slot:** replaces *Revealing the Ancient Murray via REM*.
 
@@ -299,6 +302,42 @@ dark patches off the western shore that carry the largest over-reading are
 mapped reef, not seagrass. On the open coast, at depth, reef and sediment alike
 read 5–6 m too shallow — exposure and water clarity, not substrate.
 
+### Exploratory follow-up — not confirmatory (27 Sep 2026)
+
+Prompted by the registered results, so none of this is a finding in its own
+right. Outputs in `outputs/exploratory/`; the registered outputs are untouched.
+
+**E1 — calibration step 2 without the "rises throughout" exception**
+(`validate --exploratory rule95`). D_cal becomes 16–18 m (median 18) instead of
+20. Pooled RMSE **2.82 m** [2.38, 3.34] against the registered 2.70; bias −0.96
+(registered −0.41); depth-balanced RMSE 2.46 (2.48). Bias by band, 0–2 / 2–5 /
+5–10 / 10–15 / 15–20 m: +0.98 / +1.09 / +0.47 / −0.51 / −2.83 (registered +0.98 /
++1.23 / +0.82 / +0.12 / −2.10). Substrate contrasts move by 0.1 m or less
+(`substrate --tag rule95`). **The exception was not the cause of the shallow
+over-reading.** The drafting fault was immaterial; the registered result stands.
+
+**E2 — the ratio against depth** (`…_rule95_ratio_vs_depth.png`). Inside the
+bay the median ratio rises almost linearly to ~14 m, then flattens. On the open
+coast it flattens from ~8–10 m and lies on a lower curve (1.13 against 1.24 at
+20 m). A single site-wide line cannot follow both: that is the open coast's
+−5 to −6 m at depth.
+
+**E3 — regression toward the mean** (`scripts/calibration_form_check.py`,
+in-sample). The registered form regresses depth on a noisy ratio
+(r = 0.89), which pulls every prediction toward mid-depths — shallow water
+reads deep, deep water reads shallow — while staying close to unbiased *for a
+given predicted depth*: −0.23 / +0.60 / −0.15 m at predicted 0–2 / 2–5 / 5–10 m.
+Fitted the other way (ratio on depth, inverted) the pattern by lidar depth
+changes sign in the shallows and shrinks at depth (0–2 m +0.86 → −1.22;
+15–20 m −1.90 → −0.55), at the cost of pooled RMSE (2.68 → 3.02 m). What
+remains after that is the curve's bend.
+
+What it changes: the write-up reports error **both by lidar depth** (how the
+method behaves) **and by predicted depth** (what a map user gets) and explains
+why they differ. The larger structural problem is two water types under one
+line — a v2 question, to be pre-registered as such, not a v1 tweak. Still
+unexplained: bare shallow sediment reading 2.2 m deep in 0–2 m.
+
 ### Phase 2 result — Jervis Bay, 7 Sep 2018 (provisional water level −0.496 m AHD)
 
 The pre-registered run, unchanged. `outputs/sdb_S2A_56HKG_20180907_0_L2A.json`.
@@ -490,6 +529,7 @@ defensible piece of work.
 | 27 Sep | **Substrate layers fetched and checked** (via QGIS; 5,937 macrophyte, 1,671 reef-extent, 1,131 reef-source polygons in the lidar extent; `data/raw/substrate/provenance.json`). Alignment: *Posidonia* fringes and *Zostera* shoals in the southern bay, and the lidar reef outcrops off the western shore, match their image edges to about a pixel. Coverage inside the bay, usable pixels at ≥ 0.5: *Posidonia* 8,935 / 21,585 / 17,055 in 0–2 / 2–5 / 5–10 m; reef 39,306 across all depths; sediment with no seagrass mapped 711,336 | Two layers together explain the dark seabed visible in the image: the dark patches off Huskisson that the seagrass map lacks are lidar-mapped reef. Seagrass mapping stops at ~10 m. Open coast: no seagrass mapped, 45% reef. The custodian's service states CC BY 4.0 (an IMAS copy says CC BY-NC); the custodian's statement is used. The reef service's layer descriptions are copied from a Wollongong multibeam dataset — the per-polygon Source field is the reliable one |
 | 27 Sep | **Substrate comparison run once, as registered** (addendum committed in `73d02ce` first). Reef +1.7 m at 5–20 m; *Posidonia* ~0 at 2–10 m; 0–2 m reversed | The pre-stated direction held for reef and failed for seagrass; reported as found. Correction to the Phase 2 reading above: I attributed the shallow over-reading to "where seagrass is expected". The overlay shows those patches are reef, and bare sediment over-reads on its own — the likelier source is the calibration (a straight line through a saturating relationship, fitted to 20 m in 46 of 50 folds) and shallow bright-bottom effects |
 | 27 Sep | **Next diagnostics are exploratory, and labelled so**: (1) the calibration with the 95% rule alone, no "rises throughout" exception; (2) shallow sediment over-reading against distance to shore and bottom brightness | Both were prompted by these results, so neither can be confirmatory. Each is reported beside the registered result, never in place of it |
+| 27 Sep | **Exploratory E1–E3 run** (details under *Exploratory follow-up*). The 95%-only rule does slightly worse (RMSE 2.82 vs 2.70 m) and leaves the shallow bias in place | The drafting fault in step 2 is closed as immaterial — the registered rule stays. The bias pattern is explained by the calibration's form: depth regressed on a noisy ratio regresses toward the mean, and the ratio curve bends at ~14 m in the bay and ~8–10 m on the open coast. `validate --exploratory` and `substrate --tag` write only to `outputs/exploratory/`, so a variant can never overwrite a registered output |
 
 ## Sources
 

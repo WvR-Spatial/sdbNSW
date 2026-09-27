@@ -109,6 +109,22 @@ def stumpf_fit(ratio: np.ndarray, depth: np.ndarray, rng: np.random.Generator):
     return calibrate(depth, ratio, rng)
 
 
+def stumpf_fit_rule95(ratio: np.ndarray, depth: np.ndarray, rng: np.random.Generator):
+    """EXPLORATORY: the 95% rule alone, without the 'rises throughout' exception."""
+    return calibrate(depth, ratio, rng, rises_throughout_exception=False)
+
+
+#: Exploratory variants: prompted by the registered result, so never confirmatory.
+#: Each writes to <out>/exploratory/ and never touches the registered outputs.
+EXPLORATORY = {
+    "rule95": {"fit": stumpf_fit_rule95,
+               "what": "calibration step 2 applied as the 95%-of-rise rule alone, without the "
+                       "'20 m if it rises throughout' exception",
+               "why": "the exception set D_cal = 20 m in 46 of 50 registered folds while the error "
+                      "curve showed saturation from ~14 m"},
+}
+
+
 # --------------------------------------------------------------------------
 # Statistics
 # --------------------------------------------------------------------------
@@ -300,7 +316,8 @@ def inside_polygon(x: np.ndarray, y: np.ndarray, polygon: Sequence[Sequence[floa
 
 
 def repeated_cv(depth: np.ndarray, ratio: np.ndarray, rows: np.ndarray, cols: np.ndarray, *,
-                block_m: float, pixel_m: float, folds: int, repeats: int) -> dict[str, Any]:
+                block_m: float, pixel_m: float, folds: int, repeats: int,
+                fit: Callable = stumpf_fit) -> dict[str, Any]:
     """Repeated k-fold CV. block_m = 0 means a random pixel-level split."""
     preds, cals = [], []
     for rep in range(repeats):
@@ -310,7 +327,7 @@ def repeated_cv(depth: np.ndarray, ratio: np.ndarray, rows: np.ndarray, cols: np
                                folds, frng)
         else:
             fold = random_folds(depth.size, folds, frng)
-        p, models = cross_validate(ratio, depth, fold, stumpf_fit,
+        p, models = cross_validate(ratio, depth, fold, fit,
                                    np.random.default_rng(CAL_SEED + rep))
         preds.append(p.astype(np.float32))
         cals += [dict(repeat=rep, fold=i, **m.summary()) for i, m in enumerate(models)]
@@ -369,13 +386,21 @@ def main(argv: Sequence[str] | None = None) -> int:
     p.add_argument("--curve-blocks", default=",".join(f"{b:g}" for b in BLOCK_CURVE_M),
                    help="block sizes (m) for the block-size curve; 0 = random split")
     p.add_argument("--no-figures", action="store_true")
+    p.add_argument("--exploratory", choices=sorted(EXPLORATORY), default=None,
+                   help="run a labelled exploratory variant; outputs go to <out>/exploratory/")
     a = p.parse_args(argv)
+    variant = EXPLORATORY.get(a.exploratory)
+    fit = variant["fit"] if variant else stumpf_fit
+    tag = f"_{a.exploratory}" if variant else ""
+    res_dir = a.out / "exploratory" if variant else a.out
 
     curve_blocks = tuple(float(v) for v in a.curve_blocks.split(",") if v.strip())
     deviations = [f"{nm}={got} (protocol {want})" for nm, got, want in (
         ("repeats", a.repeats, N_REPEATS), ("folds", a.folds, N_FOLDS),
         ("block_m", a.block_m, BLOCK_M), ("boot", a.boot, N_BOOT),
         ("curve_blocks", curve_blocks, BLOCK_CURVE_M)) if got != want]
+    if variant:
+        deviations.append(f"EXPLORATORY '{a.exploratory}': {variant['what']}")
 
     site_cfg = yaml.safe_load(a.config.read_text(encoding="utf-8"))["sites"][a.site]
     scene_dir = a.root / "data" / "raw" / "scenes" / a.scene
@@ -414,15 +439,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     runs: dict[float, dict] = {}
     for bm in dict.fromkeys((a.block_m, 0.0) + curve_blocks):
         runs[bm] = repeated_cv(d, r, rows, cols, block_m=bm, pixel_m=pixel_m,
-                               folds=a.folds, repeats=a.repeats)
-        tag = "random" if bm == 0 else f"{bm / 1000:g} km"
+                               folds=a.folds, repeats=a.repeats, fit=fit)
+        label = "random" if bm == 0 else f"{bm / 1000:g} km"
         rr = runs[bm]["per_repeat_rmse"]
-        print(f"  CV {tag:>8}: pooled RMSE {np.mean(rr):.3f} m (repeats {min(rr):.3f}-{max(rr):.3f})")
+        print(f"  CV {label:>8}: pooled RMSE {np.mean(rr):.3f} m (repeats {min(rr):.3f}-{max(rr):.3f})")
     prim, naive = runs[a.block_m], runs[0.0]
     pred = prim["pred"]
     err = pred - d
 
-    final = calibrate(d, r, np.random.default_rng(FINAL_SEED))
+    final = fit(r, d, np.random.default_rng(FINAL_SEED))
 
     # --- statistics --------------------------------------------------------
     brng = np.random.default_rng(BOOT_SEED)
@@ -484,6 +509,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         "protocol": "PROJECT_BRIEF.md, Phase 2 protocol (pre-registered 27 Sep 2026)",
         "protocol_commit": _git_commit(a.root, "PROJECT_BRIEF.md"),
         "deviations": deviations,
+        "exploratory": ({"name": a.exploratory, "what": variant["what"], "why": variant["why"],
+                         "status": "EXPLORATORY: prompted by the registered result; not confirmatory. "
+                                   "Report beside the registered result, never instead of it"}
+                        if variant else None),
         "inputs": {n: {"path": str(scene_dir / n), "md5": md5(scene_dir / n)}
                    for n in ("reflectance.tif", "reference.tif", "mask.tif")},
         "water_level_m_ahd": wl, "water_level_source": rrec.get("water_level_source"),
@@ -525,21 +554,31 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     oof = np.full(flags.shape, np.nan)
     oof[rows, cols] = pred
-    write_layers(scene_dir / "sdb.tif", {"oof_depth": oof, "residual": resid_img}, grid, crs,
+    raster = scene_dir / f"sdb{tag}.tif"
+    write_layers(raster, {"oof_depth": oof, "residual": resid_img}, grid, crs,
                  ("oof_depth", "residual"))
-    a.out.mkdir(parents=True, exist_ok=True)
+    res_dir.mkdir(parents=True, exist_ok=True)
     figs = []
     if not a.no_figures:
         from sdb import viz
 
-        fdir = a.out / "figures"
-        figs = viz.phase2_figures(fdir, a.scene, depth=d, pred=pred, curve=curve,
+        fdir = res_dir / "figures"
+        figs = viz.phase2_figures(fdir, a.scene + tag, depth=d, pred=pred, curve=curve,
                                   breakdown=breakdown, resid_img=resid_img, grid=grid,
                                   block_m=a.block_m, pooled=pooled,
                                   polygon=poly["polygon"] if poly else None)
+        if variant:
+            lines = {f"{a.exploratory} (all data)": (final.m1, final.m0)}
+            reg = a.out / f"sdb_{a.scene}.json"
+            if reg.exists():
+                rc = json.loads(reg.read_text(encoding="utf-8"))["all_data_calibration"]
+                lines = {"registered (all data)": (rc["m1"], rc["m0"]), **lines}
+            figs.append(viz.ratio_depth_curve(
+                fdir / f"sdb_{a.scene}{tag}_ratio_vs_depth.png", d, r,
+                inside if inside is not None else np.ones(d.size, bool), lines))
     record["figures"] = [str(f) for f in figs]
-    record["outputs"] = [str(scene_dir / "sdb.tif")]
-    jpath = a.out / f"sdb_{a.scene}.json"
+    record["outputs"] = [str(raster)]
+    jpath = res_dir / f"sdb_{a.scene}{tag}.json"
     jpath.write_text(json.dumps(_r(record), indent=2), encoding="utf-8")
 
     c = ci
@@ -567,7 +606,7 @@ def main(argv: Sequence[str] | None = None) -> int:
           f"{'beyond the largest lag' if crange is None else f'{crange:g} m'}"
           f"{'  -> EXCEEDS the block size: caveat applies' if record['range_exceeds_block'] else ''}")
     print(f"  gate (pooled RMSE < {GATE_RMSE_M:g} m): {gate.upper()}")
-    print(f"\n  record -> {jpath}\n  layers -> {scene_dir / 'sdb.tif'}")
+    print(f"\n  record -> {jpath}\n  layers -> {raster}")
     return 0
 
 

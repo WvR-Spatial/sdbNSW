@@ -129,7 +129,7 @@ and records any departure as a deviation.
 rule), `src/sdb/validate.py` (blocked cross-validation, statistics, breakdown
 depth, CLI), `src/sdb/viz.py` (figures). Tests: `tests/test_sdb.py`,
 `tests/test_validate.py` — including the water-level invariance and a leakage
-demonstration. **219 tests** with `tests/test_substrate.py`.
+demonstration. **222 tests** with `tests/test_substrate.py`.
 
 **→ YOU** —
 
@@ -188,6 +188,19 @@ python -m sdb.substrate --scene S2A_56HKG_20180907_0_L2A
 +1.66 (5–10), +1.70 (10–15), +1.66 (15–20). Writes
 `outputs/substrate_<scene>.json`, one figure, and `substrate.tif` beside the
 scene. Commit the JSON and figure.
+
+**Exploratory follow-up** (labelled, never replaces a registered result;
+writes only to `outputs/exploratory/`):
+
+```
+python -m sdb.validate --scene S2A_56HKG_20180907_0_L2A --exploratory rule95
+python -m sdb.substrate --scene S2A_56HKG_20180907_0_L2A --tag rule95
+python scripts\calibration_form_check.py --scene S2A_56HKG_20180907_0_L2A
+```
+
+Expected: pooled RMSE 2.82 m, D_cal 16–18 m; substrate contrasts within 0.1 m
+of the registered ones; the script prints slopes 49.4 vs 62.2 and pooled RMSE
+2.68 vs 3.02 m.
 
 **→ YOU** — read the output and decide whether you believe it. The gap
 between the naive and blocked numbers is a result in its own right and

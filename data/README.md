@@ -100,6 +100,10 @@ the raster is not.
 `outputs/substrate_<item id>.json`), `seagrass_frac`, `reef_frac` — on the
 ground each pixel sees, i.e. with the co-registration shift applied.
 
+Exploratory variants (`validate --exploratory <name>`) write `sdb_<name>.tif`
+beside the scene and their records to `outputs/exploratory/`; they never
+overwrite `sdb.tif`.
+
 ### 4. Orthoimagery for co-registration  *(fetched automatically, never committed)*
 
 `coreg` fetches 2 km windows of NSW Imagery (Spatial Services) through its

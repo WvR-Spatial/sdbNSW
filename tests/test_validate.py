@@ -305,3 +305,19 @@ def test_protocol_commit_is_the_one_that_introduced_the_protocol(tmp_path):
     brief.write_text(brief.read_text() + "results\n")
     git("commit", "-qam", "results")
     assert V._git_commit(tmp_path, "PROJECT_BRIEF.md")["commit"] == first
+
+
+def test_exploratory_run_is_labelled_and_leaves_registered_outputs_alone(tmp_path):
+    cfg, out, sd = _scene(tmp_path)
+    rc = V.main(["--site", "t", "--config", str(cfg), "--scene", "S", "--root", str(tmp_path),
+                 "--out", str(out), "--block-m", "300", "--curve-blocks", "0,300",
+                 "--repeats", "2", "--boot", "50", "--exploratory", "rule95"])
+    assert rc == 0
+    rec = json.loads((out / "exploratory" / "sdb_S_rule95.json").read_text())
+    assert rec["exploratory"]["name"] == "rule95"
+    assert rec["exploratory"]["status"].startswith("EXPLORATORY")
+    assert any(dv.startswith("EXPLORATORY") for dv in rec["deviations"])
+    assert not (out / "sdb_S.json").exists() and not (sd / "sdb.tif").exists()
+    assert (sd / "sdb_rule95.tif").exists()
+    assert any(f.endswith("_ratio_vs_depth.png") for f in rec["figures"])
+    assert all(Path(f).exists() for f in rec["figures"])

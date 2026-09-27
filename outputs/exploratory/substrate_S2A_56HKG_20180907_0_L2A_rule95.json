@@ -1,0 +1,1920 @@
+{
+  "scene": "S2A_56HKG_20180907_0_L2A",
+  "addendum": "PROJECT_BRIEF.md, Substrate addendum (pre-registered 27 Sep 2026)",
+  "addendum_commit": {
+    "commit": "73d02ce1d598ffc385a3f364dd3a7553a6f47fb8",
+    "date": "2026-09-27T21:52:08+10:00"
+  },
+  "substrate": {
+    "path": "data\\raw\\substrate\\substrate_jervis_bay.gpkg",
+    "md5": "5658153d53d65eb92da796b505f50d7c"
+  },
+  "residuals": {
+    "path": "data\\raw\\scenes\\S2A_56HKG_20180907_0_L2A\\sdb_rule95.tif",
+    "md5": "8efee331d1c2ed2df84284fd6e1a9ba1"
+  },
+  "exploratory": {
+    "name": "rule95",
+    "status": "EXPLORATORY: residuals from an exploratory variant of validate.py; not confirmatory"
+  },
+  "water_level_m_ahd": -0.496,
+  "coregistration_shift_m": [
+    -7.42,
+    -1.02
+  ],
+  "classes": [
+    "Posidonia",
+    "Posidonia/Zostera",
+    "Zostera/Halophila",
+    "seagrass, mixed types",
+    "reef",
+    "sediment, no seagrass mapped",
+    "edge/mixed",
+    "not mapped"
+  ],
+  "reference_class": "sediment, no seagrass mapped",
+  "rules": {
+    "majority": 0.5,
+    "core": 0.9,
+    "trace": 0.1,
+    "supersample_m": 2.0,
+    "min_compare_px": 1000,
+    "boot": 1000,
+    "boot_seed": 13,
+    "block_m": 2000.0
+  },
+  "error_sign": "e = SDB - lidar; positive = SDB reads too deep",
+  "threshold_0.5": {
+    "errors_by_class": [
+      {
+        "region": "inside bay",
+        "band_m": "0-2",
+        "class": "Posidonia",
+        "n": 8935,
+        "bias": 0.3305,
+        "rmse": 1.3372,
+        "mae": 1.0638,
+        "median_abs": 0.8946,
+        "p95_abs": 2.6031,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "0-2",
+        "class": "Posidonia/Zostera",
+        "n": 232,
+        "bias": 0.7803,
+        "rmse": 1.3793,
+        "mae": 1.1382,
+        "median_abs": 1.028,
+        "p95_abs": 2.5709,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "0-2",
+        "class": "Zostera/Halophila",
+        "n": 187,
+        "bias": 0.518,
+        "rmse": 1.6478,
+        "mae": 1.2776,
+        "median_abs": 1.1179,
+        "p95_abs": 2.7297,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "0-2",
+        "class": "seagrass, mixed types",
+        "n": 10,
+        "bias": 0.324,
+        "rmse": 0.5604,
+        "mae": 0.4293,
+        "median_abs": 0.2953,
+        "p95_abs": 1.097,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "0-2",
+        "class": "reef",
+        "n": 3381,
+        "bias": 0.1772,
+        "rmse": 2.2632,
+        "mae": 1.7062,
+        "median_abs": 1.3772,
+        "p95_abs": 4.4679,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "0-2",
+        "class": "sediment, no seagrass mapped",
+        "n": 7229,
+        "bias": 2.1741,
+        "rmse": 2.3546,
+        "mae": 2.214,
+        "median_abs": 2.3846,
+        "p95_abs": 3.2051,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "0-2",
+        "class": "edge/mixed",
+        "n": 938,
+        "bias": 1.2465,
+        "rmse": 1.9392,
+        "mae": 1.6616,
+        "median_abs": 1.6631,
+        "p95_abs": 3.1687,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "0-2",
+        "class": "not mapped",
+        "n": 1590,
+        "bias": -0.1467,
+        "rmse": 1.9363,
+        "mae": 1.4159,
+        "median_abs": 1.0679,
+        "p95_abs": 4.5143,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "2-5",
+        "class": "Posidonia",
+        "n": 21585,
+        "bias": 1.2264,
+        "rmse": 1.7151,
+        "mae": 1.4041,
+        "median_abs": 1.2444,
+        "p95_abs": 3.2668,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "2-5",
+        "class": "Posidonia/Zostera",
+        "n": 3799,
+        "bias": 1.0981,
+        "rmse": 1.76,
+        "mae": 1.3873,
+        "median_abs": 1.1442,
+        "p95_abs": 3.5328,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "2-5",
+        "class": "Zostera/Halophila",
+        "n": 1100,
+        "bias": 2.037,
+        "rmse": 2.2787,
+        "mae": 2.067,
+        "median_abs": 2.0163,
+        "p95_abs": 3.7433,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "2-5",
+        "class": "seagrass, mixed types",
+        "n": 32,
+        "bias": 1.2451,
+        "rmse": 1.7099,
+        "mae": 1.3642,
+        "median_abs": 0.9896,
+        "p95_abs": 2.6283,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "2-5",
+        "class": "reef",
+        "n": 9222,
+        "bias": 1.1783,
+        "rmse": 2.6149,
+        "mae": 1.8592,
+        "median_abs": 1.4667,
+        "p95_abs": 4.8173,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "2-5",
+        "class": "sediment, no seagrass mapped",
+        "n": 14846,
+        "bias": 1.0177,
+        "rmse": 1.3703,
+        "mae": 1.1869,
+        "median_abs": 1.1746,
+        "p95_abs": 2.3338,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "2-5",
+        "class": "edge/mixed",
+        "n": 1599,
+        "bias": 0.9314,
+        "rmse": 1.5205,
+        "mae": 1.2207,
+        "median_abs": 1.0875,
+        "p95_abs": 2.5773,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "2-5",
+        "class": "not mapped",
+        "n": 155,
+        "bias": -1.0056,
+        "rmse": 1.5206,
+        "mae": 1.2285,
+        "median_abs": 1.0332,
+        "p95_abs": 2.884,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "5-10",
+        "class": "Posidonia",
+        "n": 17055,
+        "bias": 0.6082,
+        "rmse": 1.5615,
+        "mae": 1.2239,
+        "median_abs": 1.0137,
+        "p95_abs": 3.0687,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "5-10",
+        "class": "Posidonia/Zostera",
+        "n": 6837,
+        "bias": 1.2621,
+        "rmse": 1.9919,
+        "mae": 1.6123,
+        "median_abs": 1.3893,
+        "p95_abs": 3.7547,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "5-10",
+        "class": "Zostera/Halophila",
+        "n": 1260,
+        "bias": 1.2261,
+        "rmse": 1.6732,
+        "mae": 1.3632,
+        "median_abs": 1.2075,
+        "p95_abs": 3.1229,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "5-10",
+        "class": "seagrass, mixed types",
+        "n": 37,
+        "bias": 0.2581,
+        "rmse": 1.1225,
+        "mae": 0.949,
+        "median_abs": 0.8048,
+        "p95_abs": 1.9587,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "5-10",
+        "class": "reef",
+        "n": 13937,
+        "bias": 1.9924,
+        "rmse": 3.256,
+        "mae": 2.2445,
+        "median_abs": 1.7566,
+        "p95_abs": 5.7146,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "5-10",
+        "class": "sediment, no seagrass mapped",
+        "n": 122445,
+        "bias": 0.3968,
+        "rmse": 1.2055,
+        "mae": 0.9607,
+        "median_abs": 0.825,
+        "p95_abs": 2.3042,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "5-10",
+        "class": "edge/mixed",
+        "n": 5094,
+        "bias": 0.294,
+        "rmse": 1.4029,
+        "mae": 1.0666,
+        "median_abs": 0.8679,
+        "p95_abs": 2.7353,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "10-15",
+        "class": "Posidonia",
+        "n": 14,
+        "bias": -0.1309,
+        "rmse": 0.939,
+        "mae": 0.6436,
+        "median_abs": 0.3963,
+        "p95_abs": 2.143,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "10-15",
+        "class": "Posidonia/Zostera",
+        "n": 8,
+        "bias": -0.3444,
+        "rmse": 1.0456,
+        "mae": 0.9466,
+        "median_abs": 0.8976,
+        "p95_abs": 1.6499,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "10-15",
+        "class": "Zostera/Halophila",
+        "n": 588,
+        "bias": 0.4204,
+        "rmse": 1.4278,
+        "mae": 1.1266,
+        "median_abs": 0.9285,
+        "p95_abs": 2.6933,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "10-15",
+        "class": "reef",
+        "n": 8171,
+        "bias": 1.3647,
+        "rmse": 2.8086,
+        "mae": 2.0161,
+        "median_abs": 1.5874,
+        "p95_abs": 5.2731,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "10-15",
+        "class": "sediment, no seagrass mapped",
+        "n": 282370,
+        "bias": -0.2902,
+        "rmse": 1.6528,
+        "mae": 1.2802,
+        "median_abs": 1.032,
+        "p95_abs": 3.3307,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "10-15",
+        "class": "edge/mixed",
+        "n": 952,
+        "bias": 0.3886,
+        "rmse": 1.6748,
+        "mae": 1.2712,
+        "median_abs": 0.9794,
+        "p95_abs": 3.4594,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "15-20",
+        "class": "reef",
+        "n": 4595,
+        "bias": -0.8304,
+        "rmse": 3.0255,
+        "mae": 2.3712,
+        "median_abs": 2.0089,
+        "p95_abs": 5.7509,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "15-20",
+        "class": "sediment, no seagrass mapped",
+        "n": 284446,
+        "bias": -2.4022,
+        "rmse": 3.3242,
+        "mae": 2.7539,
+        "median_abs": 2.4982,
+        "p95_abs": 6.2046,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "15-20",
+        "class": "edge/mixed",
+        "n": 360,
+        "bias": -1.2525,
+        "rmse": 2.8075,
+        "mae": 2.2795,
+        "median_abs": 1.9886,
+        "p95_abs": 5.2525,
+        "r2": null
+      },
+      {
+        "region": "open coast",
+        "band_m": "0-2",
+        "class": "Posidonia/Zostera",
+        "n": 12,
+        "bias": 0.2284,
+        "rmse": 2.0343,
+        "mae": 1.4677,
+        "median_abs": 1.1793,
+        "p95_abs": 4.1212,
+        "r2": null
+      },
+      {
+        "region": "open coast",
+        "band_m": "0-2",
+        "class": "reef",
+        "n": 924,
+        "bias": 1.5086,
+        "rmse": 3.6055,
+        "mae": 1.9638,
+        "median_abs": 1.5038,
+        "p95_abs": 4.2023,
+        "r2": null
+      },
+      {
+        "region": "open coast",
+        "band_m": "0-2",
+        "class": "sediment, no seagrass mapped",
+        "n": 1641,
+        "bias": 1.6579,
+        "rmse": 1.8658,
+        "mae": 1.7099,
+        "median_abs": 1.8536,
+        "p95_abs": 2.7481,
+        "r2": null
+      },
+      {
+        "region": "open coast",
+        "band_m": "0-2",
+        "class": "edge/mixed",
+        "n": 46,
+        "bias": 1.1723,
+        "rmse": 1.4377,
+        "mae": 1.3115,
+        "median_abs": 1.2876,
+        "p95_abs": 2.1593,
+        "r2": null
+      },
+      {
+        "region": "open coast",
+        "band_m": "2-5",
+        "class": "Posidonia/Zostera",
+        "n": 32,
+        "bias": 0.9688,
+        "rmse": 1.7085,
+        "mae": 1.4762,
+        "median_abs": 1.5067,
+        "p95_abs": 2.8802,
+        "r2": null
+      },
+      {
+        "region": "open coast",
+        "band_m": "2-5",
+        "class": "reef",
+        "n": 5362,
+        "bias": 2.1372,
+        "rmse": 6.5668,
+        "mae": 2.3431,
+        "median_abs": 1.5039,
+        "p95_abs": 4.9034,
+        "r2": null
+      },
+      {
+        "region": "open coast",
+        "band_m": "2-5",
+        "class": "sediment, no seagrass mapped",
+        "n": 8959,
+        "bias": 0.1148,
+        "rmse": 0.8697,
+        "mae": 0.7081,
+        "median_abs": 0.617,
+        "p95_abs": 1.6714,
+        "r2": null
+      },
+      {
+        "region": "open coast",
+        "band_m": "2-5",
+        "class": "edge/mixed",
+        "n": 181,
+        "bias": 0.5886,
+        "rmse": 1.1195,
+        "mae": 0.8498,
+        "median_abs": 0.6664,
+        "p95_abs": 2.2196,
+        "r2": null
+      },
+      {
+        "region": "open coast",
+        "band_m": "5-10",
+        "class": "Posidonia/Zostera",
+        "n": 18,
+        "bias": 1.3615,
+        "rmse": 1.5036,
+        "mae": 1.3615,
+        "median_abs": 1.1577,
+        "p95_abs": 2.4137,
+        "r2": null
+      },
+      {
+        "region": "open coast",
+        "band_m": "5-10",
+        "class": "reef",
+        "n": 10305,
+        "bias": 1.024,
+        "rmse": 4.735,
+        "mae": 1.9371,
+        "median_abs": 1.2317,
+        "p95_abs": 4.7977,
+        "r2": null
+      },
+      {
+        "region": "open coast",
+        "band_m": "5-10",
+        "class": "sediment, no seagrass mapped",
+        "n": 16038,
+        "bias": -1.145,
+        "rmse": 1.4559,
+        "mae": 1.2273,
+        "median_abs": 1.141,
+        "p95_abs": 2.6371,
+        "r2": null
+      },
+      {
+        "region": "open coast",
+        "band_m": "5-10",
+        "class": "edge/mixed",
+        "n": 300,
+        "bias": -0.5341,
+        "rmse": 1.3668,
+        "mae": 1.0889,
+        "median_abs": 0.9315,
+        "p95_abs": 2.6296,
+        "r2": null
+      },
+      {
+        "region": "open coast",
+        "band_m": "10-15",
+        "class": "reef",
+        "n": 14757,
+        "bias": -2.1571,
+        "rmse": 4.1457,
+        "mae": 3.1031,
+        "median_abs": 2.8938,
+        "p95_abs": 6.2257,
+        "r2": null
+      },
+      {
+        "region": "open coast",
+        "band_m": "10-15",
+        "class": "sediment, no seagrass mapped",
+        "n": 18384,
+        "bias": -3.3955,
+        "rmse": 3.6788,
+        "mae": 3.3987,
+        "median_abs": 3.3015,
+        "p95_abs": 5.8829,
+        "r2": null
+      },
+      {
+        "region": "open coast",
+        "band_m": "10-15",
+        "class": "edge/mixed",
+        "n": 222,
+        "bias": -4.0575,
+        "rmse": 4.3652,
+        "mae": 4.0884,
+        "median_abs": 4.2508,
+        "p95_abs": 6.4214,
+        "r2": null
+      },
+      {
+        "region": "open coast",
+        "band_m": "15-20",
+        "class": "reef",
+        "n": 19546,
+        "bias": -5.8565,
+        "rmse": 6.6451,
+        "mae": 6.1168,
+        "median_abs": 6.3041,
+        "p95_abs": 10.0687,
+        "r2": null
+      },
+      {
+        "region": "open coast",
+        "band_m": "15-20",
+        "class": "sediment, no seagrass mapped",
+        "n": 17208,
+        "bias": -6.8174,
+        "rmse": 7.0625,
+        "mae": 6.8174,
+        "median_abs": 6.8061,
+        "p95_abs": 9.8652,
+        "r2": null
+      },
+      {
+        "region": "open coast",
+        "band_m": "15-20",
+        "class": "edge/mixed",
+        "n": 555,
+        "bias": -6.8532,
+        "rmse": 7.1267,
+        "mae": 6.8698,
+        "median_abs": 6.8872,
+        "p95_abs": 9.9121,
+        "r2": null
+      }
+    ],
+    "vs_reference_inside_bay": [
+      {
+        "band_m": "0-2",
+        "class": "Posidonia",
+        "n_class": 8935,
+        "n_reference": 7229,
+        "bias_diff": {
+          "point": -1.8436,
+          "lo": -2.1437,
+          "hi": -1.0779
+        },
+        "rmse_diff": {
+          "point": -1.0173,
+          "lo": -1.2359,
+          "hi": -0.5032
+        },
+        "n_blocks": 30
+      },
+      {
+        "band_m": "0-2",
+        "class": "Posidonia/Zostera",
+        "n_class": 232,
+        "n_reference": 7229,
+        "note": "not compared: fewer than 1000 pixels"
+      },
+      {
+        "band_m": "0-2",
+        "class": "Zostera/Halophila",
+        "n_class": 187,
+        "n_reference": 7229,
+        "note": "not compared: fewer than 1000 pixels"
+      },
+      {
+        "band_m": "0-2",
+        "class": "reef",
+        "n_class": 3381,
+        "n_reference": 7229,
+        "bias_diff": {
+          "point": -1.9968,
+          "lo": -2.5868,
+          "hi": -1.3876
+        },
+        "rmse_diff": {
+          "point": -0.0913,
+          "lo": -0.3855,
+          "hi": 0.1832
+        },
+        "n_blocks": 31
+      },
+      {
+        "band_m": "2-5",
+        "class": "Posidonia",
+        "n_class": 21585,
+        "n_reference": 14846,
+        "bias_diff": {
+          "point": 0.2087,
+          "lo": -0.0682,
+          "hi": 0.4858
+        },
+        "rmse_diff": {
+          "point": 0.3448,
+          "lo": 0.1383,
+          "hi": 0.5411
+        },
+        "n_blocks": 31
+      },
+      {
+        "band_m": "2-5",
+        "class": "Posidonia/Zostera",
+        "n_class": 3799,
+        "n_reference": 14846,
+        "bias_diff": {
+          "point": 0.0804,
+          "lo": -0.5187,
+          "hi": 0.7381
+        },
+        "rmse_diff": {
+          "point": 0.3896,
+          "lo": -0.168,
+          "hi": 0.8426
+        },
+        "n_blocks": 28
+      },
+      {
+        "band_m": "2-5",
+        "class": "Zostera/Halophila",
+        "n_class": 1100,
+        "n_reference": 14846,
+        "bias_diff": {
+          "point": 1.0193,
+          "lo": -1.2797,
+          "hi": 1.3044
+        },
+        "rmse_diff": {
+          "point": 0.9084,
+          "lo": -0.2265,
+          "hi": 1.1015
+        },
+        "n_blocks": 28
+      },
+      {
+        "band_m": "2-5",
+        "class": "reef",
+        "n_class": 9222,
+        "n_reference": 14846,
+        "bias_diff": {
+          "point": 0.1606,
+          "lo": -0.0759,
+          "hi": 0.4164
+        },
+        "rmse_diff": {
+          "point": 1.2446,
+          "lo": 0.7998,
+          "hi": 1.8734
+        },
+        "n_blocks": 31
+      },
+      {
+        "band_m": "5-10",
+        "class": "Posidonia",
+        "n_class": 17055,
+        "n_reference": 122445,
+        "bias_diff": {
+          "point": 0.2114,
+          "lo": -0.141,
+          "hi": 0.9123
+        },
+        "rmse_diff": {
+          "point": 0.356,
+          "lo": 0.1412,
+          "hi": 0.7852
+        },
+        "n_blocks": 27
+      },
+      {
+        "band_m": "5-10",
+        "class": "Posidonia/Zostera",
+        "n_class": 6837,
+        "n_reference": 122445,
+        "bias_diff": {
+          "point": 0.8653,
+          "lo": -0.175,
+          "hi": 1.5898
+        },
+        "rmse_diff": {
+          "point": 0.7864,
+          "lo": -0.0021,
+          "hi": 1.1896
+        },
+        "n_blocks": 27
+      },
+      {
+        "band_m": "5-10",
+        "class": "Zostera/Halophila",
+        "n_class": 1260,
+        "n_reference": 122445,
+        "bias_diff": {
+          "point": 0.8293,
+          "lo": -0.8041,
+          "hi": 1.2284
+        },
+        "rmse_diff": {
+          "point": 0.4676,
+          "lo": -0.4179,
+          "hi": 0.725
+        },
+        "n_blocks": 27
+      },
+      {
+        "band_m": "5-10",
+        "class": "reef",
+        "n_class": 13937,
+        "n_reference": 122445,
+        "bias_diff": {
+          "point": 1.5956,
+          "lo": 1.1855,
+          "hi": 2.0532
+        },
+        "rmse_diff": {
+          "point": 2.0504,
+          "lo": 1.3011,
+          "hi": 3.1083
+        },
+        "n_blocks": 27
+      },
+      {
+        "band_m": "10-15",
+        "class": "Posidonia",
+        "n_class": 14,
+        "n_reference": 282370,
+        "note": "not compared: fewer than 1000 pixels"
+      },
+      {
+        "band_m": "10-15",
+        "class": "Posidonia/Zostera",
+        "n_class": 8,
+        "n_reference": 282370,
+        "note": "not compared: fewer than 1000 pixels"
+      },
+      {
+        "band_m": "10-15",
+        "class": "Zostera/Halophila",
+        "n_class": 588,
+        "n_reference": 282370,
+        "note": "not compared: fewer than 1000 pixels"
+      },
+      {
+        "band_m": "10-15",
+        "class": "reef",
+        "n_class": 8171,
+        "n_reference": 282370,
+        "bias_diff": {
+          "point": 1.655,
+          "lo": 1.1232,
+          "hi": 2.606
+        },
+        "rmse_diff": {
+          "point": 1.1558,
+          "lo": 0.4884,
+          "hi": 2.8337
+        },
+        "n_blocks": 31
+      },
+      {
+        "band_m": "15-20",
+        "class": "Posidonia",
+        "n_class": 0,
+        "n_reference": 284446,
+        "note": "not compared: fewer than 1000 pixels"
+      },
+      {
+        "band_m": "15-20",
+        "class": "Posidonia/Zostera",
+        "n_class": 0,
+        "n_reference": 284446,
+        "note": "not compared: fewer than 1000 pixels"
+      },
+      {
+        "band_m": "15-20",
+        "class": "Zostera/Halophila",
+        "n_class": 0,
+        "n_reference": 284446,
+        "note": "not compared: fewer than 1000 pixels"
+      },
+      {
+        "band_m": "15-20",
+        "class": "reef",
+        "n_class": 4595,
+        "n_reference": 284446,
+        "bias_diff": {
+          "point": 1.5717,
+          "lo": 0.5621,
+          "hi": 3.1084
+        },
+        "rmse_diff": {
+          "point": -0.2987,
+          "lo": -0.9048,
+          "hi": 0.4824
+        },
+        "n_blocks": 23
+      }
+    ],
+    "reef_open_minus_inside": [
+      {
+        "band_m": "0-2",
+        "n_open": 924,
+        "n_inside": 3381,
+        "note": "not compared: fewer than 1000 pixels"
+      },
+      {
+        "band_m": "2-5",
+        "n_open": 5362,
+        "n_inside": 9222,
+        "bias_diff": {
+          "point": 0.9589,
+          "lo": 0.2826,
+          "hi": 2.7246
+        },
+        "rmse_diff": {
+          "point": 3.9519,
+          "lo": 0.1039,
+          "hi": 9.3829
+        },
+        "n_blocks": 46
+      },
+      {
+        "band_m": "5-10",
+        "n_open": 10305,
+        "n_inside": 13937,
+        "bias_diff": {
+          "point": -0.9684,
+          "lo": -1.694,
+          "hi": 0.1803
+        },
+        "rmse_diff": {
+          "point": 1.4791,
+          "lo": -0.9358,
+          "hi": 4.2681
+        },
+        "n_blocks": 44
+      },
+      {
+        "band_m": "10-15",
+        "n_open": 14757,
+        "n_inside": 8171,
+        "bias_diff": {
+          "point": -3.5219,
+          "lo": -4.7185,
+          "hi": -1.9243
+        },
+        "rmse_diff": {
+          "point": 1.3371,
+          "lo": -0.4747,
+          "hi": 2.8113
+        },
+        "n_blocks": 32
+      },
+      {
+        "band_m": "15-20",
+        "n_open": 19546,
+        "n_inside": 4595,
+        "bias_diff": {
+          "point": -5.0261,
+          "lo": -6.7079,
+          "hi": -3.039
+        },
+        "rmse_diff": {
+          "point": 3.6196,
+          "lo": 2.4528,
+          "hi": 4.2852
+        },
+        "n_blocks": 25
+      }
+    ]
+  },
+  "threshold_0.9": {
+    "errors_by_class": [
+      {
+        "region": "inside bay",
+        "band_m": "0-2",
+        "class": "Posidonia",
+        "n": 7870,
+        "bias": 0.2097,
+        "rmse": 1.2658,
+        "mae": 1.0041,
+        "median_abs": 0.8483,
+        "p95_abs": 2.4495,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "0-2",
+        "class": "Posidonia/Zostera",
+        "n": 138,
+        "bias": 0.8156,
+        "rmse": 1.2316,
+        "mae": 1.0451,
+        "median_abs": 1.0004,
+        "p95_abs": 2.1153,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "0-2",
+        "class": "Zostera/Halophila",
+        "n": 106,
+        "bias": 0.5761,
+        "rmse": 1.5669,
+        "mae": 1.3277,
+        "median_abs": 1.2243,
+        "p95_abs": 2.7299,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "0-2",
+        "class": "seagrass, mixed types",
+        "n": 114,
+        "bias": 0.5598,
+        "rmse": 1.3298,
+        "mae": 1.0642,
+        "median_abs": 0.9598,
+        "p95_abs": 2.6994,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "0-2",
+        "class": "reef",
+        "n": 3246,
+        "bias": 0.1218,
+        "rmse": 2.2797,
+        "mae": 1.7123,
+        "median_abs": 1.3685,
+        "p95_abs": 4.5451,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "0-2",
+        "class": "sediment, no seagrass mapped",
+        "n": 7229,
+        "bias": 2.1741,
+        "rmse": 2.3546,
+        "mae": 2.214,
+        "median_abs": 2.3846,
+        "p95_abs": 3.2051,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "0-2",
+        "class": "edge/mixed",
+        "n": 2209,
+        "bias": 1.2313,
+        "rmse": 1.8578,
+        "mae": 1.5723,
+        "median_abs": 1.5136,
+        "p95_abs": 3.1646,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "0-2",
+        "class": "not mapped",
+        "n": 1590,
+        "bias": -0.1467,
+        "rmse": 1.9363,
+        "mae": 1.4159,
+        "median_abs": 1.0679,
+        "p95_abs": 4.5143,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "2-5",
+        "class": "Posidonia",
+        "n": 20173,
+        "bias": 1.2362,
+        "rmse": 1.7226,
+        "mae": 1.4118,
+        "median_abs": 1.2532,
+        "p95_abs": 3.2725,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "2-5",
+        "class": "Posidonia/Zostera",
+        "n": 2884,
+        "bias": 1.1193,
+        "rmse": 1.8099,
+        "mae": 1.4257,
+        "median_abs": 1.1706,
+        "p95_abs": 3.6574,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "2-5",
+        "class": "Zostera/Halophila",
+        "n": 766,
+        "bias": 2.1544,
+        "rmse": 2.3942,
+        "mae": 2.165,
+        "median_abs": 2.1194,
+        "p95_abs": 3.8654,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "2-5",
+        "class": "seagrass, mixed types",
+        "n": 588,
+        "bias": 1.1142,
+        "rmse": 1.649,
+        "mae": 1.3233,
+        "median_abs": 1.1096,
+        "p95_abs": 3.28,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "2-5",
+        "class": "reef",
+        "n": 9028,
+        "bias": 1.1931,
+        "rmse": 2.6299,
+        "mae": 1.8751,
+        "median_abs": 1.4866,
+        "p95_abs": 4.8074,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "2-5",
+        "class": "sediment, no seagrass mapped",
+        "n": 14845,
+        "bias": 1.0177,
+        "rmse": 1.3704,
+        "mae": 1.1869,
+        "median_abs": 1.1746,
+        "p95_abs": 2.3339,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "2-5",
+        "class": "edge/mixed",
+        "n": 3899,
+        "bias": 1.0355,
+        "rmse": 1.6086,
+        "mae": 1.2911,
+        "median_abs": 1.1433,
+        "p95_abs": 2.9108,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "2-5",
+        "class": "not mapped",
+        "n": 155,
+        "bias": -1.0056,
+        "rmse": 1.5206,
+        "mae": 1.2285,
+        "median_abs": 1.0332,
+        "p95_abs": 2.884,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "5-10",
+        "class": "Posidonia",
+        "n": 15160,
+        "bias": 0.6526,
+        "rmse": 1.5843,
+        "mae": 1.2431,
+        "median_abs": 1.0377,
+        "p95_abs": 3.1006,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "5-10",
+        "class": "Posidonia/Zostera",
+        "n": 5512,
+        "bias": 1.4193,
+        "rmse": 2.0872,
+        "mae": 1.7204,
+        "median_abs": 1.5362,
+        "p95_abs": 3.8669,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "5-10",
+        "class": "Zostera/Halophila",
+        "n": 580,
+        "bias": 1.5322,
+        "rmse": 1.916,
+        "mae": 1.5965,
+        "median_abs": 1.3732,
+        "p95_abs": 3.5385,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "5-10",
+        "class": "seagrass, mixed types",
+        "n": 545,
+        "bias": 1.0741,
+        "rmse": 1.6488,
+        "mae": 1.3128,
+        "median_abs": 1.1037,
+        "p95_abs": 3.2606,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "5-10",
+        "class": "reef",
+        "n": 12546,
+        "bias": 2.1005,
+        "rmse": 3.3693,
+        "mae": 2.3341,
+        "median_abs": 1.8585,
+        "p95_abs": 5.8249,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "5-10",
+        "class": "sediment, no seagrass mapped",
+        "n": 122439,
+        "bias": 0.3968,
+        "rmse": 1.2056,
+        "mae": 0.9608,
+        "median_abs": 0.825,
+        "p95_abs": 2.3043,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "5-10",
+        "class": "edge/mixed",
+        "n": 9883,
+        "bias": 0.4332,
+        "rmse": 1.4909,
+        "mae": 1.1246,
+        "median_abs": 0.8912,
+        "p95_abs": 2.9332,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "10-15",
+        "class": "Posidonia",
+        "n": 3,
+        "bias": -1.2898,
+        "rmse": 1.4155,
+        "mae": 1.2898,
+        "median_abs": 0.974,
+        "p95_abs": 1.9941,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "10-15",
+        "class": "Posidonia/Zostera",
+        "n": 1,
+        "bias": -1.8977,
+        "rmse": 1.8977,
+        "mae": 1.8977,
+        "median_abs": 1.8977,
+        "p95_abs": 1.8977,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "10-15",
+        "class": "Zostera/Halophila",
+        "n": 352,
+        "bias": 0.3069,
+        "rmse": 1.5322,
+        "mae": 1.1907,
+        "median_abs": 0.9871,
+        "p95_abs": 3.0535,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "10-15",
+        "class": "seagrass, mixed types",
+        "n": 1,
+        "bias": -0.0049,
+        "rmse": 0.0049,
+        "mae": 0.0049,
+        "median_abs": 0.0049,
+        "p95_abs": 0.0049,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "10-15",
+        "class": "reef",
+        "n": 7580,
+        "bias": 1.4312,
+        "rmse": 2.8643,
+        "mae": 2.0524,
+        "median_abs": 1.6123,
+        "p95_abs": 5.3707,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "10-15",
+        "class": "sediment, no seagrass mapped",
+        "n": 282356,
+        "bias": -0.2902,
+        "rmse": 1.6528,
+        "mae": 1.2803,
+        "median_abs": 1.032,
+        "p95_abs": 3.3307,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "10-15",
+        "class": "edge/mixed",
+        "n": 1810,
+        "bias": 0.4463,
+        "rmse": 1.7182,
+        "mae": 1.3226,
+        "median_abs": 1.0381,
+        "p95_abs": 3.571,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "15-20",
+        "class": "reef",
+        "n": 4224,
+        "bias": -0.7767,
+        "rmse": 3.0411,
+        "mae": 2.3759,
+        "median_abs": 2.0062,
+        "p95_abs": 5.8186,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "15-20",
+        "class": "sediment, no seagrass mapped",
+        "n": 284436,
+        "bias": -2.4022,
+        "rmse": 3.3242,
+        "mae": 2.7539,
+        "median_abs": 2.4982,
+        "p95_abs": 6.2047,
+        "r2": null
+      },
+      {
+        "region": "inside bay",
+        "band_m": "15-20",
+        "class": "edge/mixed",
+        "n": 741,
+        "bias": -1.3641,
+        "rmse": 2.8341,
+        "mae": 2.3111,
+        "median_abs": 2.0439,
+        "p95_abs": 5.1242,
+        "r2": null
+      },
+      {
+        "region": "open coast",
+        "band_m": "0-2",
+        "class": "Posidonia/Zostera",
+        "n": 7,
+        "bias": 0.4302,
+        "rmse": 1.6031,
+        "mae": 1.1407,
+        "median_abs": 0.8779,
+        "p95_abs": 3.0271,
+        "r2": null
+      },
+      {
+        "region": "open coast",
+        "band_m": "0-2",
+        "class": "reef",
+        "n": 866,
+        "bias": 1.4481,
+        "rmse": 3.4568,
+        "mae": 1.926,
+        "median_abs": 1.5038,
+        "p95_abs": 4.2008,
+        "r2": null
+      },
+      {
+        "region": "open coast",
+        "band_m": "0-2",
+        "class": "sediment, no seagrass mapped",
+        "n": 1641,
+        "bias": 1.6579,
+        "rmse": 1.8658,
+        "mae": 1.7099,
+        "median_abs": 1.8536,
+        "p95_abs": 2.7481,
+        "r2": null
+      },
+      {
+        "region": "open coast",
+        "band_m": "0-2",
+        "class": "edge/mixed",
+        "n": 109,
+        "bias": 1.7753,
+        "rmse": 4.0524,
+        "mae": 1.9875,
+        "median_abs": 1.435,
+        "p95_abs": 3.3791,
+        "r2": null
+      },
+      {
+        "region": "open coast",
+        "band_m": "2-5",
+        "class": "Posidonia/Zostera",
+        "n": 12,
+        "bias": 0.5555,
+        "rmse": 1.7176,
+        "mae": 1.4486,
+        "median_abs": 1.5433,
+        "p95_abs": 2.8758,
+        "r2": null
+      },
+      {
+        "region": "open coast",
+        "band_m": "2-5",
+        "class": "reef",
+        "n": 5185,
+        "bias": 2.1717,
+        "rmse": 6.6392,
+        "mae": 2.3793,
+        "median_abs": 1.5386,
+        "p95_abs": 4.925,
+        "r2": null
+      },
+      {
+        "region": "open coast",
+        "band_m": "2-5",
+        "class": "sediment, no seagrass mapped",
+        "n": 8959,
+        "bias": 0.1148,
+        "rmse": 0.8697,
+        "mae": 0.7081,
+        "median_abs": 0.617,
+        "p95_abs": 1.6714,
+        "r2": null
+      },
+      {
+        "region": "open coast",
+        "band_m": "2-5",
+        "class": "edge/mixed",
+        "n": 378,
+        "bias": 0.8726,
+        "rmse": 2.7989,
+        "mae": 1.0875,
+        "median_abs": 0.6685,
+        "p95_abs": 2.2226,
+        "r2": null
+      },
+      {
+        "region": "open coast",
+        "band_m": "5-10",
+        "class": "Posidonia/Zostera",
+        "n": 12,
+        "bias": 1.3318,
+        "rmse": 1.4496,
+        "mae": 1.3318,
+        "median_abs": 1.2933,
+        "p95_abs": 2.231,
+        "r2": null
+      },
+      {
+        "region": "open coast",
+        "band_m": "5-10",
+        "class": "reef",
+        "n": 9973,
+        "bias": 1.071,
+        "rmse": 4.8062,
+        "mae": 1.9643,
+        "median_abs": 1.2447,
+        "p95_abs": 4.8557,
+        "r2": null
+      },
+      {
+        "region": "open coast",
+        "band_m": "5-10",
+        "class": "sediment, no seagrass mapped",
+        "n": 16038,
+        "bias": -1.145,
+        "rmse": 1.4559,
+        "mae": 1.2273,
+        "median_abs": 1.141,
+        "p95_abs": 2.6371,
+        "r2": null
+      },
+      {
+        "region": "open coast",
+        "band_m": "5-10",
+        "class": "edge/mixed",
+        "n": 638,
+        "bias": -0.4394,
+        "rmse": 1.3978,
+        "mae": 1.1081,
+        "median_abs": 0.9439,
+        "p95_abs": 2.7099,
+        "r2": null
+      },
+      {
+        "region": "open coast",
+        "band_m": "10-15",
+        "class": "reef",
+        "n": 14493,
+        "bias": -2.1243,
+        "rmse": 4.1433,
+        "mae": 3.0864,
+        "median_abs": 2.8713,
+        "p95_abs": 6.2233,
+        "r2": null
+      },
+      {
+        "region": "open coast",
+        "band_m": "10-15",
+        "class": "sediment, no seagrass mapped",
+        "n": 18384,
+        "bias": -3.3955,
+        "rmse": 3.6788,
+        "mae": 3.3987,
+        "median_abs": 3.3015,
+        "p95_abs": 5.8829,
+        "r2": null
+      },
+      {
+        "region": "open coast",
+        "band_m": "10-15",
+        "class": "edge/mixed",
+        "n": 486,
+        "bias": -4.0037,
+        "rmse": 4.3176,
+        "mae": 4.0496,
+        "median_abs": 4.1477,
+        "p95_abs": 6.3861,
+        "r2": null
+      },
+      {
+        "region": "open coast",
+        "band_m": "15-20",
+        "class": "reef",
+        "n": 18881,
+        "bias": -5.819,
+        "rmse": 6.6246,
+        "mae": 6.0877,
+        "median_abs": 6.2699,
+        "p95_abs": 10.0731,
+        "r2": null
+      },
+      {
+        "region": "open coast",
+        "band_m": "15-20",
+        "class": "sediment, no seagrass mapped",
+        "n": 17208,
+        "bias": -6.8174,
+        "rmse": 7.0625,
+        "mae": 6.8174,
+        "median_abs": 6.8061,
+        "p95_abs": 9.8652,
+        "r2": null
+      },
+      {
+        "region": "open coast",
+        "band_m": "15-20",
+        "class": "edge/mixed",
+        "n": 1220,
+        "bias": -6.8902,
+        "rmse": 7.1678,
+        "mae": 6.9083,
+        "median_abs": 6.9632,
+        "p95_abs": 9.9227,
+        "r2": null
+      }
+    ],
+    "vs_reference_inside_bay": [
+      {
+        "band_m": "0-2",
+        "class": "Posidonia",
+        "n_class": 7870,
+        "n_reference": 7229,
+        "bias_diff": {
+          "point": -1.9644,
+          "lo": -2.2541,
+          "hi": -1.3669
+        },
+        "rmse_diff": {
+          "point": -1.0887,
+          "lo": -1.3075,
+          "hi": -0.6309
+        },
+        "n_blocks": 30
+      },
+      {
+        "band_m": "0-2",
+        "class": "Posidonia/Zostera",
+        "n_class": 138,
+        "n_reference": 7229,
+        "note": "not compared: fewer than 1000 pixels"
+      },
+      {
+        "band_m": "0-2",
+        "class": "Zostera/Halophila",
+        "n_class": 106,
+        "n_reference": 7229,
+        "note": "not compared: fewer than 1000 pixels"
+      },
+      {
+        "band_m": "0-2",
+        "class": "reef",
+        "n_class": 3246,
+        "n_reference": 7229,
+        "bias_diff": {
+          "point": -2.0523,
+          "lo": -2.6419,
+          "hi": -1.4367
+        },
+        "rmse_diff": {
+          "point": -0.0749,
+          "lo": -0.3622,
+          "hi": 0.208
+        },
+        "n_blocks": 31
+      },
+      {
+        "band_m": "2-5",
+        "class": "Posidonia",
+        "n_class": 20173,
+        "n_reference": 14845,
+        "bias_diff": {
+          "point": 0.2184,
+          "lo": -0.071,
+          "hi": 0.4838
+        },
+        "rmse_diff": {
+          "point": 0.3522,
+          "lo": 0.1357,
+          "hi": 0.5291
+        },
+        "n_blocks": 31
+      },
+      {
+        "band_m": "2-5",
+        "class": "Posidonia/Zostera",
+        "n_class": 2884,
+        "n_reference": 14845,
+        "bias_diff": {
+          "point": 0.1016,
+          "lo": -0.6062,
+          "hi": 0.7824
+        },
+        "rmse_diff": {
+          "point": 0.4396,
+          "lo": -0.1798,
+          "hi": 0.9405
+        },
+        "n_blocks": 28
+      },
+      {
+        "band_m": "2-5",
+        "class": "Zostera/Halophila",
+        "n_class": 766,
+        "n_reference": 14845,
+        "note": "not compared: fewer than 1000 pixels"
+      },
+      {
+        "band_m": "2-5",
+        "class": "reef",
+        "n_class": 9028,
+        "n_reference": 14845,
+        "bias_diff": {
+          "point": 0.1754,
+          "lo": -0.0504,
+          "hi": 0.4355
+        },
+        "rmse_diff": {
+          "point": 1.2595,
+          "lo": 0.7892,
+          "hi": 1.8072
+        },
+        "n_blocks": 31
+      },
+      {
+        "band_m": "5-10",
+        "class": "Posidonia",
+        "n_class": 15160,
+        "n_reference": 122439,
+        "bias_diff": {
+          "point": 0.2558,
+          "lo": -0.0821,
+          "hi": 1.0697
+        },
+        "rmse_diff": {
+          "point": 0.3787,
+          "lo": 0.1595,
+          "hi": 0.8874
+        },
+        "n_blocks": 27
+      },
+      {
+        "band_m": "5-10",
+        "class": "Posidonia/Zostera",
+        "n_class": 5512,
+        "n_reference": 122439,
+        "bias_diff": {
+          "point": 1.0225,
+          "lo": -0.2443,
+          "hi": 1.7847
+        },
+        "rmse_diff": {
+          "point": 0.8817,
+          "lo": -0.0285,
+          "hi": 1.3028
+        },
+        "n_blocks": 27
+      },
+      {
+        "band_m": "5-10",
+        "class": "Zostera/Halophila",
+        "n_class": 580,
+        "n_reference": 122439,
+        "note": "not compared: fewer than 1000 pixels"
+      },
+      {
+        "band_m": "5-10",
+        "class": "reef",
+        "n_class": 12546,
+        "n_reference": 122439,
+        "bias_diff": {
+          "point": 1.7037,
+          "lo": 1.3003,
+          "hi": 2.1916
+        },
+        "rmse_diff": {
+          "point": 2.1638,
+          "lo": 1.3947,
+          "hi": 3.2733
+        },
+        "n_blocks": 27
+      },
+      {
+        "band_m": "10-15",
+        "class": "Posidonia",
+        "n_class": 3,
+        "n_reference": 282356,
+        "note": "not compared: fewer than 1000 pixels"
+      },
+      {
+        "band_m": "10-15",
+        "class": "Posidonia/Zostera",
+        "n_class": 1,
+        "n_reference": 282356,
+        "note": "not compared: fewer than 1000 pixels"
+      },
+      {
+        "band_m": "10-15",
+        "class": "Zostera/Halophila",
+        "n_class": 352,
+        "n_reference": 282356,
+        "note": "not compared: fewer than 1000 pixels"
+      },
+      {
+        "band_m": "10-15",
+        "class": "reef",
+        "n_class": 7580,
+        "n_reference": 282356,
+        "bias_diff": {
+          "point": 1.7214,
+          "lo": 1.1894,
+          "hi": 2.7803
+        },
+        "rmse_diff": {
+          "point": 1.2116,
+          "lo": 0.4376,
+          "hi": 3.0209
+        },
+        "n_blocks": 31
+      },
+      {
+        "band_m": "15-20",
+        "class": "Posidonia",
+        "n_class": 0,
+        "n_reference": 284436,
+        "note": "not compared: fewer than 1000 pixels"
+      },
+      {
+        "band_m": "15-20",
+        "class": "Posidonia/Zostera",
+        "n_class": 0,
+        "n_reference": 284436,
+        "note": "not compared: fewer than 1000 pixels"
+      },
+      {
+        "band_m": "15-20",
+        "class": "Zostera/Halophila",
+        "n_class": 0,
+        "n_reference": 284436,
+        "note": "not compared: fewer than 1000 pixels"
+      },
+      {
+        "band_m": "15-20",
+        "class": "reef",
+        "n_class": 4224,
+        "n_reference": 284436,
+        "bias_diff": {
+          "point": 1.6255,
+          "lo": 0.5503,
+          "hi": 3.4341
+        },
+        "rmse_diff": {
+          "point": -0.2831,
+          "lo": -0.9044,
+          "hi": 0.6094
+        },
+        "n_blocks": 23
+      }
+    ],
+    "reef_open_minus_inside": [
+      {
+        "band_m": "0-2",
+        "n_open": 866,
+        "n_inside": 3246,
+        "note": "not compared: fewer than 1000 pixels"
+      },
+      {
+        "band_m": "2-5",
+        "n_open": 5185,
+        "n_inside": 9028,
+        "bias_diff": {
+          "point": 0.9786,
+          "lo": 0.3239,
+          "hi": 2.5357
+        },
+        "rmse_diff": {
+          "point": 4.0094,
+          "lo": 0.2334,
+          "hi": 8.9861
+        },
+        "n_blocks": 46
+      },
+      {
+        "band_m": "5-10",
+        "n_open": 9973,
+        "n_inside": 12546,
+        "bias_diff": {
+          "point": -1.0295,
+          "lo": -1.7009,
+          "hi": 0.1593
+        },
+        "rmse_diff": {
+          "point": 1.4369,
+          "lo": -0.9362,
+          "hi": 4.2996
+        },
+        "n_blocks": 44
+      },
+      {
+        "band_m": "10-15",
+        "n_open": 14493,
+        "n_inside": 7580,
+        "bias_diff": {
+          "point": -3.5555,
+          "lo": -4.7381,
+          "hi": -2.1981
+        },
+        "rmse_diff": {
+          "point": 1.2789,
+          "lo": -0.7174,
+          "hi": 2.7192
+        },
+        "n_blocks": 32
+      },
+      {
+        "band_m": "15-20",
+        "n_open": 18881,
+        "n_inside": 4224,
+        "bias_diff": {
+          "point": -5.0423,
+          "lo": -6.9589,
+          "hi": -2.853
+        },
+        "rmse_diff": {
+          "point": 3.5835,
+          "lo": 2.3698,
+          "hi": 4.3753
+        },
+        "n_blocks": 25
+      }
+    ]
+  },
+  "written_utc": "2026-09-27T12:33:44+00:00",
+  "sdb_version": "0.1.0",
+  "figures": [
+    "outputs\\exploratory\\figures\\substrate_S2A_56HKG_20180907_0_L2A_rule95_bias_vs_sediment.png"
+  ]
+}
