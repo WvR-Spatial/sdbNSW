@@ -79,8 +79,8 @@ built in `narrabeen-stage1`.
 | MHL tide gauge 216470, Jervis Bay (HMAS Creswell) | Observed water level at overpass; AEST; chart datum, AHD offset −1.07 m | MHL data request (form or data-request@mhl.nsw.gov.au) | CC BY 4.0, attribute NSW DCCEEW | Raw file no (`data/raw/tide/`); derived value yes |
 | NSW Imagery (Spatial Services) | Orthophoto windows for co-registration only | ArcGIS REST Export Map, anonymous | Catalogue: CC BY 3.0 AU; Spatial Services excludes images from its CC licence | **No** — cached in `data/raw/ortho/`, never redistributed or drawn |
 | ERA5 10 m wind | Scene selection only — glint pre-screen | [Open-Meteo](https://open-meteo.com/) archive API, anonymous | CC BY 4.0 | No — fetched at run time |
-| NSW DPI Fisheries *Estuarine Macrophytes* (candidate) | Seagrass stratum: *Posidonia*, *Zostera*, *Halophila*. Jervis Bay from **Aug 2019** aerial imagery (object-based classification), field-checked **May 2020** (project MEMS) | ArcGIS REST (`Fisheries_Portal/Estuarine_Macrophytes`) | © NSW DPI Fisheries; IMAS copy CC BY-NC 4.0 | No — derived statistics only |
-| DCCEEW *NSW seabed reef extent* (candidate) | Reef stratum, classified from **the same 2018 marine lidar** (plus 2017 subtidal reef mapping) | ArcGIS REST / zip | CC BY 4.0 | Derived statistics |
+| NSW DPI Fisheries *Estuarine Macrophytes* | Seagrass stratum: *Posidonia*, *Zostera*, *Halophila*. Jervis Bay from **Aug 2019** aerial imagery (object-based classification), field-checked **May 2020** (project MEMS). 2,356 seagrass polygons in the bay | ArcGIS REST (`Fisheries_Portal/Estuarine_Macrophytes`), fetched via QGIS | © NSW DPI Fisheries; **CC BY 4.0** as stated by the custodian's service (an IMAS redistribution states CC BY-NC) | No (`data/raw/substrate/`) — derived statistics only |
+| DCCEEW *NSW seabed reef extent* | Reef / Unconsolidated, classified from **the same 2018 marine lidar** (plus 2017 subtidal reef mapping). 837 reef, 834 unconsolidated polygons | ArcGIS REST, fetched via QGIS | CC BY 4.0 | No (`data/raw/substrate/`) — derived statistics only |
 
 **The CC BY licence on the reference data is a structural advantage.** Unlike
 the Narrabeen survey (registration-gated, non-commercial, un-committable), a
@@ -218,6 +218,50 @@ Substrate never enters the model; it only groups out-of-fold errors, so adding
 it after the run cannot flatter the fit. The class rules (which classes, how
 mixed pixels are labelled) are fixed before errors by class are computed.
 
+### Substrate addendum — pre-registered 27 Sep 2026
+
+Written after the layers were fetched and checked for dates, coverage and
+alignment, and **before any error was computed by substrate**. The Phase 2
+residual map had already been seen; these rules use only the layers' own
+classes and round thresholds, nothing tuned to it. Implemented in
+`src/sdb/substrate.py`, which reads the Phase 2 out-of-fold residuals
+(`sdb.tif`) — no refit.
+
+**Layers.** NSW DPI *Estuarine Macrophytes*, seagrass polygons only; DCCEEW
+*seabed reef extent* (Reef / Unconsolidated). Reprojected GDA94 → GDA2020
+(PROJ "GDA94 to GDA2020 (1)": 0.46 m E, 1.42 m N here — the same offset found
+in the lidar grid's origin), then onto the scene grid translated by the applied
+co-registration shift, i.e. the ground each pixel actually sees. Area fractions
+at 2 m sub-sampling.
+
+**Pixel classes** — majority rule (≥ 0.5 of the pixel), in this order of precedence:
+
+1. *Posidonia* · 2. *Posidonia/Zostera* · 3. *Zostera/Halophila* — a single mapped type ≥ 0.5
+4. seagrass, mixed types — all seagrass together ≥ 0.5, no single type
+5. reef — reef ≥ 0.5, seagrass < 0.5
+6. **sediment, no seagrass mapped** — unconsolidated ≥ 0.5, seagrass < 0.1, reef < 0.1. **The reference class**
+7. edge/mixed — anything else with ≥ 0.1 mapped
+8. not mapped
+
+Robustness: the same rules at ≥ 0.9 ("core" pixels), reported alongside.
+
+**Comparison.** Within each depth band of lidar depth, inside the bay: each
+class against *sediment, no seagrass mapped* — difference in **bias**
+(primary) and in RMSE, with 95% block-bootstrap intervals (2 km blocks, 1,000
+draws, both groups resampled together by block). Compared only where the class
+has ≥ 1,000 pixels in the band; smaller cells are described, not compared.
+Reef additionally inside bay vs open coast.
+
+**Direction stated in advance** (the brief's premise, not the map): dark
+substrate reads deeper — a positive bias difference for *Posidonia* and reef,
+smaller for *Zostera/Halophila*.
+
+**Known limits, stated before the result.** Seagrass is mapped only to ~10 m
+(14 *Posidonia* pixels deeper), so seagrass contrasts exist only in 0–10 m and
+the deep reference class may hold unmapped *Halophila*. The map post-dates the
+scene by 11 months. Unmapped dark seabed inside the reference class would
+shrink a contrast, not create one.
+
 ### Phase 2 result — Jervis Bay, 7 Sep 2018 (provisional water level −0.496 m AHD)
 
 The pre-registered run, unchanged. `outputs/sdb_S2A_56HKG_20180907_0_L2A.json`.
@@ -351,7 +395,7 @@ SDB-versus-lidar comparison, plus the repo. Limitations panel above results.
 - [x] Sun glint correction — **none** for v1 (register, 27 Sep)
 - [x] Whether ML enters v1 — **no**; v2, same folds, no coordinates as features
 - [x] Breakdown threshold — **CATZOC C** (2.0 m + 5% of depth, 95%); CATZOC B alongside
-- [ ] **Substrate layer** — candidates: NSW DPI *Estuarine Macrophytes* (seagrass) and DCCEEW *seabed reef extent* (lidar-derived). Fetch, check dates, coverage of the usable area and alignment, then fix the class rules before errors by substrate are read
+- [x] **Substrate layers** — NSW DPI *Estuarine Macrophytes* (seagrass) and DCCEEW *seabed reef extent* (lidar-derived), fetched and checked; class rules pre-registered (*Substrate addendum*)
 
 ## Decisions register
 
@@ -405,6 +449,7 @@ defensible piece of work.
 | 27 Sep | **Breakdown depth = 0 m** for CATZOC C and B — the pre-registered statistic, reported as is | The rule finds the first bin that fails; here every bin fails, so its answer is "never meets CATZOC C", itself the finding. The shape — a flat ~2 m RMSE floor to ~14 m, then saturation — is described from the curve, not by inventing a new threshold after the fact |
 | 27 Sep | **Residual correlation range 4 km > 2 km blocks: caveat applies**, as the protocol requires | Mostly systematic structure — depth-dependent bias, the open-coast offset and shelf-scale patches — rather than leakage: RMSE is flat across block sizes (2.67–2.73 m). The bootstrap intervals, which resample 2 km blocks, are the part most likely to be optimistic |
 | 27 Sep | **Substrate candidates found; none adopted yet.** NSW DPI *Estuarine Macrophytes* covers the whole bay (Aug 2019 aerial, field May 2020; *Posidonia*/*Zostera*/*Halophila*); DCCEEW *seabed reef extent* is classified from the same 2018 lidar. GA's 2007–08 video and grabs cover only the southern bay; the 2018 lidar reflectivity is raw LAS | The seagrass map is 11 months after the scene: *Posidonia* is persistent, *Zostera*/*Halophila* are not. It is aerial-optical, so it may miss seagrass exactly where Sentinel-2 fails (deep, sparse *Halophila*); "not mapped as vegetated" is not "sand". The reef layer is independent of the imagery and contemporaneous |
+| 27 Sep | **Substrate layers fetched and checked** (via QGIS; 5,937 macrophyte, 1,671 reef-extent, 1,131 reef-source polygons in the lidar extent; `data/raw/substrate/provenance.json`). Alignment: *Posidonia* fringes and *Zostera* shoals in the southern bay, and the lidar reef outcrops off the western shore, match their image edges to about a pixel. Coverage inside the bay, usable pixels at ≥ 0.5: *Posidonia* 8,935 / 21,585 / 17,055 in 0–2 / 2–5 / 5–10 m; reef 39,306 across all depths; sediment with no seagrass mapped 711,336 | Two layers together explain the dark seabed visible in the image: the dark patches off Huskisson that the seagrass map lacks are lidar-mapped reef. Seagrass mapping stops at ~10 m. Open coast: no seagrass mapped, 45% reef. The custodian's service states CC BY 4.0 (an IMAS copy says CC BY-NC); the custodian's statement is used. The reef service's layer descriptions are copied from a Wollongong multibeam dataset — the per-polygon Source field is the reliable one |
 
 ## Sources
 

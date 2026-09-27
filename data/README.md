@@ -122,16 +122,19 @@ attribute NSW DCCEEW. Save the CSV to `raw/tide/`.
 Until it arrives, `waterlevel --from-image` gives a provisional estimate
 (−0.50 m AHD at Jervis Bay, biased low by ~0.1–0.2 m).
 
-### 6. Substrate layers  *(candidates — not yet fetched)*
+### 6. Substrate layers  *(fetched via QGIS; never committed)*
 
-Used only to group validation errors, never as model inputs. Save to
-`raw/substrate/`; commit derived statistics only.
+Used only to group validation errors, never as model inputs. Saved to
+`raw/substrate/substrate_jervis_bay.gpkg` (layers `macrophytes`, `reef_extent`,
+`reef_sources`; EPSG:4283 as served) with `provenance.json` recording the
+queries, counts and md5. Commit derived statistics only. The services are
+reachable from a desktop (QGIS's Python was used), not from every network.
 
 - **NSW DPI Fisheries — Estuarine Macrophytes** (seagrass: *Posidonia*,
   *Zostera*, *Halophila*). Jervis Bay mapped from Aug 2019 aerial imagery,
   field-checked May 2020. ArcGIS REST:
   `spatial.industry.nsw.gov.au/arcgis/rest/services/Fisheries_Portal/Estuarine_Macrophytes/MapServer/0`.
-  © NSW DPI Fisheries; the IMAS copy is CC BY-NC 4.0.
+  © NSW DPI Fisheries; CC BY 4.0 as stated by the service (an IMAS copy states CC BY-NC).
 - **DCCEEW — NSW seabed reef extent**, classified from the 2018 marine lidar.
   ArcGIS REST: `mapprod3.environment.nsw.gov.au/arcgis/rest/services/Marine/NSW_seabed_reef_extent/MapServer`.
   CC BY 4.0.
