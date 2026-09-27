@@ -147,6 +147,41 @@ def residual_map(path: Path, resid_img: np.ndarray, grid: Any, block_m: float, t
     return path
 
 
+def substrate_contrasts(path: Path, comps: list[dict[str, Any]], classes: Sequence[str],
+                        bands: Sequence[str]) -> Path:
+    """Small multiples: bias of each class minus sediment, by depth band, with 95% CIs."""
+    plt = _style()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fig, axs = plt.subplots(1, len(classes), figsize=(2.6 * len(classes), 3.4), dpi=150,
+                            sharey=True)
+    x = np.arange(len(bands))
+    for ax, cname in zip(np.atleast_1d(axs), classes):
+        ax.axhline(0, color=AXIS, lw=0.8)
+        for c in comps:
+            if c["class"] != cname:
+                continue
+            i = list(bands).index(c["band_m"])
+            if "bias_diff" in c:
+                b = c["bias_diff"]
+                ax.errorbar(i, b["point"], yerr=[[b["point"] - b["lo"]], [b["hi"] - b["point"]]],
+                            fmt="o", color=SERIES[0], ms=5, elinewidth=1.4, capsize=0,
+                            markeredgecolor=SURFACE, markeredgewidth=0.8)
+                ax.text(i + 0.12, b["point"], f"{b['point']:+.2f}", color=INK_2, fontsize=7,
+                        va="center")
+            elif c["n_class"]:
+                ax.text(i, 0.03, "n<1k", color=MUTED, fontsize=6.5, ha="center", va="bottom",
+                        transform=ax.get_xaxis_transform())
+        ax.set_xticks(x, bands, rotation=0, fontsize=7)
+        ax.set_xlim(-0.5, len(bands) - 0.5)
+        ax.set_title(cname, fontsize=9)
+    np.atleast_1d(axs)[0].set_ylabel("Bias minus sediment (m)\n+ reads deeper")
+    fig.supxlabel("Lidar depth band (m), inside the bay", fontsize=8, color=INK_2)
+    fig.tight_layout()
+    fig.savefig(path)
+    plt.close(fig)
+    return path
+
+
 def phase2_figures(fdir: Path, scene: str, *, depth: np.ndarray, pred: np.ndarray,
                    curve: list[dict[str, Any]], breakdown: dict[str, float | None],
                    resid_img: np.ndarray, grid: Any, block_m: float, pooled: dict[str, Any],

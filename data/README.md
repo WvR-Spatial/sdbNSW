@@ -95,6 +95,11 @@ positive = reads too deep), float32, NaN outside assessed pixels. Its record
 (`outputs/sdb_<item id>.json`) and figures (`outputs/figures/`) are committed;
 the raster is not.
 
+`python -m sdb.substrate --scene <item id>` adds `substrate.tif`:
+`class_majority` and `class_core` (index into the class list in
+`outputs/substrate_<item id>.json`), `seagrass_frac`, `reef_frac` — on the
+ground each pixel sees, i.e. with the co-registration shift applied.
+
 ### 4. Orthoimagery for co-registration  *(fetched automatically, never committed)*
 
 `coreg` fetches 2 km windows of NSW Imagery (Spatial Services) through its

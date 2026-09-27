@@ -43,6 +43,7 @@ sdb-fetch = "sdb.fetch:main"
 sdb-coreg = "sdb.coreg:main"
 sdb-reference = "sdb.reference:main"
 sdb-validate = "sdb.validate:main"
+sdb-substrate = "sdb.substrate:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

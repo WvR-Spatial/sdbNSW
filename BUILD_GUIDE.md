@@ -129,7 +129,7 @@ and records any departure as a deviation.
 rule), `src/sdb/validate.py` (blocked cross-validation, statistics, breakdown
 depth, CLI), `src/sdb/viz.py` (figures). Tests: `tests/test_sdb.py`,
 `tests/test_validate.py` — including the water-level invariance and a leakage
-demonstration. **199 tests.**
+demonstration. **219 tests** with `tests/test_substrate.py`.
 
 **→ YOU** —
 
@@ -177,6 +177,17 @@ run in `validate.py` (Phase 2). What remains here is substrate, and ML (v2).
 machine, not from the cloud workspace). Then: check the mapping dates, how much
 of the usable area each class covers by depth band, and alignment against the
 scene; fix the class rules **before** errors by substrate are computed.
+*Done: layers in `data/raw/substrate/`, rules committed in `73d02ce`.*
+
+```
+python -m sdb.substrate --scene S2A_56HKG_20180907_0_L2A
+```
+
+~15 s. Reads `sdb.tif` from Phase 2 (no refit). Expected: inside the bay,
+*Posidonia* minus sediment −1.89 m (0–2 m), +0.24 (2–5), +0.12 (5–10); reef
++1.66 (5–10), +1.70 (10–15), +1.66 (15–20). Writes
+`outputs/substrate_<scene>.json`, one figure, and `substrate.tif` beside the
+scene. Commit the JSON and figure.
 
 **→ YOU** — read the output and decide whether you believe it. The gap
 between the naive and blocked numbers is a result in its own right and

@@ -11,8 +11,11 @@ passed: pooled RMSE 2.70 m** [95% CI 2.32–3.15], bias −0.41 m, R² 0.69
 (inside the bay 2.28 m, open coast 4.72 m). Worse than the ~1.8 m clear-water
 Stumpf literature, as expected. **Does not meet CATZOC C at any depth**; error
 is flat near 2 m RMSE to ~14 m, then climbs as the ratio saturates. SDB reads
-~1 m too deep in 0–10 m, in spatially coherent patches — substrate is next.
-Provisional water level; rerun when the gauge record arrives.
+~1 m too deep in 0–10 m. **Substrate (pre-registered addendum): reef reads
+~1.7 m deeper than sediment at 5–20 m; seagrass makes little difference at
+2–10 m; and bare shallow sediment itself reads 2.2 m too deep** — so the
+shallow over-reading is mostly not substrate. Provisional water level; rerun
+when the gauge record arrives.
 **Updated:** 27 Sep 2026 · **Repo:** `sdbNSW`
 **Portfolio slot:** replaces *Revealing the Ancient Murray via REM*.
 
@@ -262,6 +265,40 @@ the deep reference class may hold unmapped *Halophila*. The map post-dates the
 scene by 11 months. Unmapped dark seabed inside the reference class would
 shrink a contrast, not create one.
 
+### Substrate result — as pre-registered (addendum `73d02ce`)
+
+`python -m sdb.substrate`, reading the Phase 2 residuals unchanged.
+`outputs/substrate_S2A_56HKG_20180907_0_L2A.json`. Inside the bay, bias of each
+class minus *sediment, no seagrass mapped*, m, with 95% block-bootstrap
+intervals. The core (≥ 0.9) rule moves every figure by 0.2 m or less.
+
+| Band | *Posidonia* | *Posidonia/Zostera* | *Zostera/Halophila* | Reef |
+|---|---|---|---|---|
+| 0–2 m | **−1.89** [−2.21, −1.13] | n < 1,000 | n < 1,000 | **−2.10** [−2.73, −1.46] |
+| 2–5 m | +0.24 [−0.05, +0.52] | +0.10 [−0.54, +0.81] | +1.08 [−1.36, +1.37] | +0.17 [−0.09, +0.44] |
+| 5–10 m | +0.12 [−0.26, +0.89] | +0.81 [−0.29, +1.57] | +0.80 [−0.99, +1.25] | **+1.66** [+1.24, +2.13] |
+| 10–15 m | — | — | n < 1,000 | **+1.70** [+1.15, +2.72] |
+| 15–20 m | — | — | — | **+1.66** [+0.57, +3.27] |
+
+Reef, open coast minus inside bay: +1.03 (2–5 m), −1.02 (5–10), **−3.68**
+(10–15), **−5.26** (15–20).
+
+Against the direction stated in advance:
+
+- **Reef — supported at 5–20 m.** Lidar-mapped reef reads ~1.7 m deeper than
+  sediment at the same depth, intervals clear of zero.
+- ***Posidonia* — not supported at 2–10 m.** +0.1 to +0.2 m, intervals
+  include zero. Mixed and *Zostera/Halophila* classes are too small to say.
+- **0–2 m — reversed, and the reference class is why.** In absolute terms
+  shallow sediment reads **+2.22 m** too deep, *Posidonia* +0.33, reef +0.12.
+  The contrast is sediment over-reading, not dark substrate under-reading.
+
+What follows: the Phase 2 shallow over-reading is **mostly not substrate**.
+Bare sediment reads +0.8 to +2.2 m too deep through 0–10 m on its own. The
+dark patches off the western shore that carry the largest over-reading are
+mapped reef, not seagrass. On the open coast, at depth, reef and sediment alike
+read 5–6 m too shallow — exposure and water clarity, not substrate.
+
 ### Phase 2 result — Jervis Bay, 7 Sep 2018 (provisional water level −0.496 m AHD)
 
 The pre-registered run, unchanged. `outputs/sdb_S2A_56HKG_20180907_0_L2A.json`.
@@ -283,8 +320,9 @@ What it says: the method passes the gate but is not charting-grade anywhere in
 this bay, and it fails in two distinct ways — a ~2 m error floor from the
 surface down, carrying a +1 m (too deep) bias in 0–10 m, and a saturation
 failure beyond ~14 m where SDB reads too shallow. The residual map puts the
-shallow over-reading in coherent patches on the western and northern shelves,
-where seagrass is expected: the substrate stratification is the test of that.
+shallow over-reading in coherent patches on the western and northern shelves.
+The substrate test (above) found the strongest patches are lidar-mapped reef,
+and that bare sediment over-reads too — not the seagrass effect first assumed.
 Exposure matters as much as depth — the open coast doubles the error.
 
 Caveats on this run: the residual correlation outlasts the 2 km blocks, so the
@@ -450,6 +488,8 @@ defensible piece of work.
 | 27 Sep | **Residual correlation range 4 km > 2 km blocks: caveat applies**, as the protocol requires | Mostly systematic structure — depth-dependent bias, the open-coast offset and shelf-scale patches — rather than leakage: RMSE is flat across block sizes (2.67–2.73 m). The bootstrap intervals, which resample 2 km blocks, are the part most likely to be optimistic |
 | 27 Sep | **Substrate candidates found; none adopted yet.** NSW DPI *Estuarine Macrophytes* covers the whole bay (Aug 2019 aerial, field May 2020; *Posidonia*/*Zostera*/*Halophila*); DCCEEW *seabed reef extent* is classified from the same 2018 lidar. GA's 2007–08 video and grabs cover only the southern bay; the 2018 lidar reflectivity is raw LAS | The seagrass map is 11 months after the scene: *Posidonia* is persistent, *Zostera*/*Halophila* are not. It is aerial-optical, so it may miss seagrass exactly where Sentinel-2 fails (deep, sparse *Halophila*); "not mapped as vegetated" is not "sand". The reef layer is independent of the imagery and contemporaneous |
 | 27 Sep | **Substrate layers fetched and checked** (via QGIS; 5,937 macrophyte, 1,671 reef-extent, 1,131 reef-source polygons in the lidar extent; `data/raw/substrate/provenance.json`). Alignment: *Posidonia* fringes and *Zostera* shoals in the southern bay, and the lidar reef outcrops off the western shore, match their image edges to about a pixel. Coverage inside the bay, usable pixels at ≥ 0.5: *Posidonia* 8,935 / 21,585 / 17,055 in 0–2 / 2–5 / 5–10 m; reef 39,306 across all depths; sediment with no seagrass mapped 711,336 | Two layers together explain the dark seabed visible in the image: the dark patches off Huskisson that the seagrass map lacks are lidar-mapped reef. Seagrass mapping stops at ~10 m. Open coast: no seagrass mapped, 45% reef. The custodian's service states CC BY 4.0 (an IMAS copy says CC BY-NC); the custodian's statement is used. The reef service's layer descriptions are copied from a Wollongong multibeam dataset — the per-polygon Source field is the reliable one |
+| 27 Sep | **Substrate comparison run once, as registered** (addendum committed in `73d02ce` first). Reef +1.7 m at 5–20 m; *Posidonia* ~0 at 2–10 m; 0–2 m reversed | The pre-stated direction held for reef and failed for seagrass; reported as found. Correction to the Phase 2 reading above: I attributed the shallow over-reading to "where seagrass is expected". The overlay shows those patches are reef, and bare sediment over-reads on its own — the likelier source is the calibration (a straight line through a saturating relationship, fitted to 20 m in 46 of 50 folds) and shallow bright-bottom effects |
+| 27 Sep | **Next diagnostics are exploratory, and labelled so**: (1) the calibration with the 95% rule alone, no "rises throughout" exception; (2) shallow sediment over-reading against distance to shore and bottom brightness | Both were prompted by these results, so neither can be confirmatory. Each is reported beside the registered result, never in place of it |
 
 ## Sources
 
