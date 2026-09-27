@@ -71,47 +71,51 @@ stack to `data/raw/scenes/<id>/`. It refuses to write if the reflectance fails
 the water plausibility check — that means the offset is wrong, and nothing
 downstream should be built on it.
 
-**→ CLAUDE** — `coreg.py` measures how far the image sits from the lidar, from
-the waterline on steep shores; `reference.py` aggregates the lidar onto the
-scene's 10 m grid (never the other way round), applying that offset, and writes
-the masks. *Done.*
+**→ CLAUDE** — `coreg.py` measures how far the image sits from its true
+position by matching it to NSW orthoimagery over land (`ortho.py`);
+`waterlevel.py` gives the water level at overpass; `reference.py` aggregates
+the lidar onto the scene's 10 m grid (never the other way round), applying
+both, and writes the masks. *Done.*
 
-**→ YOU** — run both, in this order:
+**→ YOU** — run, in this order (the first fetches ~30 MB of orthophoto once,
+into gitignored `data/raw/ortho/`):
 ```
 python -m sdb.coreg --scene S2A_56HKG_20180907_0_L2A
+python -m sdb.waterlevel --scene S2A_56HKG_20180907_0_L2A --from-image
 python -m sdb.reference --scene S2A_56HKG_20180907_0_L2A
 ```
-Expected at Jervis Bay: shift **E −18.47, N −11.11 m**, verdict `APPLY`, and
-**916,351** usable pixels. Different numbers mean a different environment or
-input — stop and bring them back.
+Expected at Jervis Bay: shift **E −7.42, N −1.02 m**, verdict `APPLY`; water
+level **−0.496 m AHD (provisional)**; **937,499** usable pixels. Different
+numbers mean a different environment or input — stop and bring them back.
 
-> **Superseded (27 Sep).** The QGIS gate showed this waterline estimate is
-> biased: against NSW orthoimagery the true offset is ~7–8 m (E −6.5, N −3.5).
-> `coreg` is being rebuilt to register against orthoimagery on land. Until
-> then, do not use `reference.tif` for anything downstream.
+The first co-registration method (steep shorelines) was ~14 m wrong here and is
+kept only as a diagnostic: `python -m sdb.coreg --scene … --method waterline`
+writes a separate record that nothing reads.
 
-**→ YOU · QGIS** — the visual check, and it matters more than it sounds. Load
-`reflectance.tif` as RGB (bands 3, 2, 1), a hillshade of the lidar DEM, and an
-**independent basemap** (NSW Spatial Services imagery, or ESRI World Imagery):
-- At Point Perpendicular and the Beecroft cliffs, the Sentinel-2 image should
-  sit **~18 m east and ~11 m north** of both the lidar and the basemap, while
-  the lidar and basemap agree. If instead the *lidar* disagrees with the
-  basemap, stop: the correction is being applied to the wrong dataset.
-- Can you see the seabed in the imagery? If not, no method will.
-- Load `mask.tif` over the bay: flag 16 (bright NIR) should hug the beaches
-  (tide) and sit on reefs and the outer coast (whitewater), not open water.
+**→ YOU** — request the observed water level from MHL, Jervis Bay gauge
+216470, for 6–8 September 2018 (form under *Data Request* on
+mhl.nsw.gov.au, or data-request@mhl.nsw.gov.au). When the CSV arrives, save it
+under `data/raw/tide/` and run:
+```
+python -m sdb.waterlevel --scene S2A_56HKG_20180907_0_L2A --gauge-file data\raw\tide\<file>.csv
+python -m sdb.reference --scene S2A_56HKG_20180907_0_L2A
+```
+The datum is inferred from the record's mean (MHL's labels are unreliable);
+times are taken as AEST. Expect about −0.3 to −0.4 m AHD.
+
+**→ YOU · QGIS** — the visual check, done 27 Sep, and it caught the first
+co-registration. It stays in the guide for sites 2 and 3: compare the scene
+with an **independent orthophoto on land** (runways, roads, street grids), not
+at the shoreline, where shadowed cliffs, whitewater and tide all move the edge.
+Also: can you see the seabed? Does `mask.tif` flag 16 sit on beaches, reefs and
+the outer coast rather than open water?
 
 QGIS via MCP is fine for this looking-and-poking. **Nothing that touches the
 pipeline gets done in the GUI** — anything GUI-driven is not reproducible by a
 reader, which is the exact criticism that sinks the Murray REM piece.
 
-**Gate:** seabed visible; offset confirmed against the basemap. Otherwise try
-another scene — or the geometrically refined Collection-1 version of this one
-from Copernicus Data Space — before laying a finger on the method.
-
-**Then** — `waterlevel.py`, the tide at overpass. The image implies about
-−0.45 m AHD; a gauge should read −0.3 to −0.5 m. With the tide known, `coreg`
-is re-run admitting gentle shores, which pins down the north component.
+**Gate:** seabed visible; co-registration confirmed on land. *Passed on
+geometry; water level provisional until the gauge record arrives.*
 
 ---
 

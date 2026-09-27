@@ -22,6 +22,16 @@ sites:
     reference_crs: "EPSG:7856"
     # Path relative to the repo root; data/raw/ is gitignored.
     reference_dem: "data/raw/JervisBay/NSW Government - DCCEEW/DEM/5 Metre/NSW_Marine_5m_TopoBathy_DEM.tif"
+    # MHL ocean tide gauge in the bay. Constants from MHL's station page and
+    # tidal-planes table (2018-19 column), which is in AHD despite its heading.
+    tide_gauge:
+      station: "216470"
+      name: "Jervis Bay (HMAS Creswell)"
+      ahd_offset_m: -1.07        # level_AHD = level_chart_datum - 1.07
+      msl_ahd: 0.074
+      islw_ahd: -0.776
+      hhwss_ahd: 1.028
+      source: "Manly Hydraulics Laboratory for NSW DCCEEW, CC BY 4.0; times AEST"
     max_depth_m: 42.70
     testable_area_km2: 95.55     # 0-20 m band
     status: reference_in_hand

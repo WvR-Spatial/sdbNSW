@@ -392,8 +392,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     p.add_argument("--scene", required=True, help="item id under data/raw/scenes/")
     p.add_argument("--root", type=Path, default=Path("."))
     p.add_argument("--out", type=Path, default=Path("outputs"))
-    p.add_argument("--water-level", type=float, default=DEFAULT_WATER_LEVEL_M,
-                   help="water level at overpass, m AHD (default: assumed 0.0)")
+    p.add_argument("--water-level", type=float, default=None,
+                   help="water level at overpass, m AHD. Default: outputs/waterlevel_<scene>.json "
+                        "if present, else assumed 0.0")
     p.add_argument("--depth-max", type=float, default=DEPTH_WINDOW_M[1])
     p.add_argument("--coreg", choices=("auto", "off"), default="auto",
                    help="auto: apply outputs/coreg_<scene>.json if its verdict is 'apply'")
@@ -429,15 +430,24 @@ def main(argv: Sequence[str] | None = None) -> int:
     print(f"  co-registration: {coreg_note}"
           + (f"  ({shift[0]:+.2f} E, {shift[1]:+.2f} N m)" if shift != (0.0, 0.0) else ""))
 
+    wpath = a.out / f"waterlevel_{a.scene}.json"
+    if a.water_level is not None:
+        wl_src = "supplied on the command line"
+    elif wpath.exists():
+        wrec = json.loads(wpath.read_text(encoding="utf-8"))
+        a.water_level = float(wrec["water_level_m_ahd"])
+        wl_src = f"{wrec['status']} ({wrec['method']}) from {wpath.name}"
+    else:
+        a.water_level = DEFAULT_WATER_LEVEL_M
+        wl_src = "assumed (AHD ~ mean sea level)"
+
     ref = aggregate_dem(z, valid, src.shifted(tx, ty), dst.shifted(*shift),
                         water_level=a.water_level)
     flags = analysis_mask(ref, water_level=a.water_level, depth_window=(0.0, a.depth_max),
                           scl=scene.get("scl"), nir=scene.get("nir"))
     summ = summarise(ref, flags, pixel_area_m2=dst.dx * dst.dy, water_level=a.water_level)
 
-    wl_src = ("assumed (AHD ~ mean sea level)" if a.water_level == DEFAULT_WATER_LEVEL_M
-              else "supplied on the command line")
-    print(f"  water level: {a.water_level:+.2f} m AHD, {wl_src}\n")
+    print(f"  water level: {a.water_level:+.3f} m AHD, {wl_src}\n")
     print(f"  usable pixels: {summ['pixels_usable']:,} ({summ['usable_km2']} km2) "
           f"of {summ['pixels_total']:,}")
     for name, n in summ["flagged_any"].items():

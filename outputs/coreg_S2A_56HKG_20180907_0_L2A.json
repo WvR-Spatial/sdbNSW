@@ -1,179 +1,248 @@
 {
   "scene": "S2A_56HKG_20180907_0_L2A",
-  "verdict": "apply",
-  "reason": "|shift| 21.55 m, consistent across segments and with the all-shoreline cross-check",
-  "n_segments_used": 7,
-  "segments_dropped": [],
+  "method": "ortho",
+  "n_windows_ok": 8,
+  "windows_dropped": [
+    4
+  ],
   "shift_m": {
-    "east": -18.47,
-    "north": -11.11
+    "east": -7.42,
+    "north": -1.02
   },
   "stderr_m": {
-    "east": 2.9,
-    "north": 5.82
+    "east": 0.98,
+    "north": 1.14
   },
-  "magnitude_m": 21.55,
-  "residual_rms_m": 4.78,
-  "normal_spread_deg": 179.0,
-  "residuals": {
-    "0": 6.04,
-    "1": -3.29,
-    "2": -2.37,
-    "3": 4.07,
-    "4": 4.56,
-    "5": -8.33,
-    "6": 0.68
+  "scatter_m": {
+    "east": 2.22,
+    "north": 2.57
   },
-  "cross_check": {
-    "peak_m": {
-      "east": -16.99,
-      "north": -5.31
-    },
-    "peak_corr": 0.6841,
-    "corr_at_nominal": 0.6131,
-    "tolerance_m": {
-      "east": 5.8,
-      "north": 11.64
-    },
-    "difference_m": {
-      "east": 1.48,
-      "north": 5.8
-    },
-    "n_px": 107971,
-    "agrees": true,
-    "reason": "differs by E +1.5, N +5.8 m; tolerance E 5.8, N 11.6 m"
-  },
-  "segments": [
+  "magnitude_m": 7.49,
+  "datum_ambiguity_m": 1.5,
+  "verdict": "apply",
+  "reason": "|shift| 7.49 m; 8 windows agree (scatter E 2.2, N 2.6 m)",
+  "windows": [
     {
-      "segment": 0,
-      "n_px": 23,
-      "facing_deg": 269.0,
-      "centroid_e": 299460.2,
-      "centroid_n": 6115313.3,
-      "normal": [
-        0.9999,
-        0.0172
+      "shift_e": -7.39,
+      "shift_n": -1.38,
+      "peak_corr": 0.617,
+      "corr_at_zero": 0.54,
+      "n_px": 37325,
+      "status": "ok",
+      "window": 0,
+      "bbox": [
+        286010.0,
+        6116330.0,
+        288010.0,
+        6118330.0
       ],
-      "n_band_px": 388,
-      "offset_m": -12.62,
-      "peak_corr": 0.925,
-      "status": "ok"
+      "land_frac": 0.967,
+      "texture": 0.06339,
+      "ortho": "E285970_N6116290_2080x2080m_2m.png"
     },
     {
-      "segment": 1,
-      "n_px": 42,
-      "facing_deg": 271.9,
-      "centroid_e": 299385.2,
-      "centroid_n": 6114867.4,
-      "normal": [
-        0.9995,
-        -0.0325
+      "shift_e": -5.03,
+      "shift_n": -3.91,
+      "peak_corr": 0.537,
+      "corr_at_zero": 0.507,
+      "n_px": 38169,
+      "status": "ok",
+      "window": 1,
+      "bbox": [
+        290010.0,
+        6124330.0,
+        292010.0,
+        6126330.0
       ],
-      "n_band_px": 526,
-      "offset_m": -21.39,
-      "peak_corr": 0.901,
-      "status": "ok"
+      "land_frac": 0.994,
+      "texture": 0.04938,
+      "ortho": "E289970_N6124290_2080x2080m_2m.png"
     },
     {
-      "segment": 2,
-      "n_px": 25,
-      "facing_deg": 87.6,
-      "centroid_e": 302579.0,
-      "centroid_n": 6120990.6,
-      "normal": [
-        -0.9991,
-        -0.0426
+      "shift_e": -0.78,
+      "shift_n": 1.2,
+      "peak_corr": 0.551,
+      "corr_at_zero": 0.549,
+      "n_px": 36961,
+      "status": "ok",
+      "window": 2,
+      "bbox": [
+        290010.0,
+        6108330.0,
+        292010.0,
+        6110330.0
       ],
-      "n_band_px": 341,
-      "offset_m": 16.55,
-      "peak_corr": 0.951,
-      "status": "ok"
+      "land_frac": 0.958,
+      "texture": 0.04648,
+      "ortho": "E289970_N6108290_2080x2080m_2m.png"
     },
     {
-      "segment": 3,
-      "n_px": 26,
-      "facing_deg": 93.8,
-      "centroid_e": 302534.2,
-      "centroid_n": 6120496.2,
-      "normal": [
-        -0.9978,
-        0.0661
+      "shift_e": -8.86,
+      "shift_n": -0.67,
+      "peak_corr": 0.531,
+      "corr_at_zero": 0.458,
+      "n_px": 37277,
+      "status": "ok",
+      "window": 3,
+      "bbox": [
+        286010.0,
+        6106330.0,
+        288010.0,
+        6108330.0
       ],
-      "n_band_px": 397,
-      "offset_m": 21.76,
-      "peak_corr": 0.85,
-      "status": "ok"
+      "land_frac": 0.965,
+      "texture": 0.04105,
+      "ortho": "E285970_N6106290_2080x2080m_2m.png"
     },
     {
-      "segment": 4,
-      "n_px": 62,
-      "facing_deg": 131.2,
-      "centroid_e": 301474.2,
-      "centroid_n": 6115941.5,
-      "normal": [
-        -0.7524,
-        0.6587
+      "shift_e": 15.12,
+      "shift_n": -1.02,
+      "peak_corr": 0.436,
+      "corr_at_zero": 0.408,
+      "n_px": 36796,
+      "status": "ok",
+      "window": 4,
+      "bbox": [
+        294010.0,
+        6106330.0,
+        296010.0,
+        6108330.0
       ],
-      "n_band_px": 821,
-      "offset_m": 11.14,
-      "peak_corr": 0.878,
-      "status": "ok"
+      "land_frac": 0.952,
+      "texture": 0.03939,
+      "ortho": "E293970_N6106290_2080x2080m_2m.png"
     },
     {
-      "segment": 5,
-      "n_px": 26,
-      "facing_deg": 133.0,
-      "centroid_e": 300682.3,
-      "centroid_n": 6115190.8,
-      "normal": [
-        -0.7309,
-        0.6824
+      "shift_e": -6.45,
+      "shift_n": -4.74,
+      "peak_corr": 0.647,
+      "corr_at_zero": 0.564,
+      "n_px": 35386,
+      "status": "ok",
+      "window": 5,
+      "bbox": [
+        286010.0,
+        6112330.0,
+        288010.0,
+        6114330.0
       ],
-      "n_band_px": 402,
-      "offset_m": -2.41,
-      "peak_corr": 0.868,
-      "status": "ok"
+      "land_frac": 0.918,
+      "texture": 0.03861,
+      "ortho": "E285970_N6112290_2080x2080m_2m.png"
     },
     {
-      "segment": 6,
-      "n_px": 28,
-      "facing_deg": 128.6,
-      "centroid_e": 300421.1,
-      "centroid_n": 6114896.4,
-      "normal": [
-        -0.7811,
-        0.6244
+      "shift_e": -9.14,
+      "shift_n": 0.62,
+      "peak_corr": 0.661,
+      "corr_at_zero": 0.556,
+      "n_px": 36488,
+      "status": "ok",
+      "window": 6,
+      "bbox": [
+        286010.0,
+        6122330.0,
+        288010.0,
+        6124330.0
       ],
-      "n_band_px": 429,
-      "offset_m": 8.17,
-      "peak_corr": 0.808,
-      "status": "ok"
+      "land_frac": 0.95,
+      "texture": 0.03527,
+      "ortho": "E285970_N6122290_2080x2080m_2m.png"
+    },
+    {
+      "shift_e": -7.45,
+      "shift_n": -2.45,
+      "peak_corr": 0.445,
+      "corr_at_zero": 0.386,
+      "n_px": 37664,
+      "status": "ok",
+      "window": 7,
+      "bbox": [
+        298010.0,
+        6116330.0,
+        300010.0,
+        6118330.0
+      ],
+      "land_frac": 0.978,
+      "texture": 0.03091,
+      "ortho": "E297970_N6116290_2080x2080m_2m.png"
+    },
+    {
+      "shift_e": -8.97,
+      "shift_n": 0.8,
+      "peak_corr": 0.594,
+      "corr_at_zero": 0.543,
+      "n_px": 34836,
+      "status": "ok",
+      "window": 8,
+      "bbox": [
+        298010.0,
+        6122330.0,
+        300010.0,
+        6124330.0
+      ],
+      "land_frac": 0.902,
+      "texture": 0.03032,
+      "ortho": "E297970_N6122290_2080x2080m_2m.png"
+    },
+    {
+      "shift_e": 4.91,
+      "shift_n": -3.74,
+      "peak_corr": 0.26,
+      "corr_at_zero": 0.226,
+      "n_px": 37775,
+      "status": "weak correlation",
+      "window": 9,
+      "bbox": [
+        294010.0,
+        6126330.0,
+        296010.0,
+        6128330.0
+      ],
+      "land_frac": 0.982,
+      "texture": 0.02052,
+      "ortho": "E293970_N6126290_2080x2080m_2m.png"
+    },
+    {
+      "shift_e": -10.74,
+      "shift_n": -3.65,
+      "peak_corr": 0.25,
+      "corr_at_zero": 0.196,
+      "n_px": 38416,
+      "status": "weak correlation",
+      "window": 10,
+      "bbox": [
+        286010.0,
+        6126330.0,
+        288010.0,
+        6128330.0
+      ],
+      "land_frac": 1.0,
+      "texture": 0.01568,
+      "ortho": "E285970_N6126290_2080x2080m_2m.png"
     }
   ],
-  "water_level_m_ahd": 0.0,
+  "reference": {
+    "service": "https://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Imagery/MapServer/export",
+    "attribution": "NSW Imagery (c) State of New South Wales (Spatial Services, Department of Customer Service NSW)",
+    "use": "Positional reference only; imagery not redistributed. Catalogue licence CC BY 3.0 AU; Spatial Services' copyright page excludes images.",
+    "resolution_m": 2.0,
+    "cache": "data\\raw\\ortho\\jervis_bay"
+  },
   "params": {
-    "min_slope_deg": 30.0,
+    "window_m": 2000.0,
+    "n_windows": 12,
+    "min_land_frac": 0.9,
+    "min_spacing_m": 3000.0,
     "search_m": 30.0,
-    "step_m": 1.0,
-    "band_half_width_px": 5,
-    "min_segment_px": 20,
-    "cross_check_half_m": 9.0,
-    "cross_check_step_m": 3.0,
-    "agree_floor_m": 3.0,
-    "min_peak_corr": 0.5,
-    "apply_threshold_m": 2.0,
-    "max_residual_rms_m": 5.0
+    "coarse_step_m": 3.0,
+    "fine_step_m": 0.5,
+    "psf_sigma_px": 0.5,
+    "min_window_corr": 0.3,
+    "min_windows": 4,
+    "max_scatter_m": 4.0,
+    "apply_threshold_m": 2.0
   },
-  "datum": {
-    "operation": "Inverse of Map Grid of Australia zone 56 + GDA2020 to WGS 84 (2) + UTM zone 56S",
-    "stated_accuracy_m": 3.0,
-    "translation_m": [
-      0.0,
-      -0.0001
-    ],
-    "nonuniformity_m": 0.0
-  },
-  "sign_convention": "shift = ground position of image pixel minus nominal; apply by aggregating lidar onto the scene grid translated by shift",
-  "written_utc": "2026-09-27T08:23:02+00:00",
+  "sign_convention": "shift = ground position of image pixel minus nominal; apply by aggregating the reference onto the scene grid translated by shift",
+  "written_utc": "2026-09-27T10:11:56+00:00",
   "sdb_version": "0.1.0"
 }

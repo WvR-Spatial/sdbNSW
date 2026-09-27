@@ -70,15 +70,16 @@ The processing-baseline offset has already been applied and checked against
 water physics, so nothing downstream should apply it again. `provenance.json`
 records which conversion was used.
 
-Two more commands put the lidar on that scene's grid:
+Three more commands put the lidar on that scene's grid:
 
 ```
-python -m sdb.coreg --scene <item id>        # measure image-to-lidar offset (~25 s)
-python -m sdb.reference --scene <item id>    # aggregate lidar onto the scene grid (~6 s)
+python -m sdb.coreg --scene <item id>                   # image offset vs orthoimagery (~1 min)
+python -m sdb.waterlevel --scene <item id> --from-image # provisional water level (~20 s)
+python -m sdb.reference --scene <item id>               # lidar onto the scene grid (~6 s)
 ```
 
-`reference` applies the offset from `coreg` when its verdict is `apply`, and
-adds to `raw/scenes/<item id>/`:
+`reference` applies the offset from `coreg` when its verdict is `apply`, uses
+the water level from `waterlevel`, and adds to `raw/scenes/<item id>/`:
 
 | File | Contents |
 |---|---|
@@ -88,13 +89,32 @@ adds to `raw/scenes/<item id>/`:
 The small records that explain them — offset measured, datum operation, water
 level assumed, pixel counts by depth band — go to `outputs/` and are committed.
 
-### 4. Tide data
+### 4. Orthoimagery for co-registration  *(fetched automatically, never committed)*
 
-Water level at scene acquisition time, for the vertical offset between
-instantaneous depth and AHD. Candidate source: [MHL](http://new.mhl.nsw.gov.au/).
-Not yet obtained — until it is, `reference` assumes 0 m AHD and says so. The
-image itself implies about −0.45 m AHD at the Jervis Bay overpass (see the
-brief). Save to `raw/`.
+`coreg` fetches 2 km windows of NSW Imagery (Spatial Services) through its
+public Export Map endpoint, in the scene's CRS at 2 m, and caches them as PNG +
+JSON sidecar in `raw/ortho/<site>/`. Used only as a positional reference: the
+imagery's licence is unclear (catalogue CC BY 3.0 AU; Spatial Services excludes
+images from its Creative Commons licence), so it is not redistributed, not
+committed and not drawn in any figure.
+
+> NSW Imagery © State of New South Wales (Spatial Services, Department of
+> Customer Service NSW).
+
+### 5. Tide gauge record
+
+Observed water level at the overpass. Source: Manly Hydraulics Laboratory,
+**Jervis Bay gauge 216470** (HMAS Creswell), by data request — the form under
+*Data Request* on [mhl.nsw.gov.au](https://www.mhl.nsw.gov.au/Station-216470) or
+data-request@mhl.nsw.gov.au. Ask for 6–8 September 2018. Licence CC BY 4.0;
+attribute NSW DCCEEW. Save the CSV to `raw/tide/`.
+
+- Times are **AEST** (UTC+10, no daylight saving).
+- Gauge datum is **chart datum**; AHD = CD − 1.07 m. MHL's labels are not
+  reliable on this, so `waterlevel` infers the datum from the record's mean.
+
+Until it arrives, `waterlevel --from-image` gives a provisional estimate
+(−0.50 m AHD at Jervis Bay, biased low by ~0.1–0.2 m).
 
 ---
 

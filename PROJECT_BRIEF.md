@@ -1,12 +1,12 @@
 # Satellite-Derived Bathymetry on an Exposed Temperate Coast — project brief
 
-**Status:** Phase 1 — gate **not yet passed**. Scene fetched and checked;
-lidar aggregated onto the scene grid (91.6 km² usable in 0–20 m). The QGIS gate
-**overturned the waterline co-registration**: against NSW Spatial Services
-orthoimagery, on land, the image is offset **~7–8 m (E −6.5, N −3.5)**, not
-21.6 m. `reference.tif` currently carries the wrong shift — do not build on
-it. Next: co-registration against reference orthoimagery (plan below), then
-the tide at overpass.
+**Status:** Phase 1 — gate **passed on geometry, provisional on water level**.
+Co-registration rebuilt against NSW orthoimagery on land: **E −7.4 ± 1.0,
+N −1.0 ± 1.1 m** (8 windows agree), applied. Water level at overpass
+**−0.50 m AHD, provisional** (image estimate, biased low ~0.1–0.2 m); the
+observed record from MHL's Jervis Bay gauge has been requested. Reference on
+the scene grid: **93.8 km² usable in 0–20 m**. Next: Phase 2, Stumpf SDB —
+water level enters only through the depth bands and masks, so it need not wait.
 **Updated:** 27 Sep 2026 · **Repo:** `sdbNSW`
 **Portfolio slot:** replaces *Revealing the Ancient Murray via REM*.
 
@@ -70,7 +70,8 @@ built in `narrabeen-stage1`.
 |---|---|---|---|---|
 | [NSW Marine LiDAR Topo-Bathy 2018](https://datasets.seed.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018) | 5 m grid, IHO Order 1b, AHD, shore to 20–40 m, Jul–Dec 2018 | [ELVIS](https://elevation.fsdf.org.au/) / AODN, manual area select | **CC BY 4.0** | **Yes** — clipped subsets, with attribution |
 | Sentinel-2 L2A | 10 m multispectral COGs | Earth Search STAC on AWS, anonymous | Copernicus open | No — derived results only |
-| MHL NSW tide | Water level at acquisition time | mhl.nsw.gov.au | Attribution | Derived only |
+| MHL tide gauge 216470, Jervis Bay (HMAS Creswell) | Observed water level at overpass; AEST; chart datum, AHD offset −1.07 m | MHL data request (form or data-request@mhl.nsw.gov.au) | CC BY 4.0, attribute NSW DCCEEW | Raw file no (`data/raw/tide/`); derived value yes |
+| NSW Imagery (Spatial Services) | Orthophoto windows for co-registration only | ArcGIS REST Export Map, anonymous | Catalogue: CC BY 3.0 AU; Spatial Services excludes images from its CC licence | **No** — cached in `data/raw/ortho/`, never redistributed or drawn |
 | ERA5 10 m wind | Scene selection only — glint pre-screen | [Open-Meteo](https://open-meteo.com/) archive API, anonymous | CC BY 4.0 | No — fetched at run time |
 | NSW seagrass / substrate mapping | Stratification variable | SEED | Check per dataset | Clipped subsets |
 
@@ -118,8 +119,8 @@ Report, per site:
 | Reference (IHO Order 1b) | ±0.52 m at 10 m, ±0.56 m at 20 m | TVU = √(a² + (b·d)²), a=0.5, b=0.013, 95% |
 | Reference horizontal | 5 m + 5% depth ≈ 5.5 m | Sub-pixel at 10 m S2 |
 | Expected SDB error | 1.3–2.2 m clear water; unknown here | The quantity being measured |
-| Water level correction | Not yet measured. Image implies ~−0.45 m AHD at overpass vs 0 m assumed | Scalar offset. Now the leading open term |
-| **Co-registration** | ~7–8 m before correction (land features vs NSW orthoimagery); ±~2 m after, pending the orthoimagery-based `coreg` | On a 1:10 seabed slope 5 m of misregistration is 0.5 m of depth. The waterline method's 21.6 m was biased — see register |
+| Water level correction | Provisional −0.50 m AHD (image; biased low ~0.1–0.2 m, broad peak ±0.15 m); gauge record requested | A constant error is absorbed by the Stumpf intercept; it moves depth bands, masks and anything reported against AHD |
+| **Co-registration** | 7.5 m measured and removed; residual ±1.0 m E, ±1.1 m N (1σ), plus ~1.5 m possible datum offset in the reference imagery | On a 1:10 seabed slope 1 m of misregistration is 0.1 m of depth. Now a minor term |
 | Sub-pixel relief | Median 0.01–0.09 m, p90 ≤ 0.24 m by depth band | Std of the 5 m cells inside each 10 m pixel. Minor except on reef edges; kept for stratification |
 | **Seabed change 2018→scene** | **The real constraint** | See below |
 
@@ -166,9 +167,10 @@ sdbNSW/
 │       ├── stac.py             # scene discovery + selection
 │       ├── glint.py            # Cox–Munk glint index from ERA5 wind (selection only)
 │       ├── fetch.py            # quicklooks; AOI reflectance stack + SCL
-│       ├── coreg.py            # image-to-lidar offset from steep shorelines
+│       ├── ortho.py            # orthoimagery fetch/cache, window selection, registration
+│       ├── coreg.py            # co-registration CLI (ortho primary; waterline diagnostic)
 │       ├── reference.py        # exact area-weighted lidar -> scene grid; masks
-│       ├── waterlevel.py       # tide at acquisition time
+│       ├── waterlevel.py       # water level at overpass: MHL gauge, or image (provisional)
 │       ├── sdb.py              # Stumpf ratio transform, calibration
 │       ├── validate.py         # blocked CV, statistics, stratification
 │       └── viz.py              # one palette, one set of chrome
@@ -204,7 +206,7 @@ SDB-versus-lidar comparison, plus the repo. Limitations panel above results.
 
 - [x] Repo name `sdbNSW`
 - [x] Jervis Bay scene — `S2A_56HKG_20180907_0_L2A` (see decisions register)
-- [ ] **Water level at overpass** — gauge source for Jervis Bay (MHL, or a BOM gauge with a datum tie to AHD). Next
+- [ ] **Observed water level at overpass** — MHL Jervis Bay (216470) record for 6–8 Sep 2018 requested; replaces the provisional image estimate when it arrives
 - [ ] Confirm site 3 (Batemans vs Richmond) after checking lidar tile coverage
 - [ ] Atmospheric correction: L2A as supplied, or test whether it matters (one paper found it optional)
 - [ ] Sun glint correction method
@@ -242,6 +244,12 @@ defensible piece of work.
 | 27 Sep | **Why the waterline method failed: its biases all pointed east in this scene** | West-facing cliffs are in shadow under a north-easterly sun, so their image edge reads landward (east). East-facing ocean cliffs carry whitewater at the base, so their edge reads seaward (east). The bay's long beaches mostly face east, so a low tide and NIR seeing through the first ~0.2 m of water push their edge seaward (east). Different mechanisms, one direction. The QGIS view shows the shadow band directly |
 | 27 Sep | **Lesson: agreement between two estimators that share a signal is not independence** | Steep-shore and all-shore estimates agreed (−18.5 vs −17.0 E) and I treated that as confirmation. Both read the same water edge and inherited the same biases. The test that caught it used a different signal entirely — land features against an independent orthophoto. The gate worked because it was a different kind of check, not a second opinion from the same kind |
 | 27 Sep | **Proposed: co-register against reference orthoimagery, on land**, with the waterline method demoted to a diagnostic | Fetch NSW Imagery windows through its public ArcGIS REST `export` endpoint directly in EPSG:32756; aggregate to 10 m; sub-pixel phase correlation against S2 over several land windows spread across the scene (runways, roads, clearings, towns); median shift, window scatter as the error bar. Licence to be confirmed before use. **Awaiting approval** |
+| 27 Sep | **Co-registration rebuilt on orthoimagery: E −7.42 ± 0.98, N −1.02 ± 1.14 m (7.5 m) — applied.** 11 automatically chosen 2 km land windows; 8 agree (scatter E 2.2, N 2.6 m), 1 outlier dropped (+15 m E, Booderee), 2 rejected for weak correlation (forest) | Exact area aggregation of 2 m orthophoto onto the scene grid at each trial shift, gradient correlation, coarse-then-fine search. Recovers synthetic shifts to <0.7 m under different radiometry, blur and noise. East matches the screenshot check (−7.0 at the airfield); north is smaller than it suggested (−1.0 vs −3.7), within ~2σ, and rests on eight windows rather than two |
+| 27 Sep | Orthoimagery used as a **positional reference only** | Licence is unclear for images (catalogue CC BY 3.0 AU; Spatial Services' copyright page excludes images; parts are third-party). Tiles stay in gitignored `data/raw/ortho/`, only numbers are committed, and figures show Sentinel-2 NIR, never the orthophoto. Fetch uses the standard library only, so it also ran inside QGIS's Python to test it on real data |
+| 27 Sep | **Tide gauge found in the bay**: MHL 216470, Jervis Bay at HMAS Creswell, radar since 1989, AEST, chart datum with AHD offset −1.07 m | Historical data by request (CC BY 4.0). Not in the Bureau's Water Data Online; MHL's web predictions only reach back 90 days. The 2018 record must come from MHL |
+| 27 Sep | **Datum inferred from the numbers, not the label** | MHL's own pages label chart-datum values "m AHD" (live chart: 1.66, above the 1.36 m AHD flood of record) and an AHD table "Chart Datum". MSL 2018-19 is +0.074 m AHD = +1.144 m CD, so a record's mean identifies its datum; ambiguous means refuse |
+| 27 Sep | **Provisional water level −0.50 m AHD** from the image (whole-shoreline NIR vs lidar land fraction, co-registration applied) | Consistent with a near-spring low: new moon 9 Sep; MLWS 2018-19 is −0.515 m AHD. Biased low by ~0.1–0.2 m (NIR reads through very shallow water), so the gauge should read about −0.3 to −0.4 m. Estimator exact on curved synthetic shorelines; worst case one straight grid-aligned beach, ~6 cm |
+| 27 Sep | **Phase 2 does not wait for the gauge** | A constant water-level error is absorbed by the Stumpf intercept; it moves depth-band membership and masks. Re-run `reference` when the gauge value arrives and report both |
 | 27 Sep | Glint geometry: closed form `cos(2ω)=…` **replaced** with the vector derivation | The closed form is wrong off the principal plane (~0.8° at θs=20°, θv=30°, Δφ=90°). Immaterial at S2's near-nadir view, but wrong. Pinned by a grid test against an independent derivation |
 
 ## Sources
@@ -253,6 +261,10 @@ defensible piece of work.
 - SDB empirical vs ML in dynamic coastal water (2024) — https://doi.org/10.1080/21664250.2024.2445418
 - ICESat-2 Bathymetry Working Group — https://github.com/ICESat2-Bathymetry/Information
 - AusSeabed — https://www.ausseabed.gov.au/data
+- MHL Jervis Bay tide gauge 216470 — https://www.mhl.nsw.gov.au/Station-216470
+- PSMSL station JERVIS BAY II — https://psmsl.org/data/obtaining/stations/2312.php
+- NSW Imagery Export Map service — https://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Imagery/MapServer
+- Spatial Services copyright — https://www.spatial.nsw.gov.au/copyright
 - Sentinel-2 L1C Data Quality Report, Issue 28 (July 2018) — geolocation performance — https://sentinels.copernicus.eu/documents/247904/3897638/Sentinel-2_L1C_Data_Quality_Report/9699703d-556e-407a-a955-65c0c82dfcb5?version=1.2
 - Sentinel-2 geometric refinement (GRI) — https://sentinels.copernicus.eu/-/forthcoming-deployment-of-the-copernicus-sentinel-2-products-geometric-refinement
 - Cox & Munk (1954), roughness of the sea surface from sun glitter, *JOSA* 44(11) — https://doi.org/10.1364/JOSA.44.000838

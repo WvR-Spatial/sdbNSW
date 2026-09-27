@@ -36,12 +36,12 @@
   "coregistration": {
     "note": "APPLIED from coreg_S2A_56HKG_20180907_0_L2A.json",
     "shift_applied_m": [
-      -18.47,
-      -11.11
+      -7.42,
+      -1.02
     ]
   },
-  "water_level_m_ahd": 0.0,
-  "water_level_source": "assumed (AHD ~ mean sea level)",
+  "water_level_m_ahd": -0.496,
+  "water_level_source": "provisional (image) from waterlevel_S2A_56HKG_20180907_0_L2A.json",
   "depth_window_m": [
     0.0,
     20.0
@@ -56,51 +56,51 @@
   },
   "summary": {
     "pixels_total": 4496904,
-    "pixels_usable": 916351,
-    "usable_km2": 91.64,
+    "pixels_usable": 937499,
+    "usable_km2": 93.75,
     "flagged_any": {
       "lidar coverage incomplete": 1807508,
-      "any land in pixel": 1253335,
-      "outside depth window": 1748787,
+      "any land in pixel": 1268684,
+      "outside depth window": 1740578,
       "cloud or shadow (SCL)": 24644,
-      "bright NIR over lidar water": 29524,
+      "bright NIR over lidar water": 16640,
       "no image data": 0
     },
     "by_depth_band": [
       {
         "band_m": "0-2",
-        "pixels": 19380,
-        "km2": 1.94,
-        "relief_median_m": 0.078,
-        "relief_p90_m": 0.215
+        "pixels": 25125,
+        "km2": 2.51,
+        "relief_median_m": 0.092,
+        "relief_p90_m": 0.222
       },
       {
         "band_m": "2-5",
-        "pixels": 60909,
-        "km2": 6.09,
-        "relief_median_m": 0.091,
-        "relief_p90_m": 0.242
+        "pixels": 66872,
+        "km2": 6.69,
+        "relief_median_m": 0.085,
+        "relief_p90_m": 0.246
       },
       {
         "band_m": "5-10",
-        "pixels": 186412,
-        "km2": 18.64,
-        "relief_median_m": 0.032,
-        "relief_p90_m": 0.174
+        "pixels": 193326,
+        "km2": 19.33,
+        "relief_median_m": 0.03,
+        "relief_p90_m": 0.171
       },
       {
         "band_m": "10-15",
-        "pixels": 308910,
-        "km2": 30.89,
+        "pixels": 325466,
+        "km2": 32.55,
         "relief_median_m": 0.016,
-        "relief_p90_m": 0.082
+        "relief_p90_m": 0.078
       },
       {
         "band_m": "15-20",
-        "pixels": 340740,
-        "km2": 34.07,
-        "relief_median_m": 0.014,
-        "relief_p90_m": 0.057
+        "pixels": 326710,
+        "km2": 32.67,
+        "relief_median_m": 0.015,
+        "relief_p90_m": 0.061
       }
     ]
   },
@@ -108,6 +108,6 @@
     "data\\raw\\scenes\\S2A_56HKG_20180907_0_L2A\\reference.tif",
     "data\\raw\\scenes\\S2A_56HKG_20180907_0_L2A\\mask.tif"
   ],
-  "written_utc": "2026-09-27T08:24:37+00:00",
+  "written_utc": "2026-09-27T10:14:20+00:00",
   "sdb_version": "0.1.0"
 }

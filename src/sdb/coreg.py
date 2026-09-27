@@ -1,4 +1,12 @@
-"""Measure how far the image sits from the lidar -- before comparing depths.
+"""Measure how far the image sits from its true position -- before comparing depths.
+
+PRIMARY METHOD (default, `--method ortho`): register the scene against
+reference orthoimagery on land -- see sdb/ortho.py. That replaced the method
+below after the QGIS gate showed it was ~14 m wrong at Jervis Bay.
+
+DIAGNOSTIC (`--method waterline`): the original steep-shoreline method, kept
+because its failure is instructive and its tests pin the geometry. It writes
+to a separate record and never feeds reference.py. Its original description:
 
 The 2018 scene predates Sentinel-2's geometric refinement: ESA's July 2018
 quality report puts S2A absolute geolocation at ~12 m (95%). A pixel of
@@ -459,24 +467,116 @@ def _plot(path: Path, nir: np.ndarray, dst: Grid, rec: dict[str, Any]) -> None:
     plt.close(fig)
 
 
-def main(argv: Sequence[str] | None = None) -> int:
-    import yaml
+def _plot_ortho(path: Path, nir: np.ndarray, dst: Grid, rec: dict[str, Any]) -> None:
+    """Scene NIR with each window and its shift (exaggerated). No orthophoto is drawn."""
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    from matplotlib.patches import Rectangle
 
-    p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    p.add_argument("--site", default="jervis_bay")
-    p.add_argument("--config", type=Path, default=Path("config/sites.yml"))
-    p.add_argument("--scene", required=True)
-    p.add_argument("--root", type=Path, default=Path("."))
-    p.add_argument("--out", type=Path, default=Path("outputs"))
-    p.add_argument("--water-level", type=float, default=DEFAULT_WATER_LEVEL_M)
-    p.add_argument("--min-slope", type=float, default=STEEP_SLOPE_DEG)
-    p.add_argument("--min-px", type=int, default=MIN_SEGMENT_PX,
-                   help="minimum waterline pixels per segment")
-    p.add_argument("--no-cross-check", action="store_true",
-                   help="skip the all-shoreline cross-check (~30 s)")
-    a = p.parse_args(argv)
+    fig, ax = plt.subplots(figsize=(7.5, 8.5), facecolor="#0f172a")
+    lo, hi = np.nanpercentile(nir, [2, 98])
+    ext = (dst.x0, dst.x0 + dst.nx * dst.dx, dst.y0 - dst.ny * dst.dy, dst.y0)
+    ax.imshow(np.clip((nir - lo) / (hi - lo), 0, 1), cmap="gray", extent=ext, interpolation="nearest")
+    scale = 100.0
+    for w in rec["windows"]:
+        x0, y0, x1, y1 = w["bbox"]
+        used = w.get("status") == "ok" and w["window"] not in rec.get("windows_dropped", [])
+        col = "#e0a458" if used else "#64748b"
+        ax.add_patch(Rectangle((x0, y0), x1 - x0, y1 - y0, fill=False, ec=col, lw=1.2))
+        if w.get("shift_e") is not None:
+            cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
+            ax.arrow(cx, cy, w["shift_e"] * scale, w["shift_n"] * scale, color=col, width=30,
+                     head_width=140, length_includes_head=True)
+    title = f"{rec['scene']} — co-registration against NSW orthoimagery (arrows x{scale:.0f})"
+    if "shift_m" in rec:
+        title += (f"\nshift E {rec['shift_m']['east']:+.1f} ± {rec['stderr_m']['east']:.1f}, "
+                  f"N {rec['shift_m']['north']:+.1f} ± {rec['stderr_m']['north']:.1f} m   "
+                  f"verdict: {rec['verdict']}")
+    ax.set_title(title, color="#e2e8f0", fontsize=9)
+    ax.tick_params(colors="#94a3b8", labelsize=7)
+    fig.tight_layout()
+    fig.savefig(path, dpi=110, facecolor="#0f172a")
+    plt.close(fig)
 
-    site_cfg = yaml.safe_load(a.config.read_text(encoding="utf-8"))["sites"][a.site]
+
+def _run_ortho(a, site_cfg: dict[str, Any]) -> int:
+    from sdb import ortho as O
+
+    scene = read_scene(a.root / "data" / "raw" / "scenes" / a.scene)
+    dst = scene["grid"]
+    g = O.grey(scene["blue"], scene["green"], scene["red"])
+    with np.errstate(invalid="ignore"):
+        land = np.isfinite(g) & (scene["nir"] > 0.05)
+    if "scl" in scene:
+        land &= ~np.isin(scene["scl"], O.SCL_EXCLUDE)
+    wins = O.select_windows(land, g, dst, n=a.windows, window_m=a.window_km * 1000.0)
+    cache = a.root / "data" / "raw" / "ortho" / a.site
+    print(f"{a.scene}\n  reference: NSW Imagery (Spatial Services), {O.ORTHO_RES_M:g} m, "
+          f"cached in {cache}\n  {len(wins)} land windows of {a.window_km:g} km; "
+          f"search +/-{O.SEARCH_M:g} m\n")
+
+    results = []
+    for w in wins:
+        png = O.fetch_window(O.fetch_bbox(w), O.ORTHO_RES_M, cache)
+        img, og = O.load_window(png)
+        k = w["size_px"]
+        r0, c0 = w["row0"], w["col0"]
+        res = O.register_window(g[r0:r0 + k, c0:c0 + k], dst.window(r0, c0, k, k),
+                                land[r0:r0 + k, c0:c0 + k], img, og)
+        res.update({"window": w["id"], "bbox": w["bbox"], "land_frac": w["land_frac"],
+                    "texture": w["texture"], "ortho": png.name})
+        results.append(res)
+
+    sol = O.combine(results)
+    rec = {"scene": a.scene, "method": "ortho", **sol, "windows": results}
+
+    print(f"  {'win':>3} {'centre E, N':>18} {'shift E':>8} {'shift N':>8} {'corr':>6} {'at 0':>6}  status")
+    for r in results:
+        cx = (r["bbox"][0] + r["bbox"][2]) / 2
+        cy = (r["bbox"][1] + r["bbox"][3]) / 2
+        se = "--" if r.get("shift_e") is None else f"{r['shift_e']:+.1f}"
+        sn = "--" if r.get("shift_n") is None else f"{r['shift_n']:+.1f}"
+        pc = "--" if r.get("peak_corr") is None else f"{r['peak_corr']:.2f}"
+        cz = "--" if r.get("corr_at_zero") is None else f"{r['corr_at_zero']:.2f}"
+        st = r["status"] + (" (dropped)" if r["window"] in sol.get("windows_dropped", []) else "")
+        print(f"  {r['window']:>3} {cx:>9.0f},{cy:>8.0f} {se:>8} {sn:>8} {pc:>6} {cz:>6}  {st}")
+    print()
+    if "shift_m" in sol:
+        print(f"  shift: E {sol['shift_m']['east']:+.2f} ± {sol['stderr_m']['east']:.2f} m, "
+              f"N {sol['shift_m']['north']:+.2f} ± {sol['stderr_m']['north']:.2f} m   "
+              f"(|shift| {sol['magnitude_m']} m; {sol['n_windows_ok']} windows, scatter "
+              f"E {sol['scatter_m']['east']}, N {sol['scatter_m']['north']} m; "
+              f"reference datum ambiguity ~{O.DATUM_AMBIGUITY_M:g} m)")
+    print(f"  verdict: {sol['verdict'].upper()} -- {sol['reason']}")
+
+    a.out.mkdir(parents=True, exist_ok=True)
+    rec.update({
+        "reference": {"service": O.SERVICE_URL, "attribution": O.ATTRIBUTION, "use": O.USE_NOTE,
+                      "resolution_m": O.ORTHO_RES_M, "cache": str(cache)},
+        "params": {"window_m": a.window_km * 1000.0, "n_windows": a.windows,
+                   "min_land_frac": O.MIN_LAND_FRAC,
+                   "min_spacing_m": O.SPACING_FACTOR * a.window_km * 1000.0, "search_m": O.SEARCH_M,
+                   "coarse_step_m": O.COARSE_STEP_M, "fine_step_m": O.FINE_STEP_M,
+                   "psf_sigma_px": O.PSF_SIGMA_PX, "min_window_corr": O.MIN_WINDOW_CORR,
+                   "min_windows": O.MIN_WINDOWS, "max_scatter_m": O.MAX_SCATTER_M,
+                   "apply_threshold_m": O.APPLY_THRESHOLD_M},
+        "sign_convention": "shift = ground position of image pixel minus nominal; "
+                           "apply by aggregating the reference onto the scene grid translated by shift",
+        "written_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "sdb_version": __version__,
+    })
+    jpath = a.out / f"coreg_{a.scene}.json"
+    jpath.write_text(json.dumps(rec, indent=2), encoding="utf-8")
+    png = a.out / f"coreg_{a.scene}.png"
+    _plot_ortho(png, scene["nir"], dst, rec)
+    print(f"\n  record -> {jpath}\n  figure -> {png}")
+    if rec["verdict"] == "apply":
+        print("  reference.py will apply this shift (default --coreg auto).")
+    return 0
+
+
+def _run_waterline(a, site_cfg: dict[str, Any]) -> int:
     z, valid, src, src_crs = read_dem(a.root / site_cfg["reference_dem"])
     scene = read_scene(a.root / "data" / "raw" / "scenes" / a.scene)
     dst = scene["grid"]
@@ -488,12 +588,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     if "scl" in scene:
         usable &= ~np.isin(scene["scl"], SCL_CLOUD + SCL_NODATA)
 
-    print(f"{a.scene}\n  steep shoreline >= {a.min_slope:g} deg at water level "
+    print(f"{a.scene}\n  DIAGNOSTIC ONLY -- waterline method (superseded; never applied)\n"
+          f"  steep shoreline >= {a.min_slope:g} deg at water level "
           f"{a.water_level:+.2f} m AHD; search +/-{SEARCH_M:g} m along each normal\n")
     rec = estimate_shift(z, valid, src, dst, nir, usable, water_level=a.water_level,
                          min_slope=a.min_slope, min_px=a.min_px,
                          cross_check=not a.no_cross_check)
-    rec = {"scene": a.scene, **rec}
+    rec = {"scene": a.scene, "method": "waterline (diagnostic)", **rec}
 
     resid = rec.get("residuals", {})
     print(f"  {'seg':>4} {'faces':>6} {'px':>5} {'offset m':>9} {'corr':>6} {'resid m':>8}  status")
@@ -504,43 +605,48 @@ def main(argv: Sequence[str] | None = None) -> int:
         rs = "--" if rs is None else f"{rs:+.1f}"
         st = s["status"] + (" (dropped)" if s["segment"] in rec.get("segments_dropped", []) else "")
         print(f"  {s['segment']:>4} {s['facing_deg']:>5.0f}° {s['n_px']:>5} {off:>9} {cor:>6} {rs:>8}  {st}")
-
     print()
     if "shift_m" in rec:
         print(f"  shift: E {rec['shift_m']['east']:+.2f} ± {rec['stderr_m']['east']:.2f} m, "
-              f"N {rec['shift_m']['north']:+.2f} ± {rec['stderr_m']['north']:.2f} m   "
-              f"(|shift| {rec['magnitude_m']} m; {rec['n_segments_used']} segments, "
-              f"normals span {rec['normal_spread_deg']:.0f}°, residual RMS {rec['residual_rms_m']} m)")
-    ck = rec.get("cross_check")
-    if ck:
-        print(f"  cross-check, all shoreline ({ck['n_px']:,} px): peak E {ck['peak_m']['east']:+.2f}, "
-              f"N {ck['peak_m']['north']:+.2f} m; correlation {ck['corr_at_nominal']:.3f} unshifted "
-              f"-> {ck['peak_corr']:.3f} at peak\n    {'agrees' if ck['agrees'] else 'DISAGREES'}: {ck['reason']}")
-    print(f"  verdict: {rec['verdict'].upper()} -- {rec['reason']}")
+              f"N {rec['shift_m']['north']:+.2f} ± {rec['stderr_m']['north']:.2f} m")
+    print(f"  diagnostic verdict: {rec['verdict']} -- {rec['reason']}")
 
     a.out.mkdir(parents=True, exist_ok=True)
-    rec.update({
-        "water_level_m_ahd": a.water_level,
-        "params": {"min_slope_deg": a.min_slope, "search_m": SEARCH_M, "step_m": STEP_M,
-                   "band_half_width_px": BAND_HALF_WIDTH_PX, "min_segment_px": a.min_px,
-                   "cross_check_half_m": CHECK_HALF_M, "cross_check_step_m": CHECK_STEP_M,
-                   "agree_floor_m": AGREE_FLOOR_M,
-                   "min_peak_corr": MIN_PEAK_CORR, "apply_threshold_m": APPLY_THRESHOLD_M,
-                   "max_residual_rms_m": MAX_RESIDUAL_RMS_M},
-        "datum": datum,
-        "sign_convention": "shift = ground position of image pixel minus nominal; "
-                           "apply by aggregating lidar onto the scene grid translated by shift",
-        "written_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "sdb_version": __version__,
-    })
-    jpath = a.out / f"coreg_{a.scene}.json"
+    rec.update({"water_level_m_ahd": a.water_level, "datum": datum,
+                "note": "Diagnostic only. Biased at Jervis Bay by shadowed cliffs, whitewater "
+                        "and low-tide beaches; see PROJECT_BRIEF. Not read by reference.py.",
+                "written_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+                "sdb_version": __version__})
+    jpath = a.out / f"coreg_{a.scene}_waterline.json"
     jpath.write_text(json.dumps(rec, indent=2), encoding="utf-8")
-    png = a.out / f"coreg_{a.scene}.png"
-    _plot(png, nir, dst, rec)
-    print(f"\n  record -> {jpath}\n  figure -> {png}")
-    if rec["verdict"] == "apply":
-        print("  reference.py will apply this shift (default --coreg auto).")
+    _plot(a.out / f"coreg_{a.scene}_waterline.png", nir, dst, rec)
+    print(f"\n  record -> {jpath}")
     return 0
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    import yaml
+
+    p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    p.add_argument("--site", default="jervis_bay")
+    p.add_argument("--config", type=Path, default=Path("config/sites.yml"))
+    p.add_argument("--scene", required=True)
+    p.add_argument("--root", type=Path, default=Path("."))
+    p.add_argument("--out", type=Path, default=Path("outputs"))
+    p.add_argument("--method", choices=("ortho", "waterline"), default="ortho",
+                   help="ortho (default): register against orthoimagery on land. "
+                        "waterline: the superseded shoreline method, as a diagnostic")
+    p.add_argument("--windows", type=int, default=12, help="ortho: number of land windows")
+    p.add_argument("--window-km", type=float, default=2.0, help="ortho: window size, km")
+    p.add_argument("--water-level", type=float, default=DEFAULT_WATER_LEVEL_M,
+                   help="waterline only")
+    p.add_argument("--min-slope", type=float, default=STEEP_SLOPE_DEG, help="waterline only")
+    p.add_argument("--min-px", type=int, default=MIN_SEGMENT_PX, help="waterline only")
+    p.add_argument("--no-cross-check", action="store_true", help="waterline only")
+    a = p.parse_args(argv)
+
+    site_cfg = yaml.safe_load(a.config.read_text(encoding="utf-8"))["sites"][a.site]
+    return _run_ortho(a, site_cfg) if a.method == "ortho" else _run_waterline(a, site_cfg)
 
 
 if __name__ == "__main__":

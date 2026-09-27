@@ -19,6 +19,7 @@ dependencies:
   - numpy
   - scipy
   - affine
+  - pillow
   - pandas
   - scikit-learn
   - matplotlib
