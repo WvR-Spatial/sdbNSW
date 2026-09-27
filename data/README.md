@@ -49,7 +49,26 @@ files below, so you only need it again to re-derive them for another site.
 ### 3. Sentinel-2 L2A
 
 Fetched programmatically from the Earth Search STAC catalogue on AWS — no
-account, nothing to download by hand. See `src/sdb/stac.py`.
+account, nothing to download by hand.
+
+```
+python -m sdb.stac --site jervis_bay                      # rank candidates
+python -m sdb.fetch quicklook --top 3                     # AOI cloud + visual check
+python -m sdb.fetch scene --item <item id>                # fetch the chosen scene
+```
+
+Only the AOI's pixels are read (windowed COG requests), and they land in
+`raw/scenes/<item id>/`:
+
+| File | Contents |
+|---|---|
+| `reflectance.tif` | blue, green, red, nir — BOA reflectance, float32, native UTM 10 m grid, NaN = nodata |
+| `scl.tif` | scene classification, upsampled to 10 m by exact replication |
+| `provenance.json` | item id, processing baseline, the scale/offset applied and where it came from, the water plausibility check, AOI cloud/water fractions |
+
+The processing-baseline offset has already been applied and checked against
+water physics, so nothing downstream should apply it again. `provenance.json`
+records which conversion was used.
 
 ### 4. MHL NSW tide data
 

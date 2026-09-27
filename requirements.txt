@@ -1,6 +1,9 @@
 # Prefer environment.yml (conda-forge) on Windows -- GDAL via pip is painful.
 # This file exists so CI and non-conda users have a path.
 pystac-client>=0.8
+requests>=2.31
+numpy>=1.26
+shapely>=2.0
 pandas>=2.0
 pyyaml>=6.0
 rasterio>=1.3

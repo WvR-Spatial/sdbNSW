@@ -225,3 +225,120 @@ def test_jervis_bay_bbox_matches_the_measured_block():
     w, so, e, n = s.bbox
     assert (e - w) * 111.0 * math.cos(math.radians(-35.06)) == pytest.approx(13.5, abs=1.0)  # km
     assert (n - so) * 111.0 == pytest.approx(19.7, abs=1.0)                                   # km
+
+
+# --- MGRS tile parsing -----------------------------------------------------
+
+from sdb.stac import (  # noqa: E402
+    MIN_AOI_COVERAGE_PCT,
+    aoi_coverage_pct,
+    dedupe_acquisitions,
+    mgrs_tile,
+)
+
+JB_BBOX = (150.6607, -35.1504, 150.8083, -34.9735)
+
+
+@pytest.mark.parametrize("props,expected", [
+    ({"grid:code": "MGRS-56HKG"}, "56HKG"),
+    ({"grid:code": "mgrs-56hlg"}, "56HLG"),
+    ({"s2:mgrs_tile": "56HKG"}, "56HKG"),
+    ({"mgrs:utm_zone": 56, "mgrs:latitude_band": "H", "mgrs:grid_square": "KG"}, "56HKG"),
+    ({"mgrs:utm_zone": 5, "mgrs:latitude_band": "H", "mgrs:grid_square": "KG"}, "05HKG"),
+    ({}, None),
+])
+def test_mgrs_tile_reads_every_spelling(props, expected):
+    """The empty-column bug: reading only one key hides a two-tile AOI."""
+    assert mgrs_tile(props) == expected
+
+
+# --- AOI coverage ----------------------------------------------------------
+
+def _poly(w, s, e, n):
+    return {"type": "Polygon", "coordinates": [[[w, s], [e, s], [e, n], [w, n], [w, s]]]}
+
+
+def test_footprint_enclosing_the_aoi_covers_all_of_it():
+    assert aoi_coverage_pct(_poly(150.0, -36.0, 151.5, -34.0), JB_BBOX) == pytest.approx(100.0, abs=1e-6)
+
+
+def test_footprint_missing_the_aoi_covers_none_of_it():
+    assert aoi_coverage_pct(_poly(151.5, -36.0, 152.0, -34.0), JB_BBOX) == pytest.approx(0.0, abs=1e-9)
+
+
+def test_half_the_aoi_reads_as_half():
+    mid = (JB_BBOX[0] + JB_BBOX[2]) / 2
+    assert aoi_coverage_pct(_poly(mid, -36.0, 152.0, -34.0), JB_BBOX) == pytest.approx(50.0, abs=1e-6)
+
+
+def test_missing_geometry_is_nan_not_zero():
+    """Unknown coverage must not masquerade as no coverage."""
+    assert aoi_coverage_pct(None, JB_BBOX) != aoi_coverage_pct(None, JB_BBOX)  # NaN
+
+
+def test_partial_coverage_is_rejected_not_merely_penalised():
+    good = summarise_item(_props(), "full", CAPTURES,
+                          item_geometry=_poly(150.0, -36.0, 151.5, -34.0), aoi_bbox=JB_BBOX)
+    part = summarise_item(_props(), "sliver", CAPTURES,
+                          item_geometry=_poly(150.79, -36.0, 152.0, -34.0), aoi_bbox=JB_BBOX)
+    assert part["score"] == good["score"]          # scoring cannot see coverage
+    kept = filter_candidates([good, part], max_cloud=40, max_nodata=5,
+                             min_coverage=MIN_AOI_COVERAGE_PCT)
+    assert [r["id"] for r in kept] == ["full"]     # the filter must
+
+
+# --- deduplication ---------------------------------------------------------
+
+def _row(tile, day, baseline, ident):
+    p = _props(**{"datetime": f"{day}T00:02:11Z", "s2:processing_baseline": baseline,
+                  "grid:code": f"MGRS-{tile}"})
+    return summarise_item(p, ident, CAPTURES, item_geometry=_poly(150.0, -36.0, 151.5, -34.0),
+                          aoi_bbox=JB_BBOX)
+
+
+def test_same_acquisition_two_baselines_collapses_to_one():
+    rows = [_row("56HLG", "2018-09-08", "00.01", "v0"),
+            _row("56HLG", "2018-09-08", "05.00", "v1")]
+    out = dedupe_acquisitions(rows)
+    assert len(out) == 1
+    assert out[0]["id"] == "v1"            # highest baseline by default
+    assert out[0]["n_versions"] == 2
+
+
+def test_dedupe_can_prefer_the_older_processing():
+    rows = [_row("56HLG", "2018-09-08", "00.01", "v0"),
+            _row("56HLG", "2018-09-08", "05.00", "v1")]
+    out = dedupe_acquisitions(rows, prefer="lowest_baseline")
+    assert out[0]["id"] == "v0"
+
+
+def test_dedupe_keeps_different_tiles_and_different_dates_apart():
+    rows = [_row("56HLG", "2018-09-08", "05.00", "a"),
+            _row("56HKG", "2018-09-08", "05.00", "b"),
+            _row("56HLG", "2018-09-13", "05.00", "c")]
+    assert len(dedupe_acquisitions(rows)) == 3
+
+
+def test_dedupe_records_how_many_versions_were_seen():
+    rows = [_row("56HKG", "2018-09-12", b, f"v{i}") for i, b in enumerate(("00.01", "05.00"))]
+    assert dedupe_acquisitions(rows)[0]["n_versions"] == 2
+
+
+# --- rejection trail -------------------------------------------------------
+
+from sdb.stac import classify_candidates  # noqa: E402
+
+
+def test_rejected_rows_are_kept_with_a_reason():
+    good = summarise_item(_props(), "full", CAPTURES,
+                          item_geometry=_poly(150.0, -36.0, 151.5, -34.0), aoi_bbox=JB_BBOX)
+    part = summarise_item(_props(), "sliver", CAPTURES,
+                          item_geometry=_poly(150.79, -36.0, 152.0, -34.0), aoi_bbox=JB_BBOX)
+    cloudy = summarise_item(_props(**{"eo:cloud_cover": 80.0}), "cloudy", CAPTURES,
+                            item_geometry=_poly(150.0, -36.0, 151.5, -34.0), aoi_bbox=JB_BBOX)
+    out = classify_candidates([part, cloudy, good], max_cloud=40, max_nodata=5)
+    status = {r["id"]: r["status"] for r in out}
+    assert status["full"] == "kept"
+    assert status["sliver"].startswith("rejected: covers")
+    assert status["cloudy"].startswith("rejected: scene cloud")
+    assert out[0]["id"] == "full"          # kept rows lead the table

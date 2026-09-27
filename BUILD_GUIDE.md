@@ -7,8 +7,8 @@ the decision gates. This holds the *how*, and marks who does what.
 **→ CLAUDE** = I write it, you review and run it.
 
 Neither the cloud container nor the Cowork workspace can reach the Sentinel-2
-STAC endpoint — both sit behind an egress allowlist and return 403 at the
-proxy. **All network fetches run in your own Python environment on Windows**
+STAC endpoint or the Open-Meteo wind API — both sit behind an egress allowlist
+and return 403 at the proxy. **All network fetches run in your own Python environment on Windows**
 (or in GitHub Actions, which has unrestricted network). Plan around that: I
 write and review code, you execute it and bring back the output.
 
@@ -18,14 +18,17 @@ write and review code, you execute it and bring back the output.
 
 **→ YOU · one evening, plus waiting time**
 
-1. **Decide the repo name** (proposed: `sdbNSW`). Create it on GitHub, clone
-   to `C:\Study\Claude\sdbNSW`, move these two docs in, first commit.
-2. **Python environment.** 3.11+, fresh venv. Keep it separate from your ArcPy
-   environment — GDAL conflicts are not worth the afternoon.
+1. **Repo** — `sdbNSW`, cloned to `C:\Study\Claude\sdbNSW`. *Done.*
+2. **Python environment** — conda-forge only, separate from your ArcPy
+   environment. GDAL conflicts are not worth the afternoon. *Done.*
    ```
-   rasterio rioxarray xarray geopandas shapely numpy scipy
-   scikit-learn pystac-client odc-stac pyyaml matplotlib pytest
+   conda env create -f environment.yml
+   conda activate sdbnsw
+   pip install -e . --no-deps
    ```
+   `--no-deps` stops pip installing PyPI wheels with their own GDAL on top of
+   conda's. Commands in this guide are written for the **Anaconda Prompt
+   (cmd.exe)**, not PowerShell.
 3. **Order the reference lidar.** ELVIS uses area-select then asynchronous
    delivery — you draw a polygon, it emails you a download link. This can take
    hours to a day, so **do it first**, before anything else.
@@ -46,15 +49,31 @@ the site bbox, filter on cloud cover, sun elevation and glint risk, rank
 candidates by proximity to the lidar acquisition date. Writes a candidate
 table, downloads nothing.
 
+It also pulls ERA5 wind at each overpass (one request to Open-Meteo) and adds
+`glint_sigma`: how unusual a wave slope must be to glint, in standard
+deviations, from wind speed and its direction against the sun. **Lower is more
+glint-prone.** Rank with it; do not treat it as a value. `--no-wind` skips it; if the API is unreachable the search carries on
+with the columns empty.
+
 **→ YOU** — run it. Bring back the candidate table.
 
-**→ YOU + CLAUDE together** — pick the scene. This is a judgement call, not a
+**→ YOU + CLAUDE together** — shortlist. This is a judgement call, not a
 sort: lowest cloud is not always best if it sits six months from the lidar
 date, and a glinty calm day can beat a clear windy one.
 
-**→ CLAUDE** — `src/sdb/reference.py`: load the lidar, reproject and resample
-to the Sentinel-2 grid, mask land and the surf zone, produce an aligned
-reference array.
+**→ YOU** — `python -m sdb.fetch quicklook --top 3`. Reads only the SCL and
+true-colour assets over the AOI and reports **cloud over the AOI**, which the
+tile-wide figure cannot tell you, plus a panel stretched over water so seabed
+texture is visible. Bring back the panel and table; we pick the scene.
+
+**→ YOU** — `python -m sdb.fetch scene --item <id>`. Writes the reflectance
+stack to `data/raw/scenes/<id>/`. It refuses to write if the reflectance fails
+the water plausibility check — that means the offset is wrong, and nothing
+downstream should be built on it.
+
+**→ CLAUDE** — `src/sdb/reference.py`: load the lidar and **aggregate** it onto
+the Sentinel-2 10 m grid (never upsample the imagery to 5 m), mask land and the
+surf zone, produce an aligned reference array.
 
 **→ YOU · QGIS** — the visual check, and it matters more than it sounds.
 Load the scene and the lidar together:
@@ -158,6 +177,7 @@ and write the portfolio state doc entry.
 |---|---|---|
 | Reference data order | ELVIS web portal | You |
 | Imagery discovery | `pystac-client` → Earth Search | You run, I write |
+| Wind at overpass | Open-Meteo archive (ERA5) | You run, I write |
 | Raster processing | `rioxarray` / `rasterio` | I write, you run |
 | Visual QA | QGIS (incl. MCP) | You |
 | Statistics | `numpy` / `scikit-learn` | I write |
