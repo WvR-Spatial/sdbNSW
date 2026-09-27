@@ -25,6 +25,11 @@ What the index is and is not.
     of such numbers run to millions without meaning anything.
   * Driven by one 0.25 deg (~25 km) ERA5 cell at the nearest hour. Local gusts,
     wind slicks, fetch-limited bay seas and swell are all invisible to it.
+  * Only as good as the wind. Around a transition (the morning offshore flow
+    dying, a sea breeze arriving) sources disagree several-fold: at the 7 Sep
+    2018 overpass ERA5 gave 0.86 m/s and ECMWF IFS 9 km 3.58 m/s, moving sigma
+    from 6.4 to 4.5. Scenes closer than that spread are indistinguishable.
+    scripts/check_wind_sources.py compares sources for any such case.
   * Meaningful while the glinting facet is steep (glint_facet_deg >~ 10). For
     near-flat facets the sun's mirror image is in view and sigma is ~0 in any
     wind -- the geometry flag already says "severe" there.

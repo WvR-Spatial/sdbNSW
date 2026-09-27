@@ -155,12 +155,12 @@ def test_calm_is_floored_not_divided_by():
 
 def test_twelve_september_is_the_most_glint_prone_under_either_wind_pull():
     """The one discriminating observation: 12 Sep showed glint streaks, 7 and
-    17 Sep did not. Two wind pulls disagree on speed (see PROJECT_BRIEF); the
-    ranking of 12 Sep must hold under both. The order of 7 vs 17 Sep is NOT
-    tested -- both were clean, so the eye cannot separate them."""
+    17 Sep did not. ERA5 and ECMWF IFS disagree on speed (4x on 7 Sep; see
+    PROJECT_BRIEF); the ranking of 12 Sep must hold under both. The order of
+    7 vs 17 Sep is NOT tested -- both were clean, so the eye cannot separate them."""
     geom = {"0907": (90 - 41.5, 38.0), "0912": (90 - 43.3, 38.8), "0917": (90 - 45.2, 39.6)}
-    pulls = {"first":  {"0907": (3.58, 300), "0912": (3.76, 29), "0917": (2.40, 17)},
-             "stac":   {"0907": (0.86, 306), "0912": (4.37, 16), "0917": (1.87, 16)}}
+    pulls = {"ecmwf_ifs": {"0907": (3.58, 300), "0912": (3.76, 29), "0917": (2.40, 17)},
+             "era5":      {"0907": (0.86, 306), "0912": (4.37, 16), "0917": (1.87, 16)}}
     for wind in pulls.values():
         sig = {k: glint_sigma(*geom[k], *wind[k]) for k in geom}
         assert min(sig, key=sig.get) == "0912"
