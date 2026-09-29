@@ -208,7 +208,26 @@ of the registered ones; the script prints slopes 49.4 vs 62.2 and pooled RMSE
 
 **→ YOU** — read the output and decide whether you believe it. The gap
 between the naive and blocked numbers is a result in its own right and
-deserves a paragraph.
+deserves a paragraph. *Done 29 Sep — in the brief as the Phase 3 conclusion.*
+
+### v2 — ML, pre-registered
+
+The method is fixed in the brief's *v2 protocol* before any ML model sees real
+data: gradient-boosted trees with fixed settings, image-only features, v1's
+folds, a paired comparison with Stumpf, and four written predictions.
+
+**→ YOU** — commit the protocol first. Then, after `pytest -q`:
+
+```
+python -m sdb.validate --scene S2A_56HKG_20180907_0_L2A --model gbm
+python -m sdb.validate --scene S2A_56HKG_20180907_0_L2A --model gbm_xy
+```
+
+Each takes ~15 min on two cores (250 fits: primary, naive and block-size
+curve). Both read the registered Stumpf run (`sdb.tif`, measured water level)
+to pair against, and write only to `outputs/v2/` and `sdb_<model>.tif`.
+`gbm_xy` adds coordinates and is the **leakage demonstration** — its numbers
+are never a result.
 
 ---
 

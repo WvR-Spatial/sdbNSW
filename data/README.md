@@ -101,8 +101,9 @@ the raster is not.
 ground each pixel sees, i.e. with the co-registration shift applied.
 
 Exploratory variants (`validate --exploratory <name>`) write `sdb_<name>.tif`
-beside the scene and their records to `outputs/exploratory/`; they never
-overwrite `sdb.tif`.
+beside the scene and their records to `outputs/exploratory/`; v2 models
+(`validate --model gbm | gbm_xy`) write `sdb_<model>.tif` and `outputs/v2/`.
+Neither ever overwrites `sdb.tif`.
 
 ### 4. Orthoimagery for co-registration  *(fetched automatically, never committed)*
 

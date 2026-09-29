@@ -147,6 +147,29 @@ def residual_map(path: Path, resid_img: np.ndarray, grid: Any, block_m: float, t
     return path
 
 
+def model_comparison(path: Path, curves: dict[str, list[dict[str, Any]]]) -> Path:
+    """RMSE (solid) and bias (dashed) by 1 m lidar-depth bin, one colour per model."""
+    plt = _style()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fig, ax = plt.subplots(figsize=(7.0, 4.2), dpi=150)
+    ax.axhline(0, color=AXIS, lw=0.8)
+    for (name, curve), col in zip(curves.items(), SERIES):
+        rows = [c for c in curve if c.get("n")]
+        mid = np.array([(c["lo"] + c["hi"]) / 2 for c in rows])
+        rm = np.array([c["rmse"] for c in rows])
+        bi = np.array([c["bias"] for c in rows])
+        ax.plot(mid, rm, color=col, lw=1.6, label=f"{name}: RMSE")
+        ax.plot(mid, bi, color=col, lw=1.2, ls="--", label=f"{name}: bias")
+        ax.text(mid[-1] + 0.3, rm[-1], name, color=INK_2, fontsize=8, va="center")
+    ax.set(xlim=(0, 23.5), xlabel="Lidar depth (m, 1 m bins)", ylabel="Error (m)",
+           title="Out-of-fold error by depth, same folds")
+    ax.legend(loc="upper left", fontsize=7.5)
+    fig.tight_layout()
+    fig.savefig(path)
+    plt.close(fig)
+    return path
+
+
 def ratio_depth_curve(path: Path, depth: np.ndarray, ratio: np.ndarray, inside: np.ndarray,
                       lines: dict[str, tuple[float, float]], bin_m: float = 0.5) -> Path:
     """Median Stumpf ratio (and interquartile band) by lidar depth, with fitted lines.

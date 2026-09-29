@@ -399,6 +399,74 @@ meaningful — the depth range inside a band is small relative to the error.
 Pixels within 50 m of shore carry RMSE of 6–8 m at 2–15 m depth (cliff-foot
 rock, few pixels).
 
+### Phase 3 conclusion — blocked vs random validation (Warren, 29 Sep)
+
+> The near-zero gap (1.008) between our blocked and random validation sets
+> makes perfect sense given the model we are using. Since Stumpf is a simple
+> two-parameter line, it doesn't have the capacity to overfit to neighboring
+> raster pixels or memorise location data. Because of this, spatial leakage
+> doesn't inflate the accuracy under random splitting. This effectively makes
+> our Stumpf run the perfect control—we expect the true necessity of spatially
+> blocked validation to become obvious once we test more flexible, complex
+> models that are prone to that kind of spatial memorisation.
+
+## v2 protocol — ML, pre-registered 29 Sep 2026
+
+Committed before any ML model sees real data. The Phase 2 rules carry over:
+anything changed after the first run is logged as a deviation and both results
+are reported. Implemented in `src/sdb/ml.py`, run through `validate.py
+--model`.
+
+**Question.** Does a flexible model beat Stumpf out of sample, and — across the
+three sites — does that advantage survive murkier water? At Jervis Bay this
+gives the clear-water number.
+
+**Model.** Gradient-boosted regression trees (scikit-learn
+`HistGradientBoostingRegressor`), fixed settings, **no tuning**: squared-error
+loss, 300 iterations, learning rate 0.1, 31 leaves, at least 100 samples per
+leaf, **no early stopping** (it would carve a random validation split out of
+each training fold), seed fixed per fold. One model family, chosen for speed
+on ~1 M pixels; random forest is not also run — two tries at one question is a
+fork, not a check.
+
+**Features — per pixel, from the image only.** ln(1000·ρ) for blue, green, red
+and NIR; the Stumpf ratio (blue/green); the blue/red ratio. **No coordinates**,
+no neighbourhood or texture, nothing from the lidar or the substrate maps.
+Undefined values (a log that is not positive) stay missing; the model handles
+them natively.
+
+**Training sample.** As v1: up to 5,000 pixels per 1 m depth bin, drawn inside
+each training fold — but over the whole 0–20 m, with no D_cal, since a
+nonlinear model can learn the saturation itself.
+
+**Validation.** Identical to Phase 2: the same 2 km blocks and fold seeds 0–9,
+so every repeat's folds are exactly v1's; each pixel's prediction is the mean
+of its 10 out-of-fold predictions; the naive random split and the block-size
+curve (random, 0.5, 1, 2, 4 km); every registered statistic, stratum,
+interval and the CATZOC breakdown depth.
+
+**Comparison with v1.** Paired, on identical pixels and folds: ML minus Stumpf
+in RMSE, MAE and bias — pooled, by depth band, and inside bay vs open coast —
+with 95% block-bootstrap intervals (2 km blocks, both models resampled
+together, 1,000 draws). Against the measured-water-level Stumpf run.
+
+**Leakage demonstration — labelled, never a result.** The same model with
+easting and northing added (`gbm_xy`), through the same design. It exists to
+show on real data what a random split rewards.
+
+**Predictions, stated before the run.**
+
+1. Spectral ML beats Stumpf on the blocked split (lower pooled RMSE; the
+   literature suggests ~0.5 m in clear water).
+2. Spectral ML's blocked/naive ratio exceeds Stumpf's 1.008 — spectral quirks
+   shared by neighbouring pixels are something a flexible model can learn.
+3. The coordinate model fails the Phase 3 gate: its naive RMSE is more than 30%
+   below its blocked RMSE.
+4. On the blocked split the coordinate model does no better than spectral ML —
+   location cannot help where the model has not seen the ground.
+
+**Sites 2 and 3.** The same code, settings and features, unchanged.
+
 ## Error budget
 
 | Term | Magnitude | Note |
@@ -498,7 +566,7 @@ SDB-versus-lidar comparison, plus the repo. Limitations panel above results.
 - [ ] Confirm site 3 (Batemans vs Richmond) after checking lidar tile coverage
 - [x] Atmospheric correction — **L2A as supplied** for v1; ACOLITE only as diagnosis if the gate fails
 - [x] Sun glint correction — **none** for v1 (register, 27 Sep)
-- [x] Whether ML enters v1 — **no**; v2, same folds, no coordinates as features
+- [x] Whether ML enters v1 — **no**; v2 pre-registered 29 Sep (*v2 protocol*): gradient boosting, spectral features only, same folds, paired against Stumpf
 - [x] Breakdown threshold — **CATZOC C** (2.0 m + 5% of depth, 95%); CATZOC B alongside
 - [x] **Substrate layers** — NSW DPI *Estuarine Macrophytes* (seagrass) and DCCEEW *seabed reef extent* (lidar-derived), fetched and checked; class rules pre-registered (*Substrate addendum*)
 
@@ -561,6 +629,8 @@ defensible piece of work.
 | 29 Sep | **Gauge record received and checked before use.** 1-minute, complete, AHD stated in the header and confirmed by the record's mean (−0.03 m over 3 days vs MSL +0.074); AEST ±2 min and quality code 55 = ±20 mm per MHL's conditions sheet; Jervis Bay station datum adjustment 1.070 m, matching the config | The layout differed from the one the parser was written for: **Date and Time in separate columns** after a 30-line licence block. The old parser **failed loudly** (a tokenizer error), not silently. Fixed to join date and time, read the stated datum and quality codes, and **refuse if the header's datum contradicts the numbers**; pinned by a test of this exact layout. The tidal rate is now fitted over ±15 min — with 1-minute samples the two bracketing values differ by noise as much as by tide |
 | 29 Sep | **Prediction test passed: water level −0.392 m AHD** at 10:02:37 AEST (tide falling 0.12 m/h). Predicted in the register on 27 Sep: about −0.3 to −0.4 m, the image estimate biased low by ~0.1–0.2 m. Observed bias of the image estimate: **0.104 m** | The image method's known bias (NIR reading through the first decimetres of water) is now measured once. Useful for sites 2 and 3 if a gauge is missing, as a correction with a stated uncertainty rather than a guess |
 | 29 Sep | **Phase 2 rerun at the measured level becomes the primary result**; the provisional run is kept beside it | The protocol said "report both". Pooled RMSE 2.70 → 2.68 m; no conclusion changes. Exploratory runs are not repeated |
+| 29 Sep | **Phase 3 closed** with Warren's conclusion on blocked vs random validation (above) | Stumpf is the control; the prediction it makes — flexible models will open a gap — is carried into v2 as prediction 2 |
+| 29 Sep | **v2 pre-registered**: one model family (gradient boosting, fixed settings, no tuning, no early stopping), image-only per-pixel features, v1's folds and depth-balanced sample over 0–20 m, paired comparison with Stumpf; a coordinate model run only as a labelled leakage demonstration; four predictions written down first | Every choice that could be tuned to the answer is fixed before the answer exists. No tuning because honest tuning needs nested cross-validation — cost and complexity out of proportion to the question, which is the size of the ML advantage, not its maximum |
 
 ## Sources
 

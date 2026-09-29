@@ -315,6 +315,43 @@ def inside_polygon(x: np.ndarray, y: np.ndarray, polygon: Sequence[Sequence[floa
 # --------------------------------------------------------------------------
 
 
+def paired_difference(pred_a: np.ndarray, pred_b: np.ndarray, true: np.ndarray,
+                      blocks: np.ndarray, *, n_boot: int = N_BOOT, rng: np.random.Generator,
+                      level: float = 0.95) -> dict[str, Any]:
+    """Model a minus model b on the same pixels: RMSE, MAE and bias differences.
+
+    Intervals resample whole blocks, the same draw for both models, so the
+    spatially shared part of their errors cancels rather than inflating the spread.
+    """
+    t = np.asarray(true, dtype=np.float64)
+    ea, eb = np.asarray(pred_a, np.float64) - t, np.asarray(pred_b, np.float64) - t
+    ub, inv = np.unique(blocks, return_inverse=True)
+    inv = inv.ravel()
+    nb = ub.size
+    S = np.stack([np.bincount(inv, weights=w, minlength=nb)
+                  for w in (np.ones_like(ea), ea, ea * ea, np.abs(ea), eb, eb * eb, np.abs(eb))],
+                 axis=1)
+
+    def stats(T):
+        n = T[:, 0]
+        with np.errstate(invalid="ignore", divide="ignore"):
+            ra, rb = np.sqrt(T[:, 2] / n), np.sqrt(T[:, 5] / n)
+            return {"rmse_diff": ra - rb, "mae_diff": T[:, 3] / n - T[:, 6] / n,
+                    "bias_diff": T[:, 1] / n - T[:, 4] / n, "rmse_a": ra, "rmse_b": rb}
+
+    draws = rng.integers(0, nb, size=(n_boot, nb))
+    W = np.stack([np.bincount(dr, minlength=nb) for dr in draws]).astype(np.float64)
+    boot, point = stats(W @ S), stats(S.sum(axis=0, keepdims=True))
+    q = [(1 - level) / 2 * 100, (1 + level) / 2 * 100]
+    out: dict[str, Any] = {"n": int(t.size), "n_blocks": int(nb)}
+    for k in ("rmse_diff", "mae_diff", "bias_diff"):
+        v = boot[k][np.isfinite(boot[k])]
+        lo, hi = np.percentile(v, q) if v.size else (np.nan, np.nan)
+        out[k] = {"point": float(point[k][0]), "lo": float(lo), "hi": float(hi)}
+    out["rmse_a"], out["rmse_b"] = float(point["rmse_a"][0]), float(point["rmse_b"][0])
+    return out
+
+
 def repeated_cv(depth: np.ndarray, ratio: np.ndarray, rows: np.ndarray, cols: np.ndarray, *,
                 block_m: float, pixel_m: float, folds: int, repeats: int,
                 fit: Callable = stumpf_fit) -> dict[str, Any]:
@@ -338,6 +375,8 @@ def repeated_cv(depth: np.ndarray, ratio: np.ndarray, rows: np.ndarray, cols: np
 
 #: Text that first appeared in PROJECT_BRIEF.md with the pre-registration commit.
 PROTOCOL_MARKER = "pre-registered 27 Sep 2026"
+#: ...and the v2 (ML) protocol's.
+V2_MARKER = "ML, pre-registered 29 Sep 2026"
 
 
 def _git_commit(root: Path, path: str, marker: str = PROTOCOL_MARKER) -> dict[str, str] | None:
@@ -388,11 +427,19 @@ def main(argv: Sequence[str] | None = None) -> int:
     p.add_argument("--no-figures", action="store_true")
     p.add_argument("--exploratory", choices=sorted(EXPLORATORY), default=None,
                    help="run a labelled exploratory variant; outputs go to <out>/exploratory/")
+    p.add_argument("--model", choices=("stumpf", "gbm", "gbm_xy"), default="stumpf",
+                   help="stumpf = v1 (registered); gbm = v2; gbm_xy = v2 leakage demonstration. "
+                        "v2 outputs go to <out>/v2/")
     a = p.parse_args(argv)
+    if a.exploratory and a.model != "stumpf":
+        p.error("--exploratory applies to the Stumpf model only")
     variant = EXPLORATORY.get(a.exploratory)
-    fit = variant["fit"] if variant else stumpf_fit
-    tag = f"_{a.exploratory}" if variant else ""
-    res_dir = a.out / "exploratory" if variant else a.out
+    is_ml = a.model != "stumpf"
+    if is_ml:
+        from sdb import ml
+    fit = ml.fitter(a.model) if is_ml else (variant["fit"] if variant else stumpf_fit)
+    tag = f"_{a.model}" if is_ml else (f"_{a.exploratory}" if variant else "")
+    res_dir = a.out / ("v2" if is_ml else "exploratory" if variant else "")
 
     curve_blocks = tuple(float(v) for v in a.curve_blocks.split(",") if v.strip())
     deviations = [f"{nm}={got} (protocol {want})" for nm, got, want in (
@@ -434,11 +481,18 @@ def main(argv: Sequence[str] | None = None) -> int:
     d, r = depth_img[ok], ratio_img[ok]
     print(f"  usable pixels {int((flags == 0).sum()):,}; ratio undefined in "
           f"{int(((flags == 0) & ~ratio_ok).sum()):,}; assessed {d.size:,}")
+    if is_ml:
+        X = ml.features(a.model, *(scene[b][ok] for b in ("blue", "green", "red", "nir")),
+                        x=grid.x0 + (cols + 0.5) * grid.dx, y=grid.y0 - (rows + 0.5) * grid.dy)
+        print(f"  model {a.model}: {', '.join(ml.MODELS[a.model])}"
+              + ("  [LEAKAGE DEMONSTRATION -- not a result]" if a.model in ml.DEMONSTRATIONS else ""))
+    else:
+        X = r
 
     # --- primary, naive and the block-size curve ---------------------------
     runs: dict[float, dict] = {}
     for bm in dict.fromkeys((a.block_m, 0.0) + curve_blocks):
-        runs[bm] = repeated_cv(d, r, rows, cols, block_m=bm, pixel_m=pixel_m,
+        runs[bm] = repeated_cv(d, X, rows, cols, block_m=bm, pixel_m=pixel_m,
                                folds=a.folds, repeats=a.repeats, fit=fit)
         label = "random" if bm == 0 else f"{bm / 1000:g} km"
         rr = runs[bm]["per_repeat_rmse"]
@@ -447,7 +501,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     pred = prim["pred"]
     err = pred - d
 
-    final = fit(r, d, np.random.default_rng(FINAL_SEED))
+    final = fit(X, d, np.random.default_rng(FINAL_SEED))
 
     # --- statistics --------------------------------------------------------
     brng = np.random.default_rng(BOOT_SEED)
@@ -500,14 +554,19 @@ def main(argv: Sequence[str] | None = None) -> int:
     corr = correlogram(resid_img, pixel_m=pixel_m, rng=np.random.default_rng(CORR_SEED))
     crange = correlation_range(corr)
 
-    dcal = [c["d_cal_m"] for c in prim["calibrations"]]
+    dcal = [c["d_cal_m"] for c in prim["calibrations"] if "d_cal_m" in c]
     rm_blocked, rm_naive = pooled["rmse"], metrics(naive["pred"], d)["rmse"]
     gate = "pass" if rm_blocked < GATE_RMSE_M else "fail"
 
     record = {
         "scene": a.scene, "site": a.site,
-        "protocol": "PROJECT_BRIEF.md, Phase 2 protocol (pre-registered 27 Sep 2026)",
-        "protocol_commit": _git_commit(a.root, "PROJECT_BRIEF.md"),
+        "protocol": ("PROJECT_BRIEF.md, v2 protocol (pre-registered 29 Sep 2026)" if is_ml else
+                     "PROJECT_BRIEF.md, Phase 2 protocol (pre-registered 27 Sep 2026)"),
+        "protocol_commit": _git_commit(a.root, "PROJECT_BRIEF.md",
+                                       V2_MARKER if is_ml else PROTOCOL_MARKER),
+        "model": ({"name": a.model, "params": ml.HGB_PARAMS, "features": list(ml.MODELS[a.model]),
+                   "demonstration": a.model in ml.DEMONSTRATIONS} if is_ml else
+                  {"name": "stumpf"}),
         "deviations": deviations,
         "exploratory": ({"name": a.exploratory, "what": variant["what"], "why": variant["why"],
                          "status": "EXPLORATORY: prompted by the registered result; not confirmatory. "
@@ -542,8 +601,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         "residual_correlogram": corr,
         "residual_correlation_range_m": crange,
         "range_exceeds_block": bool(crange is None or crange > a.block_m),
-        "saturation_depth_d_cal_m": {"min": min(dcal), "median": float(np.median(dcal)),
-                                     "max": max(dcal)},
+        "saturation_depth_d_cal_m": ({"min": min(dcal), "median": float(np.median(dcal)),
+                                      "max": max(dcal)} if dcal else None),
         "calibrations": prim["calibrations"],
         "all_data_calibration": {**final.summary(), "note":
                                  "fitted to every assessed pixel, for mapping; not a validation result"},
@@ -551,6 +610,40 @@ def main(argv: Sequence[str] | None = None) -> int:
         "written_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "sdb_version": __version__,
     }
+
+    # --- v2: paired comparison with the registered Stumpf run ---------------
+    stumpf_rec, vs = None, None
+    if is_ml:
+        sj = a.out / f"sdb_{a.scene}.json"
+        stumpf_rec = json.loads(sj.read_text(encoding="utf-8")) if sj.exists() else None
+        st_path = scene_dir / "sdb.tif"
+        if st_path.exists():
+            with rasterio.open(st_path) as s:
+                st_pred = s.read(1).astype(np.float64)[rows, cols]
+            if np.isfinite(st_pred).all():
+                prng = np.random.default_rng(BOOT_SEED + 1)
+                vs = {"against": {"path": str(st_path), "md5": md5(st_path),
+                                  "water_level_m_ahd": (stumpf_rec or {}).get("water_level_m_ahd")},
+                      "sign": "model minus Stumpf; negative = the model is better",
+                      "pooled": paired_difference(pred, st_pred, d, blocks, n_boot=a.boot, rng=prng),
+                      "by_band_lidar_depth": [
+                          {"group": nm, **paired_difference(pred[lab_t == i], st_pred[lab_t == i],
+                                                            d[lab_t == i], blocks[lab_t == i],
+                                                            n_boot=a.boot, rng=prng)}
+                          for i, nm in enumerate(band_names) if (lab_t == i).any()]}
+                if inside is not None:
+                    vs["inside_bay_vs_open_coast"] = [
+                        {"group": nm, **paired_difference(pred[m], st_pred[m], d[m], blocks[m],
+                                                          n_boot=a.boot, rng=prng)}
+                        for nm, m in (("inside bay", inside), ("open coast", ~inside)) if m.any()]
+                if stumpf_rec:
+                    vs["blocked_over_naive"] = {
+                        "model": rm_blocked / rm_naive,
+                        "stumpf": stumpf_rec["blocked_vs_naive"]["blocked_over_naive"]}
+            else:
+                print("  sdb.tif does not cover the same pixels: run the Stumpf model first "
+                      "on the same inputs; no paired comparison")
+        record["vs_stumpf"] = vs
 
     oof = np.full(flags.shape, np.nan)
     oof[rows, cols] = pred
@@ -576,6 +669,10 @@ def main(argv: Sequence[str] | None = None) -> int:
             figs.append(viz.ratio_depth_curve(
                 fdir / f"sdb_{a.scene}{tag}_ratio_vs_depth.png", d, r,
                 inside if inside is not None else np.ones(d.size, bool), lines))
+        if is_ml and stumpf_rec:
+            figs.append(viz.model_comparison(
+                fdir / f"sdb_{a.scene}{tag}_vs_stumpf_by_depth.png",
+                {"Stumpf (v1)": stumpf_rec["by_1m_bin"], a.model: curve}))
     record["figures"] = [str(f) for f in figs]
     record["outputs"] = [str(raster)]
     jpath = res_dir / f"sdb_{a.scene}{tag}.json"
@@ -600,8 +697,22 @@ def main(argv: Sequence[str] | None = None) -> int:
                       f"RMSE {row['rmse']:.2f}")
     fmt = lambda v: "not reached in 0-20 m" if v is None else f"{v:g} m"  # noqa: E731
     print(f"\n  breakdown depth: CATZOC C {fmt(breakdown['C'])}; CATZOC B {fmt(breakdown['B'])}")
-    print(f"  saturation depth D_cal over folds: {min(dcal):g}-{max(dcal):g} m "
-          f"(median {np.median(dcal):g})")
+    if dcal:
+        print(f"  saturation depth D_cal over folds: {min(dcal):g}-{max(dcal):g} m "
+              f"(median {np.median(dcal):g})")
+    if vs:
+        v = vs["pooled"]
+        print(f"\n  vs Stumpf (paired, same pixels and folds; negative = {a.model} better):")
+        print(f"    RMSE {v['rmse_a']:.2f} vs {v['rmse_b']:.2f} m: difference {v['rmse_diff']['point']:+.2f} "
+              f"[{v['rmse_diff']['lo']:+.2f}, {v['rmse_diff']['hi']:+.2f}]   bias difference "
+              f"{v['bias_diff']['point']:+.2f} [{v['bias_diff']['lo']:+.2f}, {v['bias_diff']['hi']:+.2f}]")
+        for row in vs["by_band_lidar_depth"]:
+            print(f"    {row['group']:>6} m  RMSE {row['rmse_a']:.2f} vs {row['rmse_b']:.2f}  "
+                  f"({row['rmse_diff']['point']:+.2f} [{row['rmse_diff']['lo']:+.2f}, "
+                  f"{row['rmse_diff']['hi']:+.2f}])")
+        if "blocked_over_naive" in vs:
+            b = vs["blocked_over_naive"]
+            print(f"    blocked/naive: {b['model']:.3f} ({a.model}) vs {b['stumpf']:.3f} (Stumpf)")
     print(f"  residual correlation range: "
           f"{'beyond the largest lag' if crange is None else f'{crange:g} m'}"
           f"{'  -> EXCEEDS the block size: caveat applies' if record['range_exceeds_block'] else ''}")

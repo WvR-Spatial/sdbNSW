@@ -321,3 +321,57 @@ def test_exploratory_run_is_labelled_and_leaves_registered_outputs_alone(tmp_pat
     assert (sd / "sdb_rule95.tif").exists()
     assert any(f.endswith("_ratio_vs_depth.png") for f in rec["figures"])
     assert all(Path(f).exists() for f in rec["figures"])
+
+
+# --- v2: paired comparison and the --model switch -------------------------------------
+
+def test_paired_difference_by_hand_and_with_shared_block_errors():
+    from sdb.validate import paired_difference
+
+    true = np.zeros(8)
+    a = np.array([1.0, -1, 1, -1, 1, -1, 1, -1])            # RMSE 1, bias 0
+    b = 2 * a + 0.5                                           # RMSE sqrt(4.25), bias 0.5
+    blocks = np.repeat(np.arange(4), 2)
+    r = paired_difference(a, b, true, blocks, n_boot=200, rng=np.random.default_rng(0))
+    assert r["rmse_diff"]["point"] == pytest.approx(1 - np.sqrt(4.25))
+    assert r["bias_diff"]["point"] == pytest.approx(-0.5) and r["mae_diff"]["point"] == pytest.approx(-1.0)
+    # a large error shared by both models within each block cancels in the paired interval
+    rng = np.random.default_rng(1)
+    blocks = np.repeat(np.arange(40), 100)
+    shared = rng.normal(0, 3, 40)[blocks]
+    ea = shared + rng.normal(0, 0.5, blocks.size)
+    eb = shared + rng.normal(0, 0.5, blocks.size) + 0.2
+    r = paired_difference(ea, eb, np.zeros(blocks.size), blocks, n_boot=400, rng=np.random.default_rng(2))
+    assert r["bias_diff"]["lo"] < -0.2 + 0.1 and r["bias_diff"]["hi"] > -0.2 - 0.1
+    assert r["bias_diff"]["hi"] - r["bias_diff"]["lo"] < 0.2      # would be ~2 m unpaired
+
+
+def test_v2_run_is_paired_with_stumpf_and_written_apart(tmp_path):
+    cfg, out, sd = _scene(tmp_path)
+    common = ["--site", "t", "--config", str(cfg), "--scene", "S", "--root", str(tmp_path),
+              "--out", str(out), "--block-m", "300", "--curve-blocks", "0,300",
+              "--repeats", "2", "--boot", "50"]
+    assert V.main(common) == 0                                # v1 first: sdb.tif to pair against
+    st_md5 = __import__("hashlib").md5((sd / "sdb.tif").read_bytes()).hexdigest()
+    assert V.main(common + ["--model", "gbm"]) == 0
+    rec = json.loads((out / "v2" / "sdb_S_gbm.json").read_text())
+    assert rec["model"]["name"] == "gbm" and not rec["model"]["demonstration"]
+    assert rec["protocol"].startswith("PROJECT_BRIEF.md, v2 protocol")
+    assert rec["saturation_depth_d_cal_m"] is None
+    vs = rec["vs_stumpf"]
+    assert vs["pooled"]["n"] == rec["pixels"]["assessed"]
+    assert {r["group"] for r in vs["by_band_lidar_depth"]} >= {"0-2", "2-5", "5-10"}
+    assert "stumpf" in vs["blocked_over_naive"]
+    assert any(f.endswith("_vs_stumpf_by_depth.png") for f in rec["figures"])
+    assert all(Path(f).exists() for f in rec["figures"])
+    assert (sd / "sdb_gbm.tif").exists()
+    assert __import__("hashlib").md5((sd / "sdb.tif").read_bytes()).hexdigest() == st_md5
+    assert V.main(common + ["--model", "gbm_xy", "--no-figures"]) == 0
+    assert json.loads((out / "v2" / "sdb_S_gbm_xy.json").read_text())["model"]["demonstration"]
+
+
+def test_exploratory_and_ml_do_not_mix(tmp_path):
+    cfg, out, _ = _scene(tmp_path)
+    with pytest.raises(SystemExit):
+        V.main(["--site", "t", "--config", str(cfg), "--scene", "S", "--root", str(tmp_path),
+                "--out", str(out), "--model", "gbm", "--exploratory", "rule95"])
