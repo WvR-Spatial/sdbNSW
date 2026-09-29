@@ -19,6 +19,13 @@ fitting-depth wording was immaterial (95%-only rule: RMSE 2.82 m); the bias
 pattern is regression toward the mean plus a ratio curve that bends, and bends
 differently on the open coast. Every conclusion survives the measured water
 level unchanged.
+**v2 (ML), pre-registered** (`c2baa44`) and run once: gradient boosting on
+image-only features gives **pooled RMSE 1.88 m** [1.67, 2.13], **0.80 m better
+than Stumpf** [0.57, 1.06] on the same folds, and meets **CATZOC C to 3 m**.
+Its blocked/random gap (1.060) is seven times Stumpf's, and a model given
+coordinates flatters itself badly under a random split (0.74 vs 1.32 m) — the
+leakage story, shown on real data. One prediction failed: coordinates still
+helped on 2 km blocks, by interpolating the survey itself.
 **Updated:** 29 Sep 2026 · **Repo:** `sdbNSW`
 **Portfolio slot:** replaces *Revealing the Ancient Murray via REM*.
 
@@ -399,16 +406,19 @@ meaningful — the depth range inside a band is small relative to the error.
 Pixels within 50 m of shore carry RMSE of 6–8 m at 2–15 m depth (cliff-foot
 rock, few pixels).
 
-### Phase 3 conclusion — blocked vs random validation (Warren, 29 Sep)
+### Phase 3 conclusion — blocked vs random validation (Warren, 29 Sep; edited)
 
-> The near-zero gap (1.008) between our blocked and random validation sets
-> makes perfect sense given the model we are using. Since Stumpf is a simple
-> two-parameter line, it doesn't have the capacity to overfit to neighboring
-> raster pixels or memorise location data. Because of this, spatial leakage
-> doesn't inflate the accuracy under random splitting. This effectively makes
-> our Stumpf run the perfect control—we expect the true necessity of spatially
-> blocked validation to become obvious once we test more flexible, complex
-> models that are prone to that kind of spatial memorisation.
+> The near-zero gap between our blocked and random validation (1.008) is what
+> this model should produce. Stumpf is a simple two-parameter line: it has no
+> capacity to overfit to neighbouring raster pixels or to memorise location, so
+> spatial leakage cannot inflate its accuracy under a random split. The
+> opportunity to leak was there — residuals correlate at 0.70 between adjacent
+> pixels and do not fall below 0.1 until 4 km apart — but the model could not
+> use it, and the block-size curve barely moves (2.66 m for a random split,
+> 2.72 m for 4 km blocks). That makes the Stumpf run a clean control for
+> leakage. We expect the need for spatially blocked validation to become
+> obvious once we test more flexible models that are capable of that kind of
+> spatial memorisation.
 
 ## v2 protocol — ML, pre-registered 29 Sep 2026
 
@@ -466,6 +476,61 @@ show on real data what a random split rewards.
    location cannot help where the model has not seen the ground.
 
 **Sites 2 and 3.** The same code, settings and features, unchanged.
+
+### v2 result — Jervis Bay (measured water level), 29 Sep
+
+Run once after the protocol commit `c2baa44`, against the measured-level
+Stumpf run on byte-identical inputs. `outputs/v2/`.
+
+| | Stumpf (v1) | **gbm (v2 result)** | gbm_xy (leakage demonstration) |
+|---|---|---|---|
+| Pooled RMSE, 2 km blocks | 2.68 m [2.31, 3.13] | **1.88 m** [1.67, 2.13] | 1.32 m [1.13, 1.52] |
+| Bias · R² | −0.42 · 0.69 | −0.12 · 0.85 | −0.07 · 0.93 |
+| Depth-balanced RMSE | 2.48 m | 1.53 m | 1.26 m |
+| Random split · blocked/random | 2.66 m · 1.008 | 1.78 m · **1.060** | 0.74 m · **1.777** |
+| Block-size curve, random → 0.5 → 1 → 2 → 4 km | 2.66 → 2.67 → 2.68 → 2.69 → 2.72 | 1.80 → 1.83 → 1.86 → 1.92 → 2.06 | 0.78 → 0.99 → 1.16 → 1.50 → 1.88 |
+| RMSE by band, 0–2 / 2–5 / 5–10 / 10–15 / 15–20 m | 2.11 / 2.67 / 2.07 / 2.06 / 3.46 | 0.55 / 1.32 / 1.88 / 1.80 / 2.11 | 0.77 / 1.54 / 1.47 / 1.15 / 1.36 |
+| Inside bay / open coast | 2.27 / 4.69 m | 1.65 / 3.08 m | 1.09 / 2.39 m |
+| Breakdown depth, CATZOC C / B | 0 / 0 m | **3 / 2 m** | 2 / 1 m |
+
+**gbm minus Stumpf, paired** (same pixels and folds; 95% block bootstrap):
+**−0.80 m** [−1.06, −0.57] pooled; by band −1.57 (0–2 m), −1.35 (2–5),
+−0.19 [−0.61, +0.14] (5–10, not distinguishable), −0.26 (10–15), −1.35
+(15–20). The advantage is largest exactly where the straight line fails — the
+shallows and the saturation zone — and absent where Stumpf's line fits.
+
+**Predictions, as written before the run:**
+
+1. **Held.** Spectral ML beats Stumpf on the blocked split: −0.80 m, larger than
+   the ~0.5 m the literature reports for clear water.
+2. **Held.** Its blocked/random ratio is 1.060 against Stumpf's 1.008, and its
+   block-size curve rises steadily instead of lying flat.
+3. **Held.** The coordinate model's random-split RMSE is 44% below its blocked
+   RMSE (0.74 vs 1.32 m), far past the 30% gate.
+4. **Failed.** The coordinate model did *better* on 2 km blocks than spectral
+   ML: 1.32 vs 1.88 m, paired difference −0.57 m [−0.70, −0.41]. Depth is
+   smooth over kilometres, so given coordinates the model interpolates the
+   surveyed depths of the surrounding training blocks — near a block edge the
+   nearest training pixel is metres away. Its block-size curve shows the
+   advantage draining away as blocks grow (0.78 m at random, 1.88 at 4 km,
+   nearly back to spectral ML's 2.06). That is interpolation of the reference,
+   not remote sensing, and it is unavailable where SDB is actually needed.
+
+**What it means.** Blocking limits leakage only in proportion to how block
+size compares with the autocorrelation of whatever the model can exploit. For
+a model with location, that is the depth field itself, which is correlated
+over kilometres. The dependable protection is keeping location out of the
+features, which the v2 protocol did. **This is the write-up's methods story in
+one table:** the control (Stumpf, flat curve), a legitimate flexible model
+(gbm, a modest, rising gap), and a leaky one (gbm_xy, a random split that
+flatters it by 44%).
+
+**Caveats.** gbm's block-size curve has not plateaued by 4 km, so the 2 km
+figure may be mildly optimistic; at 4 km its advantage over Stumpf is still
+0.66 m (2.06 vs 2.72). The headline uses the protocol's mean of 10
+out-of-fold predictions per pixel, which for a nonlinear model is a small
+ensemble: a single repeat scores 1.92 m. The open coast is still twice the
+bay's error under ML, and past ~17 m even gbm saturates.
 
 ## Error budget
 
@@ -527,6 +592,8 @@ sdbNSW/
 │       ├── reference.py        # exact area-weighted lidar -> scene grid; masks
 │       ├── waterlevel.py       # water level at overpass: MHL gauge, or image (provisional)
 │       ├── sdb.py              # Stumpf ratio transform, calibration
+│       ├── ml.py               # v2: gradient boosting on per-pixel image features
+│       ├── substrate.py        # substrate strata for the errors (pre-registered addendum)
 │       ├── validate.py         # blocked CV, statistics, stratification
 │       └── viz.py              # one palette, one set of chrome
 ├── tests/                      # every statistic against an analytic answer
@@ -631,6 +698,8 @@ defensible piece of work.
 | 29 Sep | **Phase 2 rerun at the measured level becomes the primary result**; the provisional run is kept beside it | The protocol said "report both". Pooled RMSE 2.70 → 2.68 m; no conclusion changes. Exploratory runs are not repeated |
 | 29 Sep | **Phase 3 closed** with Warren's conclusion on blocked vs random validation (above) | Stumpf is the control; the prediction it makes — flexible models will open a gap — is carried into v2 as prediction 2 |
 | 29 Sep | **v2 pre-registered**: one model family (gradient boosting, fixed settings, no tuning, no early stopping), image-only per-pixel features, v1's folds and depth-balanced sample over 0–20 m, paired comparison with Stumpf; a coordinate model run only as a labelled leakage demonstration; four predictions written down first | Every choice that could be tuned to the answer is fixed before the answer exists. No tuning because honest tuning needs nested cross-validation — cost and complexity out of proportion to the question, which is the size of the ML advantage, not its maximum |
+| 29 Sep | **v2 run once, as registered: gbm 1.88 m, 0.80 m better than Stumpf** [0.57, 1.06]; meets CATZOC C to 3 m. Predictions 1–3 held; **prediction 4 failed** | Coordinates helped even on 2 km blocks because depth itself is correlated over kilometres — the model interpolates the survey from neighbouring blocks. Recorded as a failed prediction, not explained away: it shows that block size protects only against what the model can exploit, and that the real safeguard is excluding location, as v2 did |
+| 29 Sep | **Phase 3 conclusion edited** (with Warren's agreement): Australian spelling, "clean" rather than "perfect" control, and the correlation and block-size evidence added | The claim that the model *could not* use leakage is stronger with the evidence that the data offered it |
 
 ## Sources
 

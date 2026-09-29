@@ -229,6 +229,12 @@ to pair against, and write only to `outputs/v2/` and `sdb_<model>.tif`.
 `gbm_xy` adds coordinates and is the **leakage demonstration** — its numbers
 are never a result.
 
+Expected (run 29 Sep after `c2baa44`): **gbm** pooled RMSE **1.88 m**
+[1.67, 2.13], blocked/random 1.060, paired difference to Stumpf −0.80 m
+[−1.06, −0.57], CATZOC C to 3 m; **gbm_xy** 1.32 m, random split 0.74 m
+(blocked/random 1.777). Small differences in the last decimal are possible on
+a machine with a different number of cores (multithreaded tree building).
+
 ---
 
 ## Phase 4 — Three sites
