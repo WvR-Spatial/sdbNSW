@@ -1,14 +1,14 @@
 # Satellite-Derived Bathymetry on an Exposed Temperate Coast — project brief
 
-**Status:** Phase 1 gate **passed on geometry, provisional on water level**.
-Co-registration against NSW orthoimagery on land: **E −7.4 ± 1.0,
-N −1.0 ± 1.1 m** (8 windows agree), applied. Water level at overpass
-**−0.50 m AHD, provisional** (image estimate, biased low ~0.1–0.2 m); the
-observed record from MHL's Jervis Bay gauge has been requested. Reference on
-the scene grid: **93.8 km² usable in 0–20 m**.
-**Phase 2: protocol pre-registered** (`8332154`), then run once. **Gate
-passed: pooled RMSE 2.70 m** [95% CI 2.32–3.15], bias −0.41 m, R² 0.69
-(inside the bay 2.28 m, open coast 4.72 m). Worse than the ~1.8 m clear-water
+**Status:** Phase 1 gate **passed**. Co-registration against NSW orthoimagery
+on land: **E −7.4 ± 1.0, N −1.0 ± 1.1 m** (8 windows agree), applied. Water
+level at overpass **−0.392 m AHD, measured** (MHL gauge 216470, 1-minute record,
+±20 mm); the provisional image estimate (−0.496) was 0.10 m low, as predicted.
+Reference on the scene grid: **93.3 km² usable in 0–20 m**.
+**Phase 2: protocol pre-registered** (`8332154`), run at the provisional water
+level, then rerun at the measured one as the protocol required. **Gate passed:
+pooled RMSE 2.68 m** [95% CI 2.31–3.13], bias −0.42 m, R² 0.69 (inside the bay
+2.27 m, open coast 4.69 m); the provisional run gave 2.70 m. Worse than the ~1.8 m clear-water
 Stumpf literature, as expected. **Does not meet CATZOC C at any depth**; error
 is flat near 2 m RMSE to ~14 m, then climbs as the ratio saturates. SDB reads
 ~1 m too deep in 0–10 m. **Substrate (pre-registered addendum): reef reads
@@ -17,9 +17,9 @@ is flat near 2 m RMSE to ~14 m, then climbs as the ratio saturates. SDB reads
 shallow over-reading is mostly not substrate. **Exploratory follow-up:** the
 fitting-depth wording was immaterial (95%-only rule: RMSE 2.82 m); the bias
 pattern is regression toward the mean plus a ratio curve that bends, and bends
-differently on the open coast. Provisional water level; rerun when the gauge
-record arrives.
-**Updated:** 27 Sep 2026 · **Repo:** `sdbNSW`
+differently on the open coast. Every conclusion survives the measured water
+level unchanged.
+**Updated:** 29 Sep 2026 · **Repo:** `sdbNSW`
 **Portfolio slot:** replaces *Revealing the Ancient Murray via REM*.
 
 This is a living document. Revise it as decisions change — do not let the repo
@@ -82,7 +82,7 @@ built in `narrabeen-stage1`.
 |---|---|---|---|---|
 | [NSW Marine LiDAR Topo-Bathy 2018](https://datasets.seed.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018) | 5 m grid, IHO Order 1b, AHD, shore to 20–40 m, Jul–Dec 2018 | [ELVIS](https://elevation.fsdf.org.au/) / AODN, manual area select | **CC BY 4.0** | **Yes** — clipped subsets, with attribution |
 | Sentinel-2 L2A | 10 m multispectral COGs | Earth Search STAC on AWS, anonymous | Copernicus open | No — derived results only |
-| MHL tide gauge 216470, Jervis Bay (HMAS Creswell) | Observed water level at overpass; AEST; chart datum, AHD offset −1.07 m | MHL data request (form or data-request@mhl.nsw.gov.au) | CC BY 4.0, attribute NSW DCCEEW | Raw file no (`data/raw/tide/`); derived value yes |
+| MHL tide gauge 216470, Jervis Bay (HMAS Creswell) | Observed water level at overpass. **Received 29 Sep**: `JervisBay.Level1.AHD.Actual.1min.csv`, 6–9 Sep 2018, 1-minute, complete (4,321 samples), supplied in **AHD** (station datum Jervis Bay Port Datum 1958 − 1.070 m), AEST ±2 min, quality code 55 throughout (±20 mm) | MHL data request (form or data-request@mhl.nsw.gov.au) | CC BY 4.0, attribute NSW DCCEEW | Raw file no (`data/raw/tide/`); derived value yes |
 | NSW Imagery (Spatial Services) | Orthophoto windows for co-registration only | ArcGIS REST Export Map, anonymous | Catalogue: CC BY 3.0 AU; Spatial Services excludes images from its CC licence | **No** — cached in `data/raw/ortho/`, never redistributed or drawn |
 | ERA5 10 m wind | Scene selection only — glint pre-screen | [Open-Meteo](https://open-meteo.com/) archive API, anonymous | CC BY 4.0 | No — fetched at run time |
 | NSW DPI Fisheries *Estuarine Macrophytes* | Seagrass stratum: *Posidonia*, *Zostera*, *Halophila*. Jervis Bay from **Aug 2019** aerial imagery (object-based classification), field-checked **May 2020** (project MEMS). 2,356 seagrass polygons in the bay | ArcGIS REST (`Fisheries_Portal/Estuarine_Macrophytes`), fetched via QGIS | © NSW DPI Fisheries; **CC BY 4.0** as stated by the custodian's service (an IMAS redistribution states CC BY-NC) | No (`data/raw/substrate/`) — derived statistics only |
@@ -338,9 +338,37 @@ why they differ. The larger structural problem is two water types under one
 line — a v2 question, to be pre-registered as such, not a v1 tweak. Still
 unexplained: bare shallow sediment reading 2.2 m deep in 0–2 m.
 
+### Phase 2 result — rerun at the measured water level (−0.392 m AHD), 29 Sep
+
+As the protocol required when the gauge record arrived: `waterlevel` →
+`reference` → `validate` → `substrate`, nothing else changed. This is now the
+primary result; the provisional run below stays as the record of what was
+reported first (and remains in git history, `2906234` / `8ab07db`).
+
+| | Measured water level (primary) | Provisional (−0.496) |
+|---|---|---|
+| Usable pixels | 932,838 | 937,499 |
+| Pooled RMSE, 2 km blocks | **2.68 m** [2.31, 3.13] | 2.70 m [2.32, 3.15] |
+| Bias · R² | −0.42 m [−0.95, +0.06] · 0.689 | −0.41 m · 0.688 |
+| Depth-balanced RMSE | 2.48 m | 2.48 m |
+| Naive split · blocked/naive | 2.66 m · 1.008 | 2.67 m · 1.009 |
+| Bias by band, 0–2 / 2–5 / 5–10 / 10–15 / 15–20 m | +0.94 / +1.23 / +0.81 / +0.12 / −2.07 | +0.98 / +1.23 / +0.82 / +0.12 / −2.10 |
+| Inside bay / open coast RMSE | 2.27 / 4.69 m | 2.28 / 4.72 m |
+| Breakdown depth, CATZOC C and B | 0 m (exceeded from the shallowest bin) | 0 m |
+| Saturation depth D_cal | 17–20 m (median 20) | 16–20 m (median 20) |
+| Residual correlation range | 4 km (caveat applies) | 4 km |
+| Substrate, inside bay, bias vs sediment | *Posidonia* −2.03 / +0.16 / +0.16 m (0–2 / 2–5 / 5–10); reef +1.66 / +1.71 / +1.64 m (5–10 / 10–15 / 15–20) | −1.89 / +0.24 / +0.12; reef +1.66 / +1.70 / +1.66 |
+
+Every figure moves by 0.15 m or less and no conclusion changes — as expected,
+since a constant water-level error only shifts the intercept and which pixels
+fall in each band. The exploratory runs (E1–E3) were made at the provisional
+level and are not rerun: their conclusions depend on shapes, not on a 0.1 m
+offset.
+
 ### Phase 2 result — Jervis Bay, 7 Sep 2018 (provisional water level −0.496 m AHD)
 
-The pre-registered run, unchanged. `outputs/sdb_S2A_56HKG_20180907_0_L2A.json`.
+The pre-registered run, unchanged. Reported first; superseded as the primary
+result by the measured-level rerun above.
 
 | | Result |
 |---|---|
@@ -378,7 +406,7 @@ rock, few pixels).
 | Reference (IHO Order 1b) | ±0.52 m at 10 m, ±0.56 m at 20 m | TVU = √(a² + (b·d)²), a=0.5, b=0.013, 95% |
 | Reference horizontal | 5 m + 5% depth ≈ 5.5 m | Sub-pixel at 10 m S2 |
 | Expected SDB error | 1.3–2.2 m clear water; unknown here | The quantity being measured |
-| Water level correction | Provisional −0.50 m AHD (image; biased low ~0.1–0.2 m, broad peak ±0.15 m); gauge record requested | A constant error is absorbed by the Stumpf intercept; it moves depth bands, masks and anything reported against AHD |
+| Water level correction | **−0.392 m AHD measured**: gauge ±20 mm (code 55), timing ±2 min × 0.12 m/h ≈ ±4 mm, 1-minute noise ~1 cm (11-minute mean −0.394). The provisional image estimate was −0.496 | A constant error is absorbed by the Stumpf intercept; it moves depth bands, masks and anything reported against AHD. Moving from −0.496 to −0.392 changed pooled RMSE by 0.02 m |
 | **Co-registration** | 7.5 m measured and removed; residual ±1.0 m E, ±1.1 m N (1σ), plus ~1.5 m possible datum offset in the reference imagery | On a 1:10 seabed slope 1 m of misregistration is 0.1 m of depth. Now a minor term |
 | Sub-pixel relief | Median 0.01–0.09 m, p90 ≤ 0.24 m by depth band | Std of the 5 m cells inside each 10 m pixel. Minor except on reef edges; kept for stratification |
 | **Seabed change 2018→scene** | **The real constraint** | See below |
@@ -466,7 +494,7 @@ SDB-versus-lidar comparison, plus the repo. Limitations panel above results.
 
 - [x] Repo name `sdbNSW`
 - [x] Jervis Bay scene — `S2A_56HKG_20180907_0_L2A` (see decisions register)
-- [ ] **Observed water level at overpass** — MHL Jervis Bay (216470) record for 6–8 Sep 2018 requested; replaces the provisional image estimate when it arrives
+- [x] **Observed water level at overpass** — MHL Jervis Bay (216470): −0.392 m AHD at 10:02:37 AEST, 7 Sep 2018
 - [ ] Confirm site 3 (Batemans vs Richmond) after checking lidar tile coverage
 - [x] Atmospheric correction — **L2A as supplied** for v1; ACOLITE only as diagnosis if the gate fails
 - [x] Sun glint correction — **none** for v1 (register, 27 Sep)
@@ -530,6 +558,9 @@ defensible piece of work.
 | 27 Sep | **Substrate comparison run once, as registered** (addendum committed in `73d02ce` first). Reef +1.7 m at 5–20 m; *Posidonia* ~0 at 2–10 m; 0–2 m reversed | The pre-stated direction held for reef and failed for seagrass; reported as found. Correction to the Phase 2 reading above: I attributed the shallow over-reading to "where seagrass is expected". The overlay shows those patches are reef, and bare sediment over-reads on its own — the likelier source is the calibration (a straight line through a saturating relationship, fitted to 20 m in 46 of 50 folds) and shallow bright-bottom effects |
 | 27 Sep | **Next diagnostics are exploratory, and labelled so**: (1) the calibration with the 95% rule alone, no "rises throughout" exception; (2) shallow sediment over-reading against distance to shore and bottom brightness | Both were prompted by these results, so neither can be confirmatory. Each is reported beside the registered result, never in place of it |
 | 27 Sep | **Exploratory E1–E3 run** (details under *Exploratory follow-up*). The 95%-only rule does slightly worse (RMSE 2.82 vs 2.70 m) and leaves the shallow bias in place | The drafting fault in step 2 is closed as immaterial — the registered rule stays. The bias pattern is explained by the calibration's form: depth regressed on a noisy ratio regresses toward the mean, and the ratio curve bends at ~14 m in the bay and ~8–10 m on the open coast. `validate --exploratory` and `substrate --tag` write only to `outputs/exploratory/`, so a variant can never overwrite a registered output |
+| 29 Sep | **Gauge record received and checked before use.** 1-minute, complete, AHD stated in the header and confirmed by the record's mean (−0.03 m over 3 days vs MSL +0.074); AEST ±2 min and quality code 55 = ±20 mm per MHL's conditions sheet; Jervis Bay station datum adjustment 1.070 m, matching the config | The layout differed from the one the parser was written for: **Date and Time in separate columns** after a 30-line licence block. The old parser **failed loudly** (a tokenizer error), not silently. Fixed to join date and time, read the stated datum and quality codes, and **refuse if the header's datum contradicts the numbers**; pinned by a test of this exact layout. The tidal rate is now fitted over ±15 min — with 1-minute samples the two bracketing values differ by noise as much as by tide |
+| 29 Sep | **Prediction test passed: water level −0.392 m AHD** at 10:02:37 AEST (tide falling 0.12 m/h). Predicted in the register on 27 Sep: about −0.3 to −0.4 m, the image estimate biased low by ~0.1–0.2 m. Observed bias of the image estimate: **0.104 m** | The image method's known bias (NIR reading through the first decimetres of water) is now measured once. Useful for sites 2 and 3 if a gauge is missing, as a correction with a stated uncertainty rather than a guess |
+| 29 Sep | **Phase 2 rerun at the measured level becomes the primary result**; the provisional run is kept beside it | The protocol said "report both". Pooled RMSE 2.70 → 2.68 m; no conclusion changes. Exploratory runs are not repeated |
 
 ## Sources
 

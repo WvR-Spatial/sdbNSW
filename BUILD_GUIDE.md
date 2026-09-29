@@ -100,8 +100,10 @@ under `data/raw/tide/` and run:
 python -m sdb.waterlevel --scene S2A_56HKG_20180907_0_L2A --gauge-file data\raw\tide\<file>.csv
 python -m sdb.reference --scene S2A_56HKG_20180907_0_L2A
 ```
-The datum is inferred from the record's mean (MHL's labels are unreliable);
-times are taken as AEST. Expect about −0.3 to −0.4 m AHD.
+The datum is inferred from the record's mean and checked against the header's
+statement (a contradiction is refused); times are taken as AEST. *Done 29 Sep:
+−0.392 m AHD, superseding the provisional −0.496; `reference` then gives
+932,838 usable pixels (93.28 km²).*
 
 **→ YOU · QGIS** — the visual check, done 27 Sep, and it caught the first
 co-registration. It stays in the guide for sites 2 and 3: compare the scene
@@ -115,7 +117,7 @@ pipeline gets done in the GUI** — anything GUI-driven is not reproducible by a
 reader, which is the exact criticism that sinks the Murray REM piece.
 
 **Gate:** seabed visible; co-registration confirmed on land. *Passed on
-geometry; water level provisional until the gauge record arrives.*
+geometry; water level measured by the gauge on 29 Sep.*
 
 ---
 
@@ -129,7 +131,7 @@ and records any departure as a deviation.
 rule), `src/sdb/validate.py` (blocked cross-validation, statistics, breakdown
 depth, CLI), `src/sdb/viz.py` (figures). Tests: `tests/test_sdb.py`,
 `tests/test_validate.py` — including the water-level invariance and a leakage
-demonstration. **222 tests** with `tests/test_substrate.py`.
+demonstration. **225 tests** with `tests/test_substrate.py`.
 
 **→ YOU** —
 
@@ -156,8 +158,10 @@ It writes `outputs/sdb_<scene>.json`, three figures in `outputs/figures/`,
 and `sdb.tif` (out-of-fold depth and residual) beside the scene. Commit the
 JSON and figures; `sdb.tif` stays in gitignored `data/raw/`.
 
-**When the gauge record arrives:** `waterlevel --gauge-file …` → `reference` →
-`validate`, and report both runs.
+**With the gauge record (29 Sep):** `waterlevel --gauge-file …` → `reference` →
+`validate` → `substrate`. Expected: pooled RMSE **2.68 m** [2.31, 3.13], bias
+−0.42 m, 932,838 pixels; substrate reef +1.66 m at 5–10 m. Both runs are
+reported in the brief.
 
 **Gate:** site 1 RMSE within roughly 2× the literature (< ~4 m). If it is
 wildly worse, the fault is almost always water level, sun glint, or

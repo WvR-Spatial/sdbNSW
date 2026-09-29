@@ -45,6 +45,8 @@ AEST = timezone(timedelta(hours=10))
 
 #: A gauge sample must lie within this many minutes either side of the overpass.
 MAX_GAP_MIN = 30.0
+#: Half-width of the window used to estimate the tidal rate at the overpass.
+RATE_WINDOW_MIN = 15.0
 
 #: Datum inference: the series mean over the supplied record must sit within
 #: this of mean sea level in exactly one datum. The two candidates are 1.07 m
@@ -91,44 +93,93 @@ def read_gauge_csv(path: Path, *, time_col: str | None = None,
                    level_col: str | None = None) -> tuple[np.ndarray, np.ndarray, dict[str, Any]]:
     """(times as UTC datetime64[s], levels float64, notes) from an MHL-style CSV.
 
-    Tolerant of layout: header lines before the table are skipped, the time
-    column is the first that parses as dates (day first, Australian style), the
-    level column the first mostly-numeric one after it -- unless named. Times
-    are taken as AEST, as MHL documents, and converted to UTC.
+    Tolerant of layout: header lines before the table are skipped (MHL puts a
+    licence and station block first); the time column is the first that parses
+    as dates (day first, Australian style), joined with the next column when that
+    holds times of day (MHL's "Date,Time,Value [m],Quality"); the level column is
+    the first mostly-numeric one after it -- unless named. Times are taken as
+    AEST, as MHL documents, and converted to UTC. The datum stated in the header
+    and the quality codes, if present, are returned in notes.
     """
     import pandas as pd
 
     raw = Path(path).read_text(encoding="utf-8-sig", errors="replace").splitlines()
-    start = 0
-    for i, line in enumerate(raw[:200]):
-        cells = [c.strip() for c in line.split(",")]
-        if len(cells) >= 2 and _looks_like_datetime(cells[0]) and _looks_numeric(cells[1]):
-            start = max(i - 1, 0)
+    start = None
+    for i, line in enumerate(raw[:300]):
+        if _is_data_line([c.strip() for c in line.split(",")]):
+            start = i
             break
-    header_is_data = _looks_like_datetime(raw[start].split(",")[0].strip())
-    df = pd.read_csv(path, skiprows=start, header=None if header_is_data else 0,
+    if start is None:
+        raise ValueError(f"{path}: no data rows found (expected date, [time,] level)")
+    has_header = start > 0 and not _is_data_line([c.strip() for c in raw[start - 1].split(",")]) \
+        and raw[start - 1].count(",") == raw[start].count(",")
+    skip = start - 1 if has_header else start
+    df = pd.read_csv(path, skiprows=skip, header=0 if has_header else None,
                      encoding="utf-8-sig", skipinitialspace=True)
     df.columns = [str(c).strip() for c in df.columns]
+    cols = list(df.columns)
 
-    tcol = time_col or next(c for c in df.columns
-                            if pd.to_datetime(df[c].head(20), dayfirst=True, errors="coerce").notna().mean() > 0.8)
-    lcol = level_col or next(c for c in df.columns if c != tcol
+    tcol = time_col or next(c for c in cols
+                            if pd.to_datetime(df[c].head(20).astype(str), dayfirst=True,
+                                              errors="coerce").notna().mean() > 0.8
+                            and not df[c].head(20).astype(str).str.match(_TIME_RE).all())
+    i = cols.index(tcol)
+    clock = (cols[i + 1] if i + 1 < len(cols)
+             and df[cols[i + 1]].head(20).astype(str).str.strip().str.match(_TIME_RE).mean() > 0.8
+             else None)
+    stamp = df[tcol].astype(str).str.strip()
+    if clock:
+        stamp = stamp + " " + df[clock].astype(str).str.strip()
+    lcol = level_col or next(c for c in cols if c not in (tcol, clock)
                              and pd.to_numeric(df[c], errors="coerce").notna().mean() > 0.8)
-    t = pd.to_datetime(df[tcol], dayfirst=True, errors="coerce")
+    t = _parse_times(stamp)
     z = pd.to_numeric(df[lcol], errors="coerce")
     ok = t.notna() & z.notna()
     t_local = t[ok].dt.tz_localize(AEST) if t[ok].dt.tz is None else t[ok]
     t_utc = t_local.dt.tz_convert("UTC").dt.tz_localize(None).values.astype("datetime64[s]")
-    order = np.argsort(t_utc)
+    order = np.argsort(t_utc, kind="stable")
+    qcol = next((c for c in cols if c.lower().startswith("qual")), None)
+    header = raw[:skip]
     notes = {"file_rows": int(len(df)), "rows_used": int(ok.sum()), "time_column": tcol,
-             "level_column": lcol, "header_lines_skipped": start,
-             "timezone_assumed": "AEST (UTC+10), per MHL" if t[ok].dt.tz is None else "from file"}
+             "clock_column": clock, "level_column": lcol, "header_lines_skipped": skip,
+             "timezone_assumed": "AEST (UTC+10), per MHL" if t[ok].dt.tz is None else "from file",
+             "datum_stated": next((ln.split(",", 1)[1].strip() for ln in header
+                                   if ln.split(",")[0].strip().lower() == "datum"), None),
+             "quality_codes": ({str(k): int(v) for k, v in df.loc[ok, qcol].value_counts().items()}
+                               if qcol else None)}
     return t_utc[order], z[ok].to_numpy(float)[order], notes
 
 
-def _looks_like_datetime(s: str) -> bool:
+_TIME_RE = r"^\d{1,2}:\d{2}(:\d{2})?$"
+
+
+def _is_data_line(cells: list[str]) -> bool:
+    """A table row: a date (or date-time) then a number, or a date, a time of day, a number."""
+    import re
+
+    if len(cells) < 2 or not _looks_like_datetime(cells[0]):
+        return False
+    if _looks_numeric(cells[1]):
+        return True
+    return len(cells) >= 3 and re.match(_TIME_RE, cells[1]) is not None and _looks_numeric(cells[2])
+
+
+def _parse_times(stamp):
+    """Day-first parsing; an explicit format first, so 07/09 can never become 9 July."""
     import pandas as pd
-    if not s or s.replace(".", "", 1).lstrip("-").isdigit():
+
+    for fmt in ("%d/%m/%Y %H:%M:%S", "%d/%m/%Y %H:%M", "%d/%m/%Y"):
+        t = pd.to_datetime(stamp, format=fmt, errors="coerce")
+        if t.notna().mean() > 0.99:
+            return t
+    return pd.to_datetime(stamp, dayfirst=True, errors="coerce")
+
+
+def _looks_like_datetime(s: str) -> bool:
+    import re
+
+    import pandas as pd
+    if not s or s.replace(".", "", 1).lstrip("-").isdigit() or re.match(_TIME_RE, s):
         return False
     return pd.to_datetime(s, dayfirst=True, errors="coerce") is not pd.NaT
 
@@ -139,6 +190,16 @@ def _looks_numeric(s: str) -> bool:
         return True
     except ValueError:
         return False
+
+
+def check_stated_datum(stated: str | None, inferred: str) -> None:
+    """Refuse when the header names a datum and the numbers say otherwise."""
+    if not stated:
+        return
+    says_ahd = "australian height datum" in stated.lower() or stated.strip().upper().startswith("AHD")
+    if says_ahd != (inferred == "ahd"):
+        raise ValueError(f"header states datum '{stated}' but the record's mean says {inferred.upper()}: "
+                         "check the file before using it")
 
 
 def infer_datum(levels: np.ndarray, gauge: Gauge, *, tol: float = DATUM_TOLERANCE_M) -> str:
@@ -176,7 +237,14 @@ def level_at(times_utc: np.ndarray, levels: np.ndarray, when_utc: datetime, *,
     span = (t1 - t0) / np.timedelta64(1, "s")
     f = 0.0 if span == 0 else float((w - t0) / np.timedelta64(1, "s") / span)
     z = float(levels[i - 1] + f * (levels[i] - levels[i - 1]))
-    rate = float((levels[i] - levels[i - 1]) / (span / 3600.0)) if span else 0.0
+    # Tidal rate from a straight-line fit over +/-15 min: with 1-minute records the
+    # two bracketing samples differ by sensor noise (~1 cm) as much as by tide.
+    near = np.abs((times_utc - w) / np.timedelta64(1, "m")) <= RATE_WINDOW_MIN
+    if near.sum() >= 3:
+        hrs = ((times_utc[near] - w) / np.timedelta64(1, "s")).astype(float) / 3600.0
+        rate = float(np.polyfit(hrs, levels[near], 1)[0])
+    else:
+        rate = float((levels[i] - levels[i - 1]) / (span / 3600.0)) if span else 0.0
     return {"level": z, "before_utc": str(t0), "after_utc": str(t1),
             "gap_before_min": round(float(g0), 1), "gap_after_min": round(float(g1), 1),
             "tidal_rate_m_per_h": round(rate, 3)}
@@ -277,14 +345,26 @@ def main(argv: Sequence[str] | None = None) -> int:
     if a.gauge_file:
         t, lv, notes = read_gauge_csv(a.gauge_file, time_col=a.time_col, level_col=a.level_col)
         datum = infer_datum(lv, gauge) if a.datum == "auto" else a.datum
+        try:
+            check_stated_datum(notes.get("datum_stated"), datum)
+        except ValueError as e:
+            if a.datum == "auto":
+                print(f"  REFUSED: {e}")
+                return 2
+            print(f"  WARNING (datum given explicitly, so continuing): {e}")
         ahd = to_ahd(lv, datum, gauge)
         at = level_at(t, ahd, when)
+        near = np.abs((t - np.datetime64(when.replace(tzinfo=None), "s")).astype(float)) <= 300
+        at["centred_11min_mean"] = round(float(ahd[near].mean()), 4) if near.any() else None
         ok = plausible(at["level"], gauge)
         print(f"  gauge {gauge.name} ({gauge.station}): {notes['rows_used']} samples, "
               f"{t[0]} to {t[-1]} UTC\n  datum: {datum.upper()}"
               f"{' (inferred from the record mean)' if a.datum == 'auto' else ' (as given)'}"
+              f"; header states: {notes.get('datum_stated') or 'nothing'}"
+              f"\n  quality codes: {notes.get('quality_codes')}"
               f"\n  level at overpass: {at['level']:+.3f} m AHD (samples {at['gap_before_min']} min "
-              f"before, {at['gap_after_min']} after; tide moving {at['tidal_rate_m_per_h']:+.2f} m/h)")
+              f"before, {at['gap_after_min']} after; tide moving {at['tidal_rate_m_per_h']:+.2f} m/h; "
+              f"11-min centred mean {at['centred_11min_mean']:+.3f})")
         if not ok:
             print(f"  REFUSED: outside the plausible range [{gauge.islw_ahd - PLAUSIBLE_MARGIN_M:+.2f}, "
                   f"{gauge.hhwss_ahd + PLAUSIBLE_MARGIN_M:+.2f}] m AHD -- check units and datum")
@@ -292,6 +372,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         rec.update({"method": "gauge", "water_level_m_ahd": round(at["level"], 3),
                     "status": "measured", "datum_in_file": datum, "interpolation": at,
                     "file": {"path": str(a.gauge_file), "md5": _md5(a.gauge_file), **notes}})
+        prev = a.out / f"waterlevel_{a.scene}.json"
+        if prev.exists():
+            old_rec = json.loads(prev.read_text(encoding="utf-8"))
+            if old_rec.get("method") == "image":
+                rec["superseded"] = {k: old_rec.get(k) for k in
+                                     ("method", "status", "water_level_m_ahd", "written_utc")}
+                print(f"  supersedes the provisional image estimate {old_rec['water_level_m_ahd']:+.3f} m AHD "
+                      f"(image minus gauge {old_rec['water_level_m_ahd'] - at['level']:+.3f} m)")
     else:
         from sdb.reference import SCL_CLOUD, SCL_NODATA, plane_translation, read_dem, read_scene
 

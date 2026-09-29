@@ -10,69 +10,40 @@
     "hhwss_ahd": 1.028,
     "source": "Manly Hydraulics Laboratory for NSW DCCEEW, CC BY 4.0; times AEST"
   },
-  "method": "image",
-  "water_level_m_ahd": -0.496,
-  "status": "provisional",
-  "coregistration_applied_m": [
-    -7.42,
-    -1.02
-  ],
-  "estimate": {
-    "status": "ok",
-    "level_m_ahd": -0.496,
-    "peak_corr": 0.7554,
-    "corr_at_0m": 0.7331,
-    "n_px": 168412,
-    "coarse": {
-      "levels": [
-        -1.2,
-        -1.1,
-        -1.0,
-        -0.9,
-        -0.8,
-        -0.7,
-        -0.6,
-        -0.5,
-        -0.4,
-        -0.3,
-        -0.2,
-        -0.1,
-        0.0,
-        0.1,
-        0.2,
-        0.3,
-        0.4,
-        0.5,
-        0.6,
-        0.7,
-        0.8
-      ],
-      "corr": [
-        0.7181,
-        0.7243,
-        0.7308,
-        0.7377,
-        0.7454,
-        0.7508,
-        0.7539,
-        0.7554,
-        0.7549,
-        0.7526,
-        0.746,
-        0.74,
-        0.7331,
-        0.7253,
-        0.717,
-        0.7086,
-        0.7009,
-        0.6923,
-        0.6826,
-        0.6759,
-        0.6698
-      ]
-    },
-    "bias": "NIR reads bright through the first ~0.1-0.2 m of water, so the image estimate is biased low by about that much"
+  "method": "gauge",
+  "water_level_m_ahd": -0.392,
+  "status": "measured",
+  "datum_in_file": "ahd",
+  "interpolation": {
+    "level": -0.392,
+    "before_utc": "2018-09-07T00:02:00",
+    "after_utc": "2018-09-07T00:03:00",
+    "gap_before_min": 0.6,
+    "gap_after_min": 0.4,
+    "tidal_rate_m_per_h": -0.125,
+    "centred_11min_mean": -0.3941
   },
-  "written_utc": "2026-09-27T10:13:06+00:00",
+  "file": {
+    "path": "data\\raw\\tide\\JervisBay.Level1.AHD.Actual.1min.csv",
+    "md5": "99bc279cf847e08e05eb59c080e72beb",
+    "file_rows": 4321,
+    "rows_used": 4321,
+    "time_column": "Date",
+    "clock_column": "Time",
+    "level_column": "Value [m]",
+    "header_lines_skipped": 30,
+    "timezone_assumed": "AEST (UTC+10), per MHL",
+    "datum_stated": "Australian Height Datum (1971)",
+    "quality_codes": {
+      "55": 4321
+    }
+  },
+  "superseded": {
+    "method": "image",
+    "status": "provisional",
+    "water_level_m_ahd": -0.496,
+    "written_utc": "2026-09-27T10:13:06+00:00"
+  },
+  "written_utc": "2026-09-29T12:26:02+00:00",
   "sdb_version": "0.1.0"
 }

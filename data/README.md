@@ -124,12 +124,20 @@ Observed water level at the overpass. Source: Manly Hydraulics Laboratory,
 data-request@mhl.nsw.gov.au. Ask for 6–8 September 2018. Licence CC BY 4.0;
 attribute NSW DCCEEW. Save the CSV to `raw/tide/`.
 
-- Times are **AEST** (UTC+10, no daylight saving).
-- Gauge datum is **chart datum**; AHD = CD − 1.07 m. MHL's labels are not
-  reliable on this, so `waterlevel` infers the datum from the record's mean.
+Received 29 Sep 2026 as `JervisBay.Level1.AHD.Actual.1min.csv`, with MHL's
+*Data conditions and limitations* PDF (keep both):
 
-Until it arrives, `waterlevel --from-image` gives a provisional estimate
-(−0.50 m AHD at Jervis Bay, biased low by ~0.1–0.2 m).
+- A 30-line licence and station block, then `Date,Time,Value [m],Quality` —
+  date and time in **separate columns**, day first, CRLF line endings.
+- 1-minute samples, 6 Sep 00:00 – 9 Sep 00:00 AEST, none missing.
+- Supplied in **AHD** (the header says so; the record's mean agrees). The
+  station's own datum is Jervis Bay Port Datum (1958): AHD = SD − 1.070 m.
+- Times **AEST** (UTC+10, no daylight saving), accurate to ±2 minutes.
+- Quality code **55** throughout: processed to ±20 mm.
+
+`waterlevel` reads this layout as supplied, infers the datum from the numbers
+and refuses if that contradicts the header. `waterlevel --from-image` remains
+for sites without a gauge; at Jervis Bay it read 0.104 m low.
 
 ### 6. Substrate layers  *(fetched via QGIS; never committed)*
 

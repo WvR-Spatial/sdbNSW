@@ -203,3 +203,89 @@ def test_cli_refuses_an_implausible_level(tmp_path):
     csv.write_text("\n".join(fixed) + "\n")               # centimetres, datum forced
     assert waterlevel.main(["--site", "t", "--config", str(cfg), "--scene", "S", "--root", str(root),
                             "--out", str(root / "o"), "--gauge-file", str(csv), "--datum", "ahd"]) == 2
+
+
+# --- MHL's actual export layout (as received for 216470, Sep 2026) ---------------
+
+MHL_PREAMBLE = [
+    "The data supplied is licensed under a Creative Commons Attribution 4.0 licence. ",
+    "To view a copy of this licence visit:", "http://creativecommons.org/licenses/by/4.0", "",
+    "Licence:", "You are free:", "", "               1.to copy distribute display and perform the work",
+    "", "Under the following conditions:",
+    "               2. Please attribute NSW Department of Climate Change Energy the Environment "
+    "and Water in any publications using this data.", "", "",
+    "Station Name, Jervis Bay", "Station Number, 216470", "Longitude,150.707439",
+    "Latitude,-35.121953", 'Web,"http://www.mhl.nsw.gov.au/Station-216470"', "",
+]
+
+
+def _write_mhl_export(path, datum_line="Datum, Australian Height Datum (1971)", offset=0.0, noise=0.01):
+    """Date and Time in separate columns, 1-minute samples, CRLF endings, quality codes."""
+    mins = np.arange(0, 3 * 24 * 60 + 1)
+    hours = mins / 60
+    rng = np.random.default_rng(0)
+    z = _tide(hours) + offset + rng.normal(0, noise, mins.size)
+    rows = [f"{(datetime(2018, 9, 6) + np.timedelta64(int(m), 'm').astype(object)):%d/%m/%Y,%H:%M:%S},"
+            f"{v:.3f},55" for m, v in zip(mins, z)]
+    lines = MHL_PREAMBLE + [datum_line, "", "Parameter, Level 1", "", "Date,Time,Value [m],Quality"] + rows
+    path.write_bytes(("\r\n".join(lines) + "\r\n").encode("ascii"))
+    return hours, z
+
+
+def test_reads_mhls_export_with_separate_date_and_time_columns(tmp_path):
+    f = tmp_path / "JervisBay.Level1.AHD.Actual.1min.csv"
+    _write_mhl_export(f)
+    t, z, notes = read_gauge_csv(f)
+    assert len(t) == 3 * 24 * 60 + 1
+    assert str(t[0]) == "2018-09-05T14:00:00" and str(t[1]) == "2018-09-05T14:01:00"
+    assert (notes["time_column"], notes["clock_column"], notes["level_column"]) == ("Date", "Time", "Value [m]")
+    assert notes["datum_stated"] == "Australian Height Datum (1971)"
+    assert notes["quality_codes"] == {"55": len(t)}
+    at = level_at(t, z, OVERPASS)
+    assert at["level"] == pytest.approx(_tide(H_OVERPASS), abs=0.02)        # 1 cm noise
+    true_rate = -0.6 * 2 * np.pi / 12.42 * np.sin(2 * np.pi * (H_OVERPASS - 4.0) / 12.42)
+    assert at["tidal_rate_m_per_h"] == pytest.approx(true_rate, abs=0.03)   # not the noise
+
+
+def test_a_header_datum_that_contradicts_the_numbers_is_refused(tmp_path):
+    from sdb.waterlevel import check_stated_datum
+
+    check_stated_datum("Australian Height Datum (1971)", "ahd")
+    check_stated_datum(None, "cd")
+    with pytest.raises(ValueError, match="header states"):
+        check_stated_datum("Australian Height Datum (1971)", "cd")
+    f = tmp_path / "mislabelled.csv"
+    _write_mhl_export(f, offset=-JB.ahd_offset_m)            # chart-datum numbers under an AHD label
+    _, z, notes = read_gauge_csv(f)
+    assert infer_datum(z, JB) == "cd"
+    with pytest.raises(ValueError, match="header states"):
+        check_stated_datum(notes["datum_stated"], infer_datum(z, JB))
+
+
+def test_cli_keeps_the_superseded_image_estimate_and_refuses_a_contradicted_header(tmp_path):
+    import yaml
+
+    from sdb import waterlevel
+
+    root = tmp_path
+    sd = root / "data" / "raw" / "scenes" / "S"
+    sd.mkdir(parents=True)
+    (sd / "provenance.json").write_text(json.dumps({"datetime_utc": "2018-09-07T00:02:37Z"}))
+    cfg = root / "sites.yml"
+    cfg.write_text(yaml.safe_dump({"sites": {"t": {"reference_dem": "x", "tide_gauge": {
+        "station": "216470", "name": "Jervis Bay", "ahd_offset_m": -1.07, "msl_ahd": 0.074,
+        "islw_ahd": -0.776, "hhwss_ahd": 1.028}}}}))
+    out = root / "o"
+    out.mkdir()
+    (out / "waterlevel_S.json").write_text(json.dumps(
+        {"method": "image", "status": "provisional", "water_level_m_ahd": -0.496}))
+    good = root / "good.csv"
+    _write_mhl_export(good)
+    args = ["--site", "t", "--config", str(cfg), "--scene", "S", "--root", str(root), "--out", str(out)]
+    assert waterlevel.main(args + ["--gauge-file", str(good)]) == 0
+    rec = json.loads((out / "waterlevel_S.json").read_text())
+    assert rec["status"] == "measured" and rec["superseded"]["water_level_m_ahd"] == -0.496
+    assert rec["file"]["datum_stated"].startswith("Australian Height Datum")
+    bad = root / "bad.csv"
+    _write_mhl_export(bad, offset=-JB.ahd_offset_m)
+    assert waterlevel.main(args + ["--gauge-file", str(bad)]) == 2
