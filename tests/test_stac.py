@@ -342,3 +342,42 @@ def test_rejected_rows_are_kept_with_a_reason():
     assert status["sliver"].startswith("rejected: covers")
     assert status["cloudy"].startswith("rejected: scene cloud")
     assert out[0]["id"] == "full"          # kept rows lead the table
+
+
+# --- scene nodata is a proxy, coverage decides --------------------------------
+
+from sdb.stac import rejection_tally  # noqa: E402
+
+
+def test_full_coverage_beats_scene_nodata():
+    """Batemans Bay 2018-08-18: the AOI was whole, the tile was cut elsewhere."""
+    whole = summarise_item(_props(**{"s2:nodata_pixel_percentage": 15.2}), "edge_tile", CAPTURES,
+                           item_geometry=_poly(150.0, -36.0, 151.5, -34.0), aoi_bbox=JB_BBOX)
+    assert whole["aoi_coverage_pct"] == pytest.approx(100.0)
+    out = classify_candidates([whole], max_cloud=40, max_nodata=5)
+    assert out[0]["status"] == "kept"
+
+
+def test_scene_nodata_still_applies_without_a_footprint():
+    blind = summarise_item(_props(**{"s2:nodata_pixel_percentage": 40.0}), "no_geom", CAPTURES)
+    out = classify_candidates([blind], max_cloud=40, max_nodata=5)
+    assert out[0]["status"].startswith("rejected: nodata")
+
+
+def test_rejection_tally_counts_every_outcome():
+    full = _poly(150.0, -36.0, 151.5, -34.0)
+    rows = [
+        summarise_item(_props(), "good", CAPTURES, item_geometry=full, aoi_bbox=JB_BBOX),
+        summarise_item(_props(), "sliver", CAPTURES,
+                       item_geometry=_poly(150.79, -36.0, 152.0, -34.0), aoi_bbox=JB_BBOX),
+        summarise_item(_props(**{"eo:cloud_cover": 80.0}), "cloudy", CAPTURES,
+                       item_geometry=full, aoi_bbox=JB_BBOX),
+        summarise_item(_props(**{"s2:nodata_pixel_percentage": 40.0}), "blind", CAPTURES),
+    ]
+    tally = rejection_tally(classify_candidates(rows, max_cloud=40, max_nodata=5))
+    assert tally == {"kept": 1, "coverage": 1, "cloud": 1, "nodata": 1}
+
+
+def test_rejection_tally_refuses_an_unknown_status():
+    with pytest.raises(ValueError):
+        rejection_tally([{"status": "rejected: something new"}])

@@ -8,7 +8,9 @@ defaults:
   window_days: 45          # +/- around each capture date
   max_cloud: 40            # scene-level %, deliberately loose: scene cloud is a
                            # poor proxy for cloud over a small AOI. Filter hard later.
-  max_nodata: 5            # % of scene that is swath-edge nodata
+  max_nodata: 5            # % of scene that is swath-edge nodata. Applied only to
+                           # items with no footprint: where AOI coverage can be
+                           # measured it decides alone (sdb.stac.classify_candidates)
 
 sites:
   jervis_bay:
@@ -58,15 +60,39 @@ sites:
     status: reference_in_hand
 
   narrabeen_long_reef:
-    label: "Narrabeen - Long Reef"
-    role: "exposed, surf-dominated"
-    bbox: null                   # TODO: measure from the coverage index
-    capture_dates: []
-    status: not_ordered
+    label: "Northern Beaches (Queenscliff - Palm Beach)"
+    role: "exposed, surf-dominated open coast"
+    # SydneyNorth2018_DEM_3376256_01_005, block NSW020302 (North Head - Barrenjoey).
+    # AOI = the part of the block that no other block's raster reaches, in MGA56
+    # E 337230-347890, N 6260100-6281900: SydneyHarbour (flown 2018-08-18) runs
+    # to N 6259945 and BrokenBay (2018-08-24) starts at N 6282035. One capture
+    # date, and an ELVIS order inside it is not mosaicked (data/README.md).
+    # Lon/lat box inscribed in that window.
+    bbox: [151.2460, -33.7867, 151.3570, -33.5918]
+    capture_dates: ["2018-09-18"]   # CAPT_END from the coverage index
+    reference_crs: "EPSG:7856"
+    reference_dem: "data/raw/Narrabeen/NSW Government - DCCEEW/DEM/5 Metre/NSW_Marine_5m_TopoBathy_DEM.tif"
+    status: reordering           # 1 Oct extract was mosaicked (resampled); native re-order pending
 
+  # Site 3 candidates. Entries exist so sdb.stac / sdb.fetch quicklook can
+  # screen the imagery around each capture date before any lidar is ordered.
   batemans_bay:
     label: "Batemans Bay / Clyde mouth"
-    role: "worst case — estuarine turbidity"
-    bbox: null                   # TODO: measure from the coverage index
-    capture_dates: ["2018-08-24"]   # block NSW020602, from the coverage index
-    status: not_ordered
+    role: "candidate worst case — estuarine turbidity (to be confirmed from imagery)"
+    # BatemansBay2018_DEM_2436036_01_005, block NSW020602; block bbox from the
+    # coverage index. MoruyaCoast (2018-09-05) and Murramurang (2018-09-06)
+    # rasters overlap its south and north-east corners: the lidar order must
+    # avoid them.
+    bbox: [150.1571, -35.7879, 150.2936, -35.6851]
+    capture_dates: ["2018-08-24"]
+    status: screening
+
+  richmond_river:
+    label: "Richmond River mouth (Ballina)"
+    role: "candidate worst case — river plume (to be confirmed from imagery)"
+    # Screening box only. The mouth sits on the seam between ByronBallina
+    # (NSW010102, flown 2018-08-04) to the north and Broadwater (NSW010103,
+    # 2018-07-08) to the south, at about lat -28.877.
+    bbox: [153.5500, -28.9500, 153.6500, -28.8000]
+    capture_dates: ["2018-07-08", "2018-08-04"]
+    status: screening

@@ -324,17 +324,24 @@ def classify_candidates(rows: Iterable[dict[str, Any]], *, max_cloud: float,
     Partial AOI coverage is a hard rejection, not a penalty. A scene covering a
     quarter of the bay cannot validate the bay, however clear and however close
     in time -- and it would otherwise sit at the top of the list looking ideal.
+
+    Scene-wide nodata is only a proxy for that, so it applies only when the item
+    has no footprint to measure coverage from. Where coverage is known it
+    decides alone: a tile cut by the swath edge 50 km away says nothing about
+    the AOI. (Batemans Bay, 2018-08-18: 100% AOI coverage, 0.4% cloud, was
+    rejected for 15% nodata elsewhere in the tile.)
     """
     out = []
     for r in rows:
         r = dict(r)
         cov = r.get("aoi_coverage_pct")
-        if cov is not None and cov == cov and cov < min_coverage:
+        known = cov is not None and cov == cov
+        if known and cov < min_coverage:
             r["status"] = f"rejected: covers {cov:.1f}% of AOI"
         elif r["cloud_pct"] == r["cloud_pct"] and r["cloud_pct"] > max_cloud:
             r["status"] = f"rejected: scene cloud {r['cloud_pct']:.1f}%"
-        elif r["nodata_pct"] > max_nodata:
-            r["status"] = f"rejected: nodata {r['nodata_pct']:.1f}%"
+        elif not known and r["nodata_pct"] > max_nodata:
+            r["status"] = f"rejected: nodata {r['nodata_pct']:.1f}% (no footprint)"
         else:
             r["status"] = "kept"
         out.append(r)
@@ -343,6 +350,20 @@ def classify_candidates(rows: Iterable[dict[str, Any]], *, max_cloud: float,
     rej = sorted((r for r in out if r["status"] != "kept"),
                  key=lambda r: (-r["score"], r["days_from_lidar"]))
     return kept + rej
+
+
+def rejection_tally(rows: Iterable[dict[str, Any]]) -> dict[str, int]:
+    """Count classified rows by outcome: kept, coverage, cloud, nodata."""
+    tally = {"kept": 0, "coverage": 0, "cloud": 0, "nodata": 0}
+    for r in rows:
+        s = r.get("status", "")
+        key = ("kept" if s == "kept" else "coverage" if s.startswith("rejected: covers")
+               else "cloud" if s.startswith("rejected: scene cloud")
+               else "nodata" if s.startswith("rejected: nodata") else None)
+        if key is None:
+            raise ValueError(f"unclassified row status: {s!r}")
+        tally[key] += 1
+    return tally
 
 
 def filter_candidates(rows: Iterable[dict[str, Any]], *, max_cloud: float,
@@ -461,12 +482,21 @@ def main(argv: Sequence[str] | None = None) -> int:
     allrows = classify_candidates(rows, max_cloud=max_cloud, max_nodata=max_nodata,
                                   min_coverage=a.min_coverage)
     kept = [r for r in allrows if r["status"] == "kept"]
-    print(f"{len(kept)} pass the hard filters "
-          f"(coverage >= {a.min_coverage}%, cloud <= {max_cloud}%, nodata <= {max_nodata}%)\n")
+    tally = rejection_tally(allrows)
+    print(f"{len(kept)} pass the hard filters (coverage >= {a.min_coverage}%, "
+          f"cloud <= {max_cloud}%; nodata <= {max_nodata}% only where an item has no footprint)")
+    print(f"   rejected: {tally['coverage']} partial AOI coverage, {tally['cloud']} scene cloud, "
+          f"{tally['nodata']} nodata\n")
+
+    # Written before any early return: the rejected rows are the decision
+    # trail, and they matter most when nothing passes.
+    csv = _write_table(allrows, a.out, site.name)
 
     if not kept:
         print("Nothing passed. Widen --window-days or raise --max-cloud before "
               "concluding anything about the site.")
+        if csv is not None:
+            print(f"every row and why it was rejected -> {csv}")
         return 1
 
     # Console shows kept rows only, so tile and coverage (always >= the filter)
@@ -485,17 +515,13 @@ def main(argv: Sequence[str] | None = None) -> int:
              "needs_boa_offset": "offset"}
     try:
         import pandas as pd
-        a.out.mkdir(parents=True, exist_ok=True)
-        csv = a.out / f"candidates_{site.name}.csv"
-        full = pd.DataFrame(allrows)
-        front = ["status"] + [c for c in full.columns if c != "status"]
-        full[front].to_csv(csv, index=False)
         print(pd.DataFrame(kept)[cols].head(a.top).rename(columns=short).to_string(index=False))
-        n_rej = len(allrows) - len(kept)
-        print(f"\nfull table, including {n_rej} rejected rows and why -> {csv}")
     except ImportError:
         for r in kept[:a.top]:
             print({k: r[k] for k in cols})
+    if csv is not None:
+        n_rej = len(allrows) - len(kept)
+        print(f"\nfull table, including {n_rej} rejected rows and why -> {csv}")
 
     baselines = {r["processing_baseline"] for r in kept}
     if len(baselines) > 1:
@@ -508,6 +534,22 @@ def main(argv: Sequence[str] | None = None) -> int:
           "\nprone. Rank with it; do not read it as a value. Neither cloud nor glint is"
           "\nsettled until you have looked. Shortlist, then look.")
     return 0
+
+
+def _write_table(rows: list[dict[str, Any]], out: Path, site_name: str) -> Path | None:
+    """Every classified row, status first, to outputs/candidates_<site>.csv."""
+    if not rows:
+        return None
+    try:
+        import pandas as pd
+    except ImportError:
+        return None
+    out.mkdir(parents=True, exist_ok=True)
+    csv = out / f"candidates_{site_name}.csv"
+    full = pd.DataFrame(rows)
+    front = ["status"] + [c for c in full.columns if c != "status"]
+    full[front].to_csv(csv, index=False)
+    return csv
 
 
 def _add_wind(rows: list[dict[str, Any]], site: Site) -> tuple[list[dict[str, Any]], bool]:
