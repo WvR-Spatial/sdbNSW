@@ -71,28 +71,42 @@ sites:
     bbox: [151.2460, -33.7867, 151.3570, -33.5918]
     capture_dates: ["2018-09-18"]   # CAPT_END from the coverage index
     reference_crs: "EPSG:7856"
-    reference_dem: "data/raw/Narrabeen/NSW Government - DCCEEW/DEM/5 Metre/NSW_Marine_5m_TopoBathy_DEM.tif"
-    status: reordering           # 1 Oct extract was mosaicked (resampled); native re-order pending
+    # ELVIS order of 1 Oct, lon 151.24-151.37, lat -33.7867 to -33.592: native
+    # values (grid phase of SydneyNorth; bit-identical to the first small clip
+    # on 327,640 cells; 97% of underwater cells on the cm lattice). The earlier
+    # whole-block extract in data/raw/Narrabeen/NSW Government - DCCEEW/ was
+    # mosaicked ("Average 16") and is superseded.
+    reference_dem: "data/raw/Narrabeen/B/NSW Government - DCCEEW/DEM/5 Metre/NSW_Marine_5m_TopoBathy_DEM.tif"
+    max_depth_m: 41.2
+    testable_area_km2: 35.5      # 0-20 m below 0 m AHD, inside bbox; 34 two-km blocks
+    status: reference_in_hand
 
-  # Site 3 candidates. Entries exist so sdb.stac / sdb.fetch quicklook can
-  # screen the imagery around each capture date before any lidar is ordered.
   batemans_bay:
     label: "Batemans Bay / Clyde mouth"
-    role: "candidate worst case — estuarine turbidity (to be confirmed from imagery)"
-    # BatemansBay2018_DEM_2436036_01_005, block NSW020602; block bbox from the
-    # coverage index. MoruyaCoast (2018-09-05) and Murramurang (2018-09-06)
-    # rasters overlap its south and north-east corners: the lidar order must
-    # avoid them.
-    bbox: [150.1571, -35.7879, 150.2936, -35.6851]
-    capture_dates: ["2018-08-24"]
-    status: screening
+    role: "site 3 — estuarine turbidity (Clyde plume visible on the chosen scene)"
+    # BatemansBay2018_DEM_2436036_01_005, block NSW020602. MoruyaCoast
+    # (2018-09-05) and Murramurang (2018-09-06) rasters overlap the block's
+    # south and north-east corners, so the lidar was ordered as two boxes inside
+    # BatemansBay alone (A: lon 150.1607-150.2388, lat -35.77 to -35.687;
+    # B: lon 150.1592-150.2906, lat -35.77 to -35.7304), both native, and joined
+    # without resampling by scripts/dem_extracts.py (overlap of 881,967 cells
+    # bit-identical; sidecar JSON beside the merged file). The far north-east
+    # corner by the Murramurang boundary is not covered. bbox = A u B.
+    bbox: [150.1592, -35.7700, 150.2906, -35.6870]
+    capture_dates: ["2018-08-24"]   # CAPT_END from the coverage index
+    reference_crs: "EPSG:7856"
+    reference_dem: "data/raw/BatemansBay/BatemansBay_5m_native_AB.tif"
+    max_depth_m: 40.6
+    testable_area_km2: 28.4      # 0-20 m below 0 m AHD, inside bbox; 21 two-km blocks
+    status: reference_in_hand
 
   richmond_river:
     label: "Richmond River mouth (Ballina)"
-    role: "candidate worst case — river plume (to be confirmed from imagery)"
-    # Screening box only. The mouth sits on the seam between ByronBallina
-    # (NSW010102, flown 2018-08-04) to the north and Broadwater (NSW010103,
-    # 2018-07-08) to the south, at about lat -28.877.
+    role: "rejected site-3 candidate (1 Oct 2026)"
+    # Rejected: the plume is a small patch at the mouth in otherwise clear open
+    # coast, and the mouth sits on the seam between ByronBallina (NSW010102,
+    # flown 2018-08-04) and Broadwater (NSW010103, 2018-07-08), 27 days apart.
+    # Kept so the screening outputs stay reproducible.
     bbox: [153.5500, -28.9500, 153.6500, -28.8000]
     capture_dates: ["2018-07-08", "2018-08-04"]
-    status: screening
+    status: rejected

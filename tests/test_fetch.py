@@ -102,6 +102,38 @@ def test_scaling_falls_back_to_the_baseline_rule():
     assert reflectance_scaling([], "02.07").offset == 0.0
 
 
+def test_item_flag_beats_a_contradicting_declared_offset():
+    """Earth Search Collection-1: pixels already harmonised, raster:bands says -0.1."""
+    s = reflectance_scaling([{"scale": 0.0001, "offset": -0.1}], "05.00", offset_applied=True)
+    assert (s.scale, s.offset, s.agrees_with_baseline) == (0.0001, 0.0, True)
+    assert "boa_offset_applied" in s.source
+
+
+def test_item_flag_false_leaves_the_declared_scaling_alone():
+    s = reflectance_scaling([{"scale": 0.0001, "offset": 0.0}], "00.01", offset_applied=False)
+    assert (s.offset, s.agrees_with_baseline) == (0.0, True)
+    s = reflectance_scaling([{"scale": 0.0001, "offset": -0.1}], "05.00", offset_applied=False)
+    assert s.offset == pytest.approx(-0.1)
+
+
+def test_item_flag_without_raster_bands_means_no_offset():
+    assert reflectance_scaling(None, "05.00", offset_applied=True).offset == 0.0
+
+
+def test_double_offset_is_what_the_water_check_catches():
+    """The Northern Beaches failure, reproduced: water DN ~36 with -0.1 applied."""
+    dn = np.full((40, 40), 36, dtype="uint16")
+    water = np.ones((40, 40), dtype=bool)
+    wrong = reflectance_scaling([{"scale": 0.0001, "offset": -0.1}], "05.00")
+    right = reflectance_scaling([{"scale": 0.0001, "offset": -0.1}], "05.00", offset_applied=True)
+    bad = offset_plausibility(apply_scaling(dn, wrong), apply_scaling(dn, wrong), water,
+                              min_pixels=100)
+    good = offset_plausibility(apply_scaling(dn, right), apply_scaling(dn, right), water,
+                               min_pixels=100)
+    assert bad["verdict"] == "fail" and "TWICE" in bad["reason"]
+    assert good["verdict"] == "pass"
+
+
 def test_scaling_refuses_to_guess():
     with pytest.raises(ValueError):
         reflectance_scaling(None, None)

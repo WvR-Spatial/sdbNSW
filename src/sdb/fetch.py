@@ -119,23 +119,40 @@ class Scaling:
 
 
 def reflectance_scaling(raster_bands: list[dict[str, Any]] | None,
-                        processing_baseline: str | float | None) -> Scaling:
+                        processing_baseline: str | float | None,
+                        *, offset_applied: bool | None = None) -> Scaling:
     """Decide how to turn digital numbers into reflectance, and say how.
 
     The asset's own `raster:bands` metadata wins when present, because it is the
     publisher's statement about these exact bytes. It is cross-checked against
     the processing-baseline rule; a disagreement is reported, not silently
     resolved, and the pixel-level plausibility check arbitrates.
+
+    One exception. Earth Search's Collection-1 items (baseline 05.00) carry
+    `earthsearch:boa_offset_applied: true`: the -1000 DN offset was already
+    taken out when the COGs were written, so the pixels are reflectance x 1e4.
+    Their `raster:bands` still declare `offset: -0.1`, which contradicts the
+    flag; applying it subtracts the offset twice (Northern Beaches, 27 Sep 2018:
+    water red -0.096). The item-level flag describes how these pixels were made,
+    so it wins, and the plausibility check still has the last word.
     """
     rule = needs_boa_offset(processing_baseline)
+    if offset_applied is True:
+        rule = False                     # offset already in the pixels
     if raster_bands:
         b = raster_bands[0]
         if "scale" in b:
             scale = float(b["scale"])
             offset = float(b.get("offset", 0.0) or 0.0)
             has_offset = not math.isclose(offset, 0.0, abs_tol=1e-9)
+            if offset_applied is True and has_offset:
+                return Scaling(scale, 0.0,
+                               f"asset raster:bands scale; declared offset {offset:+g} "
+                               "ignored: item says earthsearch:boa_offset_applied=true", True)
             agrees = None if rule is None else (has_offset == rule)
             return Scaling(scale, offset, "asset raster:bands", agrees)
+    if offset_applied is True:
+        return Scaling(1e-4, 0.0, "derived: earthsearch:boa_offset_applied=true", True)
     if rule is True:
         return Scaling(1e-4, -0.1, "derived: baseline >= 04.00", True)
     if rule is False:
@@ -403,7 +420,10 @@ def cmd_scene(a) -> int:
     (item,) = get_items([a.item], defaults["stac_url"], defaults["collection"])
     props = item.properties
     baseline = props.get("s2:processing_baseline")
+    offset_applied = props.get("earthsearch:boa_offset_applied")
     print(f"{item.id}\n  baseline {baseline}   datetime {props['datetime']}   extent: {bbox_src}")
+    if offset_applied is not None:
+        print(f"  earthsearch:boa_offset_applied = {offset_applied}")
 
     hrefs, scalings, asset_meta = {}, {}, {}
     for b in (*STACK_BANDS, "scl"):
@@ -411,7 +431,8 @@ def cmd_scene(a) -> int:
         hrefs[b] = asset.href
         asset_meta[b] = {"asset_key": key, "href": asset.href}
         if b != "scl":
-            scalings[b] = reflectance_scaling(asset.extra_fields.get("raster:bands"), baseline)
+            scalings[b] = reflectance_scaling(asset.extra_fields.get("raster:bands"), baseline,
+                                              offset_applied=offset_applied)
             print(f"  {b:5s} scale {scalings[b].scale:g} offset {scalings[b].offset:+g}"
                   f"  [{scalings[b].source}; agrees with baseline rule: "
                   f"{scalings[b].agrees_with_baseline}]")
@@ -451,6 +472,7 @@ def cmd_scene(a) -> int:
         "datetime_utc": props["datetime"],
         "platform": props.get("platform"),
         "processing_baseline": baseline,
+        "earthsearch_boa_offset_applied": offset_applied,
         "sun_elevation_deg": props.get("view:sun_elevation"),
         "sun_azimuth_deg": props.get("view:sun_azimuth"),
         "bbox_wgs84": list(bbox),

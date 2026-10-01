@@ -268,7 +268,10 @@ def summarise_item(item_props: dict[str, Any], item_id: str, capture_dates: Sequ
         "view_zen_deg": round(view_zen, 1),
         "view_rel_az_deg": round(rel_az, 1),
         "processing_baseline": baseline,
-        "needs_boa_offset": needs_boa_offset(baseline),
+        # Earth Search Collection-1 items already have the offset taken out of
+        # the pixels (earthsearch:boa_offset_applied); see fetch.reflectance_scaling.
+        "needs_boa_offset": (False if item_props.get("earthsearch:boa_offset_applied") is True
+                             else needs_boa_offset(baseline)),
         "platform": item_props.get("platform"),
         "mgrs_tile": mgrs_tile(item_props),
         "aoi_coverage_pct": round(coverage, 1) if coverage == coverage else None,
@@ -526,8 +529,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     baselines = {r["processing_baseline"] for r in kept}
     if len(baselines) > 1:
         print(f"\nNOTE  mixed processing baselines in the shortlist: {sorted(map(str, baselines))}."
-              f"\n      Products at baseline >= {BASELINE_OFFSET_FROM:.2f} need the -1000 DN BOA"
-              f"\n      offset applied before scaling. Harmonise before comparing scenes.")
+              f"\n      Different Sen2Cor versions: record which one each site uses. The"
+              f"\n      offset column says whether -0.1 must still be applied to the pixels;"
+              f"\n      fetch decides per item and checks the result against water physics.")
     print("\nCloud percentage is scene-wide and a poor proxy for cloud over a small AOI."
           "\ngeom (glint_flag) is geometry only. glint_sig adds wind from one ~25 km ERA5"
           "\ncell: slope needed to glint, in standard deviations -- LOWER is MORE glint-"

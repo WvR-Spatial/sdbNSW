@@ -381,3 +381,10 @@ def test_rejection_tally_counts_every_outcome():
 def test_rejection_tally_refuses_an_unknown_status():
     with pytest.raises(ValueError):
         rejection_tally([{"status": "rejected: something new"}])
+
+
+def test_offset_column_respects_the_earth_search_flag():
+    c1 = _props(**{"s2:processing_baseline": "05.00", "earthsearch:boa_offset_applied": True})
+    raw = _props(**{"s2:processing_baseline": "05.00"})
+    assert summarise_item(c1, "c1", CAPTURES)["needs_boa_offset"] is False
+    assert summarise_item(raw, "raw", CAPTURES)["needs_boa_offset"] is True
