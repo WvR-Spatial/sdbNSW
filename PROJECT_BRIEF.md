@@ -26,7 +26,14 @@ Its blocked/random gap (1.060) is seven times Stumpf's, and a model given
 coordinates flatters itself badly under a random split (0.74 vs 1.32 m) — the
 leakage story, shown on real data. One prediction failed: coordinates still
 helped on 2 km blocks, by interpolating the survey itself.
-**Updated:** 29 Sep 2026 · **Repo:** `sdbNSW`
+**Phase 4 (three sites): protocol pre-registered 1 Oct**, before any fit at the
+new sites. Northern Beaches (Queenscliff–Palm Beach, one survey block) and
+Batemans Bay (site 3; Richmond rejected) have native lidar, scenes and
+co-registration in hand; water levels await MHL. Found on the way: **ELVIS
+averages any extract that spans more than one survey block** — most of Jervis
+Bay's reference is affected, by ~0.13 m RMS, which leaves its results inside
+their intervals but compromises its relief strata.
+**Updated:** 1 Oct 2026 · **Repo:** `sdbNSW`
 **Portfolio slot:** replaces *Revealing the Ancient Murray via REM*.
 
 This is a living document. Revise it as decisions change — do not let the repo
@@ -72,10 +79,11 @@ three give the relationship between error and the thing that drives it.
 | # | Site | Role | bbox (WGS84) |
 |---|---|---|---|
 | 1 | Jervis Bay | Best case — sheltered, clear, mixed substrate | **Measured:** 150.6607, −35.1504, 150.8083, −34.9735 (block NSW020502) |
-| 2 | Narrabeen–Long Reef | Exposed, surf-dominated | Indicative 151.29, −33.74, 151.33, −33.70 — measure from `data/reference/nsw_marine_lidar_blocks_index.csv` |
-| 3 | Batemans Bay / Clyde mouth | Worst case — estuarine turbidity | Indicative 150.17, −35.75, 150.25, −35.68 — block NSW020602, captured 2018-08-24 |
+| 2 | Northern Beaches (Queenscliff–Palm Beach) | Exposed, surf-dominated | **Measured:** 151.2460, −33.7867, 151.3570, −33.5918 — the single-date part of block NSW020302 (flown to 18 Sep 2018) |
+| 3 | Batemans Bay / Clyde mouth | Turbid end — estuarine plume | **Measured:** 150.1592, −35.7700, 150.2906, −35.6870 — block NSW020602 (24 Aug 2018), two native boxes joined |
 
-*Alternative for site 3 if the Clyde signal is too weak: Richmond River mouth, Ballina.*
+*Richmond River (Ballina) was screened and rejected on 1 Oct: a small plume
+on the seam between two blocks flown 27 days apart (decisions register).*
 
 **Start with Jervis Bay.** If it fails in the clearest water on the coast,
 nothing downstream matters and you have spent one weekend finding out.
@@ -87,9 +95,10 @@ built in `narrabeen-stage1`.
 
 | Source | What | Access | Licence | Commit to repo? |
 |---|---|---|---|---|
-| [NSW Marine LiDAR Topo-Bathy 2018](https://datasets.seed.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018) | 5 m grid, IHO Order 1b, AHD, shore to 20–40 m, Jul–Dec 2018 | [ELVIS](https://elevation.fsdf.org.au/) / AODN, manual area select | **CC BY 4.0** | **Yes** — clipped subsets, with attribution |
+| [NSW Marine LiDAR Topo-Bathy 2018](https://datasets.seed.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018) | 5 m grid, IHO Order 1b, AHD, shore to 20–40 m, Jul–Dec 2018. **Order inside one survey block's raster**: an extract spanning several is averaged ("Average 16"); check with `scripts/dem_extracts.py` | [ELVIS](https://elevation.fsdf.org.au/) / AODN, manual area select | **CC BY 4.0** | **Yes** — clipped subsets, with attribution |
 | Sentinel-2 L2A | 10 m multispectral COGs | Earth Search STAC on AWS, anonymous | Copernicus open | No — derived results only |
 | MHL tide gauge 216470, Jervis Bay (HMAS Creswell) | Observed water level at overpass. **Received 29 Sep**: `JervisBay.Level1.AHD.Actual.1min.csv`, 6–9 Sep 2018, 1-minute, complete (4,321 samples), supplied in **AHD** (station datum Jervis Bay Port Datum 1958 − 1.070 m), AEST ±2 min, quality code 55 throughout (±20 mm) | MHL data request (form or data-request@mhl.nsw.gov.au) | CC BY 4.0, attribute NSW DCCEEW | Raw file no (`data/raw/tide/`); derived value yes |
+| MHL gauges for sites 2–3 | **Requested 1 Oct**: Sydney 213470 and Patonga 212440, 26–29 Sep 2018; Princess Jetty 216410, 22–25 Aug 2018; 1-minute, AHD. Sydney waverider, 1–29 Sep 2018 (seabed-change context) | As above | As above | As above |
 | NSW Imagery (Spatial Services) | Orthophoto windows for co-registration only | ArcGIS REST Export Map, anonymous | Catalogue: CC BY 3.0 AU; Spatial Services excludes images from its CC licence | **No** — cached in `data/raw/ortho/`, never redistributed or drawn |
 | ERA5 10 m wind | Scene selection only — glint pre-screen | [Open-Meteo](https://open-meteo.com/) archive API, anonymous | CC BY 4.0 | No — fetched at run time |
 | NSW DPI Fisheries *Estuarine Macrophytes* | Seagrass stratum: *Posidonia*, *Zostera*, *Halophila*. Jervis Bay from **Aug 2019** aerial imagery (object-based classification), field-checked **May 2020** (project MEMS). 2,356 seagrass polygons in the bay | ArcGIS REST (`Fisheries_Portal/Estuarine_Macrophytes`), fetched via QGIS | © NSW DPI Fisheries; **CC BY 4.0** as stated by the custodian's service (an IMAS redistribution states CC BY-NC) | No (`data/raw/substrate/`) — derived statistics only |
@@ -532,6 +541,135 @@ out-of-fold predictions per pixel, which for a nonlinear model is a small
 ensemble: a single repeat scores 1.92 m. The open coast is still twice the
 bay's error under ML, and past ~17 m even gbm saturates.
 
+## Phase 4 protocol — three sites, pre-registered 1 Oct 2026
+
+Committed before any depth model is fitted at Northern Beaches or Batemans
+Bay. The Phase 2 and v2 rules carry over: anything changed after the first
+run at a new site is logged as a deviation, and both results are reported.
+
+**Question.** How does the error change from the clearest site to the most
+turbid, and does the ML advantage survive murkier water? The sites were chosen
+to span a clarity gradient; whether the gradient exists in these scenes is
+measured, not assumed.
+
+**Same code, same settings.** Stumpf (Phase 2 protocol) and gbm (v2 protocol)
+exactly as registered: calibration rule, depth-balanced sample, 2 km blocks
+aligned to each scene's grid, 5 folds × 10 repeats with fold seeds 0–9, the
+mean of out-of-fold predictions, naive split, block-size curve, correlogram,
+block-bootstrap intervals, CATZOC C/B breakdown depth, exclusions by band,
+gbm − Stumpf paired, and the `gbm_xy` leakage demonstration. Only the inputs
+are site-specific: AOI, reference, scene, co-registration, water level. No
+inside-bay stratum at the new sites. Substrate strata only if the layers are
+fetched, with the addendum's class rules unchanged, before `validate` runs.
+
+**Site eligibility — from the lidar and capture dates alone.**
+
+1. One capture date across the AOI: one survey block's raster, not mosaicked
+   by ELVIS. The reference must pass `scripts/dem_extracts.py check` (≥ 90% of
+   underwater cells on the centimetre lattice).
+2. At least **15 two-kilometre blocks** holding usable 0–20 m pixels in the
+   `reference` mask at the measured water level — three or more per fold.
+
+A site that fails either is reported as ineligible and not fitted.
+
+| Site | AOI (WGS84) | Reference | Capture | 2 km blocks with 0–20 m water, before masking |
+|---|---|---|---|---|
+| Northern Beaches | 151.2460, −33.7867, 151.3570, −33.5918 | SydneyNorth only, native | 18 Sep 2018 (end of capture) | 34 |
+| Batemans Bay | 150.1592, −35.7700, 150.2906, −35.6870 | BatemansBay boxes A ∪ B, native, joined without resampling | 24 Aug 2018 | 21 |
+
+**Scenes — the site-1 rule.** The scene closest to the block's capture date
+whose water over the lidar is free of cloud, haze and glint on inspection of
+the water-stretched quicklook; Collection-1 preferred when otherwise equal.
+Chosen on 1 Oct by inspection only, with no depth data looked at:
+
+- Northern Beaches `S2A_56HLH_20180927_1_L2A`, 9 days after. 17 Sep (1 day):
+  cloud over the northern water. 13 Sep (5 days): small cloud and haze patches
+  over nearshore water.
+- Batemans Bay `S2B_56HKF_20180823_1_L2A`, 1 day before. Water clear of cloud
+  (the 3% is over land); wind 0.7 m/s.
+
+Turbidity was not a selection criterion. The quicklooks are stretched per
+scene, so their colour cannot rank it, and choosing scenes for it would build
+the gradient into the sample.
+
+**Pre-processing — same code.**
+
+- Reflectance as supplied (Sen2Cor L2A: Jervis Bay baseline 00.01, the new
+  sites Collection-1), checked against water physics at fetch.
+- Co-registration on orthoimagery, with one fallback: window size steps
+  2 → 1.5 → 1 km until at least four windows agree; every other threshold
+  unchanged. Northern Beaches at 2 km: E −0.43, N −3.47 m (7 windows).
+  Batemans Bay: 3 windows at 2 km (insufficient); at 1.5 km E +2.95,
+  N −4.91 m (7 windows). Both applied.
+- Water level from the MHL gauge at the overpass, as at site 1. Northern
+  Beaches: **Sydney (213470) primary, Patonga (212440) cross-check**; their
+  difference at the overpass is reported as the water-level uncertainty, and
+  above 0.10 m the site is also run at Patonga's level. Batemans Bay: Princess
+  Jetty (216410). Not Narrabeen Lagoon (213408D): the lagoon entrance damps
+  and delays the tide. Without a gauge record, the image estimate plus Jervis
+  Bay's measured bias (+0.104 m), labelled provisional.
+
+**Water clarity — fixed now, from the image, never from the errors.**
+
+- **Metric:** median red reflectance (B04, 665 nm, as supplied) over usable
+  pixels whose lidar depth is **10–20 m**. Red is the standard single-band
+  turbidity signal (Nechad et al. 2010). The 10 m floor keeps the seabed out:
+  pure-water absorption alone sets Kd(red) ≥ 0.41 m⁻¹ (Pope & Fry 1997), so a
+  bright sand bottom adds < 0.0002 at 10 m but of order 0.005 at 5 m — as
+  large as the turbidity signal itself.
+- Computed **per site**, and **per 2 km block** for blocks with ≥ 200 such
+  pixels.
+- Stated in advance: absolute red reflectance carries each scene's atmospheric
+  correction, so site-to-site differences of a few thousandths may be
+  atmosphere, not water. Comparisons within a scene share one correction —
+  hence the block-level test below.
+- Context only, not a metric: the depth the lidar reached (Jervis Bay 42.7,
+  Northern Beaches 41.2, Batemans Bay 40.6 m) describes clarity on the survey
+  date, not the image date.
+
+**Analysis.**
+
+1. **Site level (n = 3), descriptive.** Pooled and depth-balanced RMSE, bias,
+   breakdown depths and gbm − Stumpf, per site, against site clarity. Decision
+   gate 4 is read here.
+2. **Block level — the inferential test.** Spearman rank correlation between
+   block clarity and block RMSE over the same 10–20 m pixels, for Stumpf and
+   for gbm, within each site; 95% interval by resampling blocks within site
+   (1,000 draws). Across sites, the mean of the within-site correlations, so a
+   site-level offset (atmosphere, exposure) cannot create the correlation.
+3. **ML across sites.** gbm − Stumpf, paired per site, as in v2.
+
+**Predictions, stated before the run.**
+
+1. Batemans Bay has the highest site clarity metric (the most turbid water).
+   If not, the turbid end did not materialise in these scenes, and that is
+   reported.
+2. Stumpf pooled RMSE at both new sites exceeds Jervis Bay's 2.68 m.
+3. At Batemans Bay, Stumpf block RMSE in 10–20 m rises with block red
+   reflectance (Spearman > 0, interval excluding 0).
+4. gbm beats Stumpf at every site (paired interval excludes 0), by less at
+   Batemans Bay than Jervis Bay's 0.80 m.
+
+**Sensitivity runs — labelled, never the result.**
+
+- **Reference averaging.** Northern Beaches rerun with the 1 Oct whole-block
+  extract — the same coast, averaged by ELVIS — as the reference, everything
+  else identical. It measures on real data what the averaging in Jervis Bay's
+  reference does to each statistic.
+- **Water level**, at Patonga's level if the gauges differ by more than
+  0.10 m.
+
+**Known limits, stated now.**
+
+- Northern Beaches imagery is 9 days after the lidar on a surf coast, and
+  sandbars move. The MHL Sydney wave record for 1–28 Sep is reported beside
+  the 0–5 m results; no correction is attempted.
+- Jervis Bay's reference is mostly ELVIS-averaged (register, 1 Oct); relief
+  terciles are not compared across sites.
+- Three sites cannot separate clarity from everything else that differs
+  between them — exposure, substrate, scene, atmosphere. The within-site block
+  test is the one that can.
+
 ## Error budget
 
 | Term | Magnitude | Note |
@@ -541,7 +679,8 @@ bay's error under ML, and past ~17 m even gbm saturates.
 | Expected SDB error | 1.3–2.2 m clear water; unknown here | The quantity being measured |
 | Water level correction | **−0.392 m AHD measured**: gauge ±20 mm (code 55), timing ±2 min × 0.12 m/h ≈ ±4 mm, 1-minute noise ~1 cm (11-minute mean −0.394). The provisional image estimate was −0.496 | A constant error is absorbed by the Stumpf intercept; it moves depth bands, masks and anything reported against AHD. Moving from −0.496 to −0.392 changed pooled RMSE by 0.02 m |
 | **Co-registration** | 7.5 m measured and removed; residual ±1.0 m E, ±1.1 m N (1σ), plus ~1.5 m possible datum offset in the reference imagery | On a 1:10 seabed slope 1 m of misregistration is 0.1 m of depth. Now a minor term |
-| Sub-pixel relief | Median 0.01–0.09 m, p90 ≤ 0.24 m by depth band | Std of the 5 m cells inside each 10 m pixel. Minor except on reef edges; kept for stratification |
+| Sub-pixel relief | Median 0.01–0.09 m, p90 ≤ 0.24 m by depth band | Std of the 5 m cells inside each 10 m pixel. Minor except on reef edges; kept for stratification. **At Jervis Bay suppressed by the ELVIS averaging below** |
+| **Reference processing (ELVIS averaging)** | Jervis Bay only: 0.13 m RMS at 10 m in 0–20 m (+0.05 m mean, p99 0.52 m), surface displaced 2.5 m S and 2.5 m W — measured on the averaged vs native Northern Beaches extracts | Moves Jervis Bay's RMSE by < 0.01 m in quadrature. Phase 4 measures its effect on every statistic directly. Sites 2 and 3 are native |
 | **Seabed change 2018→scene** | **The real constraint** | See below |
 
 Reference is 2.5–4× more precise than the error being measured. Gate passes.
@@ -556,6 +695,11 @@ For Jervis Bay this largely resolved itself: every block over the AOI was
 flown on 8–9 September 2018, and the chosen scene is 7 September — one day
 before the survey, so seabed change is a minor term here rather than the
 dominant one. It will not be for every site.
+
+Batemans Bay pairs as closely (scene 23 Aug, block 24 Aug). Northern Beaches
+does not: the nearest clean scene is 27 Sep, 9 days after its block was
+finished, on a surf coast. Its 0–5 m results carry that, with the wave record
+between the two dates reported beside them.
 
 ## Decision gates
 
@@ -597,7 +741,8 @@ sdbNSW/
 │       ├── validate.py         # blocked CV, statistics, stratification
 │       └── viz.py              # one palette, one set of chrome
 ├── tests/                      # every statistic against an analytic answer
-├── scripts/                    # one-off provenance checks (network), not pipeline
+├── scripts/                    # one-off provenance checks (network), not pipeline;
+│                               #   dem_extracts.py: native-value check, exact join of ELVIS boxes
 ├── config/
 │   └── sites.yml               # bboxes, pairing windows, tide gauge, strata polygons
 ├── data/
@@ -630,7 +775,10 @@ SDB-versus-lidar comparison, plus the repo. Limitations panel above results.
 - [x] Repo name `sdbNSW`
 - [x] Jervis Bay scene — `S2A_56HKG_20180907_0_L2A` (see decisions register)
 - [x] **Observed water level at overpass** — MHL Jervis Bay (216470): −0.392 m AHD at 10:02:37 AEST, 7 Sep 2018
-- [ ] Confirm site 3 (Batemans vs Richmond) after checking lidar tile coverage
+- [x] Site 3 — **Batemans Bay**; Richmond rejected (register, 1 Oct)
+- [x] Phase 4 protocol — pre-registered 1 Oct (*Phase 4 protocol*)
+- [ ] MHL gauge records for sites 2–3 and the Sydney wave record (requested 1 Oct)
+- [ ] Substrate layers for sites 2–3 — optional; only if fetched before `validate` runs
 - [x] Atmospheric correction — **L2A as supplied** for v1; ACOLITE only as diagnosis if the gate fails
 - [x] Sun glint correction — **none** for v1 (register, 27 Sep)
 - [x] Whether ML enters v1 — **no**; v2 pre-registered 29 Sep (*v2 protocol*): gradient boosting, spectral features only, same folds, paired against Stumpf
@@ -648,7 +796,7 @@ defensible piece of work.
 | 27 Sep | Delivered DEM verified | 5 m, AHD, IHO Order 1b per supplier metadata. −42.7 to +166.6 m. **95.6 km² in 0–20 m** (~955k cells at 10 m). Mosaic of blocks flown 8 and 9 Sep 2018. Laser reached 42.7 m — top of the stated 20–40 m range, so the water is clear |
 | 27 Sep | **Aggregate lidar onto the S2 10 m grid**; never upsample imagery | Upsampling invents spatial detail and flatters the error. Aggregating four 5 m cells also reduces reference noise |
 | 27 Sep | AOI straddles MGRS **56HKG / 56HLG**, no common date. 56HKG covers 100%; 56HLG only the eastern part. **All 56HLG scenes rejected** — including the same-day 8 Sep scene | A scene covering part of the bay cannot validate the bay. Partial coverage is a hard rejection, not a score penalty |
-| 27 Sep | Duplicate processings collapsed; prefer baseline **05.00** (Collection-1) | Same datatake published twice. Collection-1 is consistently reprocessed. Its −0.1 BOA offset is applied at fetch and verified against water physics (red/NIR medians near zero) |
+| 27 Sep | Duplicate processings collapsed; prefer baseline **05.00** (Collection-1) | Same datatake published twice. Collection-1 is consistently reprocessed. Its −0.1 BOA offset is applied at fetch and verified against water physics (red/NIR medians near zero). **Corrected 1 Oct** (below): on Earth Search the offset is already in Collection-1 pixels |
 | 27 Sep | Scene: **`S2A_56HKG_20180907_0_L2A`**, 2018-09-07 00:02 UTC, one day before the lidar | AOI cloud 0.55% despite 36.4% tile cloud; calm inside the bay, seabed visible along the shallow margins. **12 Sep rejected** on inspection: wind-roughened surface, glint streaks across the bay, resolved wave texture offshore — with near-identical sun geometry (facet 23.4° vs 24.3°), so the difference is wind, which the glint heuristic cannot see. **17 Sep rejected**: cumulus and shadow over the bay (3.6% AOI vs 1.2% tile). Tile cloud misled in both directions |
 | 27 Sep | Accept baseline **00.01** for the chosen scene | No Collection-1 version exists for 7 Sep. Departs from the 05.00 preference; scene quality outweighs processing preference. No BOA offset applies; the conversion is verified by the water plausibility check at fetch |
 | 27 Sep | Stratify site-1 error **inside-bay vs open coast** | The outer coast east of Beecroft is visibly rougher than the sheltered bay in every candidate, and both lie in the 0–20 m envelope — an exposure gradient within a single scene |
@@ -700,6 +848,18 @@ defensible piece of work.
 | 29 Sep | **v2 pre-registered**: one model family (gradient boosting, fixed settings, no tuning, no early stopping), image-only per-pixel features, v1's folds and depth-balanced sample over 0–20 m, paired comparison with Stumpf; a coordinate model run only as a labelled leakage demonstration; four predictions written down first | Every choice that could be tuned to the answer is fixed before the answer exists. No tuning because honest tuning needs nested cross-validation — cost and complexity out of proportion to the question, which is the size of the ML advantage, not its maximum |
 | 29 Sep | **v2 run once, as registered: gbm 1.88 m, 0.80 m better than Stumpf** [0.57, 1.06]; meets CATZOC C to 3 m. Predictions 1–3 held; **prediction 4 failed** | Coordinates helped even on 2 km blocks because depth itself is correlated over kilometres — the model interpolates the survey from neighbouring blocks. Recorded as a failed prediction, not explained away: it shows that block size protects only against what the model can exploit, and that the real safeguard is excluding location, as v2 did |
 | 29 Sep | **Phase 3 conclusion edited** (with Warren's agreement): Australian spelling, "clean" rather than "perfect" control, and the correlation and block-size evidence added | The claim that the model *could not* use leakage is stronger with the evidence that the data offered it |
+| 1 Oct | **Site 2 sized by the validation design, not the place name.** The first ELVIS clip (the requested 1.7 × 5.15 km Narrabeen–Collaroy box) held 4.1 km² of 0–20 m water in 3–4 two-km blocks — fewer than five folds. Re-ordered across the SydneyNorth block (NSW020302) | Same code at every site means each site must fit the design. The block's ends lie in the SydneyHarbour (flown 18 Aug) and BrokenBay (24 Aug) rasters, a month before SydneyNorth (18 Sep), so the AOI is the single-date window between them: Queenscliff–Palm Beach |
+| 1 Oct | **ELVIS averages any extract that spans more than one survey block ("Average 16").** The whole-block Narrabeen extract is exactly a 4×4 mean of the native cells (321,291 cells, zero difference), centred half a cell off: smoothed over 20 m and displaced 2.5 m S and 2.5 m W. At 10 m in 0–20 m it differs from native by 0.13 m RMS (+0.05 m mean, p99 0.52 m). Native values sit on a centimetre lattice (97–99% of underwater cells); averaged ones do not (~10%, i.e. chance) | Orders kept inside one block's raster come back native: Northern Beaches is bit-identical to the first clip on 327,640 cells, and both Batemans Bay boxes pass. `scripts/dem_extracts.py` checks any delivery, and joins boxes of one block only where every overlapping cell is identical |
+| 1 Oct | **Jervis Bay's reference is mostly ELVIS-averaged** (257 of 299 one-km tiles; native only in a ~5 × 8 km Beecroft patch). Headline results stand: 0.13 m of reference error in quadrature moves 2.68 and 1.88 m by < 0.01 m. **Its relief terciles are compromised** — averaging suppresses within-pixel spread everywhere except the Beecroft patch | Disclosed rather than re-ordered: a native Jervis Bay needs five block orders joined by hand, for an effect inside the intervals. Phase 4 measures the effect directly (sensitivity run). The 27 Sep "delivered DEM verified" check covered range and units, not resampling; that check is now a script |
+| 1 Oct | **Scene search: scene-wide nodata applies only when an item has no footprint**; measured AOI coverage decides. The candidates table is written even when nothing passes | At Sydney both orbits clip tile 56HLH (14–20% nodata), which rejected all 36 acquisitions, and the empty result left no table to show why. At Batemans Bay a 100%-coverage, 0.4%-cloud scene had been rejected the same way. No Jervis Bay row was rejected on nodata alone |
+| 1 Oct | **Site 3: Batemans Bay. Richmond River rejected** | Screened on quicklooks before any lidar was ordered. Richmond's plume is a small patch at the mouth, and the mouth sits on the seam between ByronBallina (4 Aug) and Broadwater (8 Jul), 27 days apart. Batemans Bay is one block and one date, shows the Clyde plume across the inner bay, and has an AHD gauge |
+| 1 Oct | **Scenes: Northern Beaches 27 Sep (9 days after), Batemans Bay 23 Aug (1 day before)**, by the site-1 rule. 28 Aug at Batemans Bay was proposed for its turbid look and declined | The quicklook panels are stretched per channel to each scene's own water, so their colour cannot rank turbidity; 28 Aug also had 5 m/s wind and wave texture across the outer bay. Choosing scenes for turbidity would build the gradient into the sample |
+| 1 Oct | **Earth Search Collection-1 pixels already have the BOA offset removed.** Items carry `earthsearch:boa_offset_applied: true` while `raster:bands` still declares −0.1; trusting the latter subtracted it twice (Northern Beaches water red −0.096), and the water-physics check refused the stack. The item flag now wins over a contradicting `raster:bands`; the check still arbitrates | **Corrects the 27 Sep entry** on Collection-1 offsets, which had never met a real Collection-1 pixel. Jervis Bay used baseline 00.01 (flag false, offset 0, water red +0.0039) and is unaffected. Both new scenes pass (red +0.0036 and +0.0053) |
+| 1 Oct | **Batemans Bay lidar in two native boxes**, joined without resampling (overlap 881,967 cells, bit-identical) | A whole-block order touches the MoruyaCoast and Murramurang rasters and would be averaged. Cost: the far north-east corner by Murramurang |
+| 1 Oct | **Co-registration window fallback: 2 → 1.5 → 1 km until at least four windows agree**, other thresholds unchanged. Northern Beaches, 2 km: E −0.43, N −3.47 m (7 windows, scatter 0.7 / 0.3 m). Batemans Bay: 3 windows at 2 km — insufficient — then at 1.5 km E +2.95, N −4.91 m (7 windows, scatter 1.3 / 0.2 m). Both applied | Batemans Bay's AOI is half water; 2 km tiles that are 90% land and 3 km apart fit only three, all in one corner — unable to test that the shift is rigid or to catch an outlier. Written after seeing that, but it concerns land area, not depth errors. Both new scenes are Collection-1 (geometrically refined) and shift 3.5–5.7 m, against Jervis Bay's 7.5 m on unrefined 00.01 |
+| 1 Oct | **Provisional water levels from the image:** Northern Beaches +0.49, Batemans Bay +0.52 m AHD. `waterlevel --from-image` no longer requires gauge constants | Superseded when the gauge records arrive. On surf beaches whitewater may bias the image estimate beyond Jervis Bay's 0.10 m |
+| 1 Oct | **Gauges: Sydney 213470 (primary) and Patonga 212440 (cross-check) for Northern Beaches; Princess Jetty 216410 for Batemans Bay. Not Ocean Street Bridge (213408D)** | The two ocean-connected gauges bracket the site, so their difference is a measured uncertainty. Ocean Street Bridge records Narrabeen Lagoon, whose entrance damps and delays the tide |
+| 1 Oct | **Phase 4 protocol pre-registered** before any fit at sites 2 or 3 | Eligibility from the lidar and dates, clarity from the image, the scene and gauge rules, four predictions and two sensitivity runs, all fixed first. The within-site block test is the inferential core, because three sites cannot separate clarity from everything else that differs between them |
 
 ## Sources
 
@@ -728,3 +888,9 @@ defensible piece of work.
 - NSW DPI Fisheries Estuarine Macrophytes (REST) — https://spatial.industry.nsw.gov.au/arcgis/rest/services/Fisheries_Portal/Estuarine_Macrophytes/MapServer/0
 - DCCEEW NSW seabed reef extent — https://mapprod3.environment.nsw.gov.au/arcgis/rest/services/Marine/NSW_seabed_reef_extent/MapServer
 - GA Record 2009/10, Jervis Bay soft-sediment habitats — https://www.ga.gov.au/bigobj/GA14300.pdf
+- Earth Search STAC item with `earthsearch:boa_offset_applied` — https://earth-search.aws.element84.com/v1/collections/sentinel-2-l2a/items/S2A_56HLH_20180927_1_L2A
+- The same double-offset trap found independently — https://github.com/Khadra-AI/thuraya-experience/pull/109
+- ESA, radiometric offset in PB04.00 products — https://forum.step.esa.int/t/info-introduction-of-additional-radiometric-offset-in-pb04-00-products/35431
+- Nechad, Ruddick & Park (2010), generic multisensor algorithm for total suspended matter, *RSE* 114(4) — https://doi.org/10.1016/j.rse.2009.11.022
+- Pope & Fry (1997), absorption spectrum of pure water, *Applied Optics* 36(33) — https://doi.org/10.1364/AO.36.008710
+- PSMSL, Sydney Fort Denison — https://psmsl.org/data/obtaining/stations/196.php

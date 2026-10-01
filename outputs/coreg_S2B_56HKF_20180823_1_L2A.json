@@ -1,64 +1,150 @@
 {
   "scene": "S2B_56HKF_20180823_1_L2A",
   "method": "ortho",
-  "n_windows_ok": 3,
+  "n_windows_ok": 7,
   "windows_dropped": [],
-  "verdict": "insufficient",
-  "reason": "3 usable windows; need 4",
+  "shift_m": {
+    "east": 2.95,
+    "north": -4.91
+  },
+  "stderr_m": {
+    "east": 0.62,
+    "north": 0.09
+  },
+  "scatter_m": {
+    "east": 1.3,
+    "north": 0.19
+  },
+  "magnitude_m": 5.73,
+  "datum_ambiguity_m": 1.5,
+  "verdict": "apply",
+  "reason": "|shift| 5.73 m; 7 windows agree (scatter E 1.3, N 0.2 m)",
   "windows": [
     {
-      "shift_e": 1.05,
-      "shift_n": -5.12,
+      "shift_e": 2.07,
+      "shift_n": -5.03,
       "peak_corr": 0.411,
-      "corr_at_zero": 0.363,
-      "n_px": 35015,
+      "corr_at_zero": 0.35,
+      "n_px": 19987,
       "status": "ok",
       "window": 0,
       "bbox": [
-        244930.0,
-        6041390.0,
-        246930.0,
-        6043390.0
+        244430.0,
+        6042890.0,
+        245930.0,
+        6044390.0
       ],
-      "land_frac": 0.908,
-      "texture": 0.13669,
-      "ortho": "E244890_N6041350_2080x2080m_2m.png"
+      "land_frac": 0.932,
+      "texture": 0.16523,
+      "ortho": "E244390_N6042850_1580x1580m_2m.png"
     },
     {
-      "shift_e": 2.87,
-      "shift_n": -5.11,
-      "peak_corr": 0.465,
-      "corr_at_zero": 0.398,
-      "n_px": 37585,
+      "shift_e": 2.96,
+      "shift_n": -4.64,
+      "peak_corr": 0.331,
+      "corr_at_zero": 0.295,
+      "n_px": 21298,
       "status": "ok",
       "window": 1,
       "bbox": [
-        244930.0,
-        6045390.0,
-        246930.0,
-        6047390.0
+        245930.0,
+        6039890.0,
+        247430.0,
+        6041390.0
       ],
-      "land_frac": 0.975,
-      "texture": 0.1098,
-      "ortho": "E244890_N6045350_2080x2080m_2m.png"
+      "land_frac": 0.999,
+      "texture": 0.11033,
+      "ortho": "E245890_N6039850_1580x1580m_2m.png"
     },
     {
-      "shift_e": 4.62,
+      "shift_e": 3.37,
       "shift_n": -5.12,
-      "peak_corr": 0.501,
-      "corr_at_zero": 0.456,
-      "n_px": 37841,
+      "peak_corr": 0.492,
+      "corr_at_zero": 0.435,
+      "n_px": 20304,
       "status": "ok",
       "window": 2,
       "bbox": [
-        248930.0,
-        6045390.0,
-        250930.0,
+        244430.0,
+        6045890.0,
+        245930.0,
         6047390.0
       ],
-      "land_frac": 0.981,
-      "texture": 0.07229,
-      "ortho": "E248890_N6045350_2080x2080m_2m.png"
+      "land_frac": 0.947,
+      "texture": 0.08792,
+      "ortho": "E244390_N6045850_1580x1580m_2m.png"
+    },
+    {
+      "shift_e": 4.66,
+      "shift_n": -4.78,
+      "peak_corr": 0.482,
+      "corr_at_zero": 0.446,
+      "n_px": 20492,
+      "status": "ok",
+      "window": 3,
+      "bbox": [
+        247430.0,
+        6045890.0,
+        248930.0,
+        6047390.0
+      ],
+      "land_frac": 0.959,
+      "texture": 0.07881,
+      "ortho": "E247390_N6045850_1580x1580m_2m.png"
+    },
+    {
+      "shift_e": -0.77,
+      "shift_n": -4.86,
+      "peak_corr": 0.537,
+      "corr_at_zero": 0.516,
+      "n_px": 21143,
+      "status": "ok",
+      "window": 4,
+      "bbox": [
+        242930.0,
+        6039890.0,
+        244430.0,
+        6041390.0
+      ],
+      "land_frac": 0.992,
+      "texture": 0.03931,
+      "ortho": "E242890_N6039850_1580x1580m_2m.png"
+    },
+    {
+      "shift_e": 2.95,
+      "shift_n": -6.61,
+      "peak_corr": 0.308,
+      "corr_at_zero": 0.256,
+      "n_px": 21311,
+      "status": "ok",
+      "window": 5,
+      "bbox": [
+        250430.0,
+        6045890.0,
+        251930.0,
+        6047390.0
+      ],
+      "land_frac": 1.0,
+      "texture": 0.02613,
+      "ortho": "E250390_N6045850_1580x1580m_2m.png"
+    },
+    {
+      "shift_e": 0.9,
+      "shift_n": -4.91,
+      "peak_corr": 0.496,
+      "corr_at_zero": 0.483,
+      "n_px": 19661,
+      "status": "ok",
+      "window": 6,
+      "bbox": [
+        253430.0,
+        6045890.0,
+        254930.0,
+        6047390.0
+      ],
+      "land_frac": 0.916,
+      "texture": 0.02474,
+      "ortho": "E253390_N6045850_1580x1580m_2m.png"
     }
   ],
   "reference": {
@@ -69,10 +155,10 @@
     "cache": "data\\raw\\ortho\\batemans_bay"
   },
   "params": {
-    "window_m": 2000.0,
+    "window_m": 1500.0,
     "n_windows": 12,
     "min_land_frac": 0.9,
-    "min_spacing_m": 3000.0,
+    "min_spacing_m": 2250.0,
     "search_m": 30.0,
     "coarse_step_m": 3.0,
     "fine_step_m": 0.5,
@@ -83,6 +169,6 @@
     "apply_threshold_m": 2.0
   },
   "sign_convention": "shift = ground position of image pixel minus nominal; apply by aggregating the reference onto the scene grid translated by shift",
-  "written_utc": "2026-10-01T12:19:03+00:00",
+  "written_utc": "2026-10-01T12:27:42+00:00",
   "sdb_version": "0.1.0"
 }

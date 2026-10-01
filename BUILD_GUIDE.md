@@ -240,12 +240,35 @@ a machine with a different number of cores (multithreaded tree building).
 ## Phase 4 — Three sites
 
 **→ YOU** — order lidar for sites 2 and 3 from ELVIS (async again — order
-both at the start of this phase).
+both at the start of this phase). **Keep each order inside one survey
+block's raster**, or ELVIS averages it (`data/README.md`, section 1); check
+every delivery with `python scripts\dem_extracts.py check <tif>`.
 
 **→ CLAUDE** — `config/sites.yml`, and whatever the pipeline needs to run
-per-site without copy-paste.
+per-site without copy-paste. Every command takes `--site`; the default is
+`jervis_bay`, so always pass it.
 
-**→ YOU** — run all three. Bring back the comparison.
+Done on 1 Oct, before the protocol (data preparation only, no depths fitted):
+
+```
+python -m sdb.stac --site narrabeen_long_reef            # likewise batemans_bay
+python -m sdb.fetch --site narrabeen_long_reef quicklook --top 3
+python -m sdb.fetch --site narrabeen_long_reef scene --item S2A_56HLH_20180927_1_L2A
+python -m sdb.fetch --site batemans_bay scene --item S2B_56HKF_20180823_1_L2A
+python -m sdb.coreg --site narrabeen_long_reef --scene S2A_56HLH_20180927_1_L2A
+python -m sdb.coreg --site batemans_bay --scene S2B_56HKF_20180823_1_L2A --window-km 1.5
+python -m sdb.waterlevel --site <site> --scene <scene> --from-image      # provisional
+```
+
+Expect: both fetches pass the water check (red/NIR ≈ +0.004); co-registration
+"apply" at both (Batemans Bay needs 1.5 km windows — the registered fallback).
+
+**→ YOU** — commit the *Phase 4 protocol* in `PROJECT_BRIEF.md` before anything
+below. When the MHL records arrive: add each site's `tide_gauge` block, then
+per site `waterlevel --gauge-file` → `reference` → `validate` (Stumpf) →
+`validate --model gbm` and `gbm_xy`; then the clarity analysis and the
+sensitivity run (code written after the protocol commit, tested first).
+Bring back the comparison.
 
 **Gate:** does error track water clarity monotonically? If it does, you have a
 clean finding. If it does not, that is a more interesting finding — report it

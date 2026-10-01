@@ -37,6 +37,24 @@ Attribution string:
 > (Department of Climate Change, Energy, the Environment and Water),
 > licensed under CC BY 4.0.
 
+**Keep each order inside one survey block's raster.** When an order touches
+more than one block, ELVIS mosaics them with "Average 16" interpolation: every
+cell becomes the mean of a 4×4 window, smoothed over 20 m and displaced half a
+cell (2.5 m south, 2.5 m west). The delivery's readme says so only as "where
+required". Block extents are in the coverage index (section 2). Where a site
+needs more than one rectangle inside a block, order several and join them:
+
+```
+python scripts\dem_extracts.py check  <delivered .tif> [--against <another extract>]
+python scripts\dem_extracts.py merge  <out .tif> <box A .tif> <box B .tif>
+```
+
+`check` reports the grid phase and the share of underwater cells on a
+whole-centimetre lattice: 0.97–0.99 for native values, ~0.1 after averaging.
+`merge` refuses unless every input shares one grid and every overlapping cell
+is identical, and writes a JSON sidecar with the inputs' md5s. Jervis Bay's
+delivery (below) predates this and is mostly averaged.
+
 ### 2. Survey coverage index  *(optional — already reduced)*
 
 The whole-of-NSW block footprints, used to establish per-block capture dates.
@@ -69,6 +87,12 @@ Only the AOI's pixels are read (windowed COG requests), and they land in
 The processing-baseline offset has already been applied and checked against
 water physics, so nothing downstream should apply it again. `provenance.json`
 records which conversion was used.
+
+Earth Search's Collection-1 items (baseline 05.00, ids ending `_1` or `_2`)
+already have the −1000 DN offset taken out of their pixels and say so with
+`earthsearch:boa_offset_applied: true`, yet their `raster:bands` still declare
+`offset: -0.1`. `fetch` follows the item flag; applying both subtracts the
+offset twice, which the water check catches (red and NIR near −0.1).
 
 Three more commands put the lidar on that scene's grid:
 
@@ -140,6 +164,15 @@ Received 29 Sep 2026 as `JervisBay.Level1.AHD.Actual.1min.csv`, with MHL's
 and refuses if that contradicts the header. `waterlevel --from-image` remains
 for sites without a gauge; at Jervis Bay it read 0.104 m low.
 
+Sites 2 and 3, requested 1 Oct 2026 in the same format (1-minute, AHD, AEST):
+Sydney **213470** and Patonga **212440**, 26–29 Sep 2018 (Northern Beaches;
+Sydney primary, Patonga cross-check); Princess Jetty, Batemans Bay **216410**,
+22–25 Aug 2018; and the Sydney waverider for 1–29 Sep 2018, as context for
+seabed change between the lidar and the scene. Not Ocean Street Bridge
+(213408D): it records Narrabeen Lagoon, not the sea. Each station's datum
+offset and tidal planes go into its site's `tide_gauge` entry in
+`config/sites.yml` before its record is read.
+
 ### 6. Substrate layers  *(fetched via QGIS; never committed)*
 
 Used only to group validation errors, never as model inputs. Saved to
@@ -179,4 +212,44 @@ native CRS   EPSG:7856  (GDA2020 / MGA zone 56)
 
 All five blocks covering the AOI were flown 8–9 September 2018, so scene
 pairing targets a two-day window rather than the survey's full
-8 July – 3 October 2018 span.
+8 July – 3 October 2018 span. The delivery spans all five blocks' rasters and
+is therefore ELVIS-averaged except in a patch on the Beecroft coast
+(`dem_extracts.py check`: 9% of underwater cells on the cm lattice).
+
+### Site 2 — Northern Beaches
+
+```
+block        SydneyNorth  (NS_ID 23, COMPCODE NSW020302)
+product      SydneyNorth2018_DEM_3376256_01_005
+captured     to 2018-09-18 (CAPT_END)
+ordered      lon 151.24-151.37, lat -33.7867 to -33.592  (inside SydneyNorth only)
+saved        raw/Narrabeen/B/NSW Government - DCCEEW/DEM/5 Metre/
+check        native: 97% of underwater cells on the cm lattice; bit-identical
+             to the first (small) clip on 327,640 cells
+AOI          151.2460, -33.7867, 151.3570, -33.5918  (MGA56 E 337230-347890,
+             N 6260100-6281900: clear of SydneyHarbour, flown 18 Aug, and
+             BrokenBay, 24 Aug)
+0-20 m       35.5 km2 in the AOI, 34 two-km blocks; laser reached 41.2 m
+```
+
+`raw/Narrabeen/NSW Government - DCCEEW/` holds the earlier whole-block extract,
+which ELVIS averaged. It is kept as the input for the Phase 4 sensitivity run,
+never as the reference.
+
+### Site 3 — Batemans Bay
+
+```
+block        BatemansBay  (COMPCODE NSW020602)
+product      BatemansBay2018_DEM_2436036_01_005
+captured     2018-08-24 (CAPT_END)
+ordered      A: lon 150.1607-150.2388, lat -35.77 to -35.687
+             B: lon 150.1592-150.2906, lat -35.77 to -35.7304
+             (inside BatemansBay only: MoruyaCoast and Murramurang rasters
+             overlap the block's other corners)
+saved        raw/BatemansBay/A/..., raw/BatemansBay/B/...
+joined       raw/BatemansBay/BatemansBay_5m_native_AB.tif (+ .json sidecar),
+             by dem_extracts.py merge; overlap 881,967 cells, bit-identical
+AOI          150.1592, -35.7700, 150.2906, -35.6870 (A u B; the far north-east
+             corner is not covered)
+0-20 m       28.4 km2, 21 two-km blocks; laser reached 40.6 m
+```
