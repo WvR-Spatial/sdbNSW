@@ -255,3 +255,47 @@ def phase2_figures(fdir: Path, scene: str, *, depth: np.ndarray, pred: np.ndarra
         residual_map(fdir / f"sdb_{scene}_residual_map.png", resid_img, grid, block_m,
                      f"Out-of-fold residual ({block_m / 1000:g} km validation blocks)", polygon),
     ]
+
+
+def clarity_blocks(path: Path, sites: dict[str, dict[str, Any]],
+                   blocks: dict[str, list[dict[str, Any]]]) -> Path:
+    """Phase 4: block RMSE in 10-20 m against block red reflectance, one panel per site.
+
+    Shared axes so the sites can be read against each other -- with the caveat,
+    printed on the figure, that absolute red carries each scene's atmospheric
+    correction. Stumpf filled, gbm open; within-site Spearman in each panel.
+    """
+    plt = _style()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    names = list(sites)
+    fig, axs = plt.subplots(1, len(names), figsize=(3.4 * len(names), 3.6), dpi=150,
+                            sharex=True, sharey=True, squeeze=False)
+    for ax, k in zip(axs[0], names):
+        tab = blocks.get(k) or []
+        x = np.array([t["clarity"] for t in tab])
+        for (m, col), filled in zip((("stumpf", SERIES[0]), ("gbm", SERIES[1])), (True, False)):
+            if not tab or m not in tab[0]["rmse"]:
+                continue
+            y = np.array([t["rmse"][m] for t in tab])
+            ax.scatter(x, y, s=18, color=col if filled else "none", edgecolors=col, lw=1.0,
+                       label="Stumpf" if m == "stumpf" else "gbm", zorder=3)
+        lines = []
+        for m in ("stumpf", "gbm"):
+            w = sites[k]["within"].get(m)
+            if w and np.isfinite(w["rho"]):
+                lines.append(f"{'Stumpf' if m == 'stumpf' else 'gbm'} ρ {w['rho']:+.2f} "
+                             f"[{w['lo']:+.2f}, {w['hi']:+.2f}]")
+        ax.text(0.03, 0.97, "\n".join(lines) + f"\n{len(tab)} blocks", transform=ax.transAxes,
+                va="top", fontsize=7, color=INK_2)
+        c = sites[k]["clarity"]["median_red"]
+        ax.set_title(f"{k.replace('_', ' ')}" + (f"\nsite median red {c:.4f}" if c is not None
+                                                  else ""), fontsize=9)
+        ax.set_axisbelow(True)
+    axs[0][0].set_ylabel("Block RMSE, 10–20 m (m)")
+    axs[0][0].legend(loc="lower right", fontsize=7)
+    fig.supxlabel("Block median red reflectance, 10–20 m  (higher = more turbid; absolute "
+                  "values carry each scene's atmospheric correction)", fontsize=7.5, color=INK_2)
+    fig.tight_layout()
+    fig.savefig(path)
+    plt.close(fig)
+    return path

@@ -377,6 +377,18 @@ def repeated_cv(depth: np.ndarray, ratio: np.ndarray, rows: np.ndarray, cols: np
 PROTOCOL_MARKER = "pre-registered 27 Sep 2026"
 #: ...and the v2 (ML) protocol's.
 V2_MARKER = "ML, pre-registered 29 Sep 2026"
+#: ...and the Phase 4 (three sites) protocol's.
+PHASE4_MARKER = "three sites, pre-registered 1 Oct 2026"
+
+#: Phase 4 eligibility: blocks of the primary size holding usable 0-20 m pixels.
+#: Five folds need at least three blocks each; fewer and a site is not fitted.
+MIN_BLOCKS = 15
+
+
+def eligible_blocks(flags: np.ndarray, *, block_px: int) -> int:
+    """Number of blocks that hold at least one usable pixel (flag 0)."""
+    rows, cols = np.nonzero(flags == 0)
+    return int(np.unique(block_ids(rows, cols, block_px=block_px)).size) if rows.size else 0
 
 
 def _git_commit(root: Path, path: str, marker: str = PROTOCOL_MARKER) -> dict[str, str] | None:
@@ -430,16 +442,23 @@ def main(argv: Sequence[str] | None = None) -> int:
     p.add_argument("--model", choices=("stumpf", "gbm", "gbm_xy"), default="stumpf",
                    help="stumpf = v1 (registered); gbm = v2; gbm_xy = v2 leakage demonstration. "
                         "v2 outputs go to <out>/v2/")
+    p.add_argument("--reference-tag", default=None,
+                   help="sensitivity run on reference_<tag>.tif from `reference --tag`; "
+                        "outputs go to <out>/sensitivity/")
     a = p.parse_args(argv)
     if a.exploratory and a.model != "stumpf":
         p.error("--exploratory applies to the Stumpf model only")
+    if a.exploratory and a.reference_tag:
+        p.error("--exploratory and --reference-tag do not combine")
     variant = EXPLORATORY.get(a.exploratory)
     is_ml = a.model != "stumpf"
     if is_ml:
         from sdb import ml
     fit = ml.fitter(a.model) if is_ml else (variant["fit"] if variant else stumpf_fit)
-    tag = f"_{a.model}" if is_ml else (f"_{a.exploratory}" if variant else "")
-    res_dir = a.out / ("v2" if is_ml else "exploratory" if variant else "")
+    rtag = f"_{a.reference_tag}" if a.reference_tag else ""
+    tag = rtag + (f"_{a.model}" if is_ml else (f"_{a.exploratory}" if variant else ""))
+    res_dir = (a.out / "sensitivity" if rtag else
+               a.out / ("v2" if is_ml else "exploratory" if variant else ""))
 
     curve_blocks = tuple(float(v) for v in a.curve_blocks.split(",") if v.strip())
     deviations = [f"{nm}={got} (protocol {want})" for nm, got, want in (
@@ -448,21 +467,25 @@ def main(argv: Sequence[str] | None = None) -> int:
         ("curve_blocks", curve_blocks, BLOCK_CURVE_M)) if got != want]
     if variant:
         deviations.append(f"EXPLORATORY '{a.exploratory}': {variant['what']}")
+    if rtag:
+        deviations.append(f"SENSITIVITY: reference '{a.reference_tag}' instead of the registered one")
 
     site_cfg = yaml.safe_load(a.config.read_text(encoding="utf-8"))["sites"][a.site]
     scene_dir = a.root / "data" / "raw" / "scenes" / a.scene
-    rpath = a.out / f"reference_{a.scene}.json"
+    rpath = (a.out / "sensitivity" if rtag else a.out) / f"reference_{a.scene}{rtag}.json"
     if not rpath.exists():
-        print(f"no {rpath}: run sdb.reference first", file=sys.stderr)
+        print(f"no {rpath}: run sdb.reference first"
+              + (f" with --tag {a.reference_tag}" if rtag else ""), file=sys.stderr)
         return 2
     rrec = json.loads(rpath.read_text(encoding="utf-8"))
     wl = float(rrec["water_level_m_ahd"])
 
     scene = read_scene(scene_dir)
     grid, crs = scene["grid"], scene["crs"]
-    with rasterio.open(scene_dir / "reference.tif") as s:
+    ref_tif, mask_tif = scene_dir / f"reference{rtag}.tif", scene_dir / f"mask{rtag}.tif"
+    with rasterio.open(ref_tif) as s:
         ref = {d: s.read(i + 1).astype(np.float64) for i, d in enumerate(s.descriptions)}
-    with rasterio.open(scene_dir / "mask.tif") as s:
+    with rasterio.open(mask_tif) as s:
         flags = s.read(1)
     if not (flags.shape == ref["z_mean"].shape == scene["blue"].shape):
         print("reflectance, reference and mask grids differ", file=sys.stderr)
@@ -472,6 +495,14 @@ def main(argv: Sequence[str] | None = None) -> int:
     print(f"{a.scene}\n  water level {wl:+.3f} m AHD ({rrec.get('water_level_source', '?')})")
     if deviations:
         print("  DEVIATES from the pre-registered protocol: " + "; ".join(deviations))
+
+    n_blocks = eligible_blocks(flags, block_px=int(round(a.block_m / pixel_m)))
+    print(f"  {a.block_m / 1000:g} km blocks with usable pixels: {n_blocks} "
+          f"(Phase 4 eligibility: at least {MIN_BLOCKS})")
+    if n_blocks < MIN_BLOCKS:
+        print(f"  INELIGIBLE under the Phase 4 protocol: fewer than {MIN_BLOCKS} blocks. "
+              f"Not fitted; report the site as ineligible.")
+        return 3
 
     depth_img = wl - ref["z_mean"]
     ratio_img = stumpf_ratio(scene["blue"], scene["green"])
@@ -564,6 +595,12 @@ def main(argv: Sequence[str] | None = None) -> int:
                      "PROJECT_BRIEF.md, Phase 2 protocol (pre-registered 27 Sep 2026)"),
         "protocol_commit": _git_commit(a.root, "PROJECT_BRIEF.md",
                                        V2_MARKER if is_ml else PROTOCOL_MARKER),
+        "phase4_protocol_commit": _git_commit(a.root, "PROJECT_BRIEF.md", PHASE4_MARKER),
+        "eligibility": {"blocks_with_usable_pixels": n_blocks, "min_blocks": MIN_BLOCKS,
+                        "block_m": a.block_m},
+        "sensitivity": ({"reference_tag": a.reference_tag, "reference_record": str(rpath),
+                         "status": "SENSITIVITY: report beside the registered result, never "
+                                   "instead of it"} if rtag else None),
         "model": ({"name": a.model, "params": ml.HGB_PARAMS, "features": list(ml.MODELS[a.model]),
                    "demonstration": a.model in ml.DEMONSTRATIONS} if is_ml else
                   {"name": "stumpf"}),
@@ -572,8 +609,8 @@ def main(argv: Sequence[str] | None = None) -> int:
                          "status": "EXPLORATORY: prompted by the registered result; not confirmatory. "
                                    "Report beside the registered result, never instead of it"}
                         if variant else None),
-        "inputs": {n: {"path": str(scene_dir / n), "md5": md5(scene_dir / n)}
-                   for n in ("reflectance.tif", "reference.tif", "mask.tif")},
+        "inputs": {f.name: {"path": str(f), "md5": md5(f)}
+                   for f in (scene_dir / "reflectance.tif", ref_tif, mask_tif)},
         "water_level_m_ahd": wl, "water_level_source": rrec.get("water_level_source"),
         "error_sign": "e = SDB - lidar; positive = SDB reads too deep",
         "pixels": {"usable": int((flags == 0).sum()), "ratio_undefined":
@@ -614,9 +651,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     # --- v2: paired comparison with the registered Stumpf run ---------------
     stumpf_rec, vs = None, None
     if is_ml:
-        sj = a.out / f"sdb_{a.scene}.json"
+        # Against the Stumpf run on the same reference: the registered one, or the
+        # same sensitivity tag.
+        sj = (a.out / "sensitivity" if rtag else a.out) / f"sdb_{a.scene}{rtag}.json"
         stumpf_rec = json.loads(sj.read_text(encoding="utf-8")) if sj.exists() else None
-        st_path = scene_dir / "sdb.tif"
+        st_path = scene_dir / f"sdb{rtag}.tif"
         if st_path.exists():
             with rasterio.open(st_path) as s:
                 st_pred = s.read(1).astype(np.float64)[rows, cols]

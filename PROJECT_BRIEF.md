@@ -739,6 +739,7 @@ sdbNSW/
 │       ├── ml.py               # v2: gradient boosting on per-pixel image features
 │       ├── substrate.py        # substrate strata for the errors (pre-registered addendum)
 │       ├── validate.py         # blocked CV, statistics, stratification
+│       ├── clarity.py          # Phase 4: clarity against error, within and across sites
 │       └── viz.py              # one palette, one set of chrome
 ├── tests/                      # every statistic against an analytic answer
 ├── scripts/                    # one-off provenance checks (network), not pipeline;
@@ -860,6 +861,7 @@ defensible piece of work.
 | 1 Oct | **Provisional water levels from the image:** Northern Beaches +0.49, Batemans Bay +0.52 m AHD. `waterlevel --from-image` no longer requires gauge constants | Superseded when the gauge records arrive. On surf beaches whitewater may bias the image estimate beyond Jervis Bay's 0.10 m |
 | 1 Oct | **Gauges: Sydney 213470 (primary) and Patonga 212440 (cross-check) for Northern Beaches; Princess Jetty 216410 for Batemans Bay. Not Ocean Street Bridge (213408D)** | The two ocean-connected gauges bracket the site, so their difference is a measured uncertainty. Ocean Street Bridge records Narrabeen Lagoon, whose entrance damps and delays the tide |
 | 1 Oct | **Phase 4 protocol pre-registered** before any fit at sites 2 or 3 | Eligibility from the lidar and dates, clarity from the image, the scene and gauge rules, four predictions and two sensitivity runs, all fixed first. The within-site block test is the inferential core, because three sites cannot separate clarity from everything else that differs between them |
+| 1 Oct | **Phase 4 code written after the protocol commit `a5b5f5d`, tested on synthetic data only**: `clarity.py` (metric, block table, Spearman with block-resampled intervals, mean of within-site correlations, gate 4, the four predictions evaluated as written); `reference --dem/--tag` and `validate --reference-tag` for sensitivity runs, which can only write tagged files and `outputs/sensitivity/`; `validate` exits without fitting below 15 blocks | Same order as Phase 2: protocol, then code, then real data. A test pins the design's reason for the within-site mean: two sites that differ only in level give a pooled Spearman above 0.7 and a within-site mean near 0. Another pins that a sensitivity run leaves the registered outputs byte-identical |
 
 ## Sources
 

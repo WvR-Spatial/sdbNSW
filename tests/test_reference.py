@@ -225,3 +225,85 @@ def test_layers_round_trip_through_geotiff(tmp_path):
         assert s.count == 4 and s.descriptions[0] == "z_mean"
         assert np.allclose(s.read(1), -3.0)
         assert s.transform.c == 0.0 and s.transform.f == 40.0
+
+
+def test_a_different_dem_needs_a_tag():
+    """A sensitivity DEM must never overwrite the registered reference. (A tag alone is
+    allowed: the water-level sensitivity reuses the registered DEM.)"""
+    from sdb import reference as R
+
+    with pytest.raises(SystemExit):
+        R.main(["--scene", "S", "--dem", "x.tif"])
+
+
+def test_tagged_reference_writes_beside_the_registered_one(tmp_path):
+    """`--dem X --tag avg` writes reference_avg/mask_avg and a sensitivity record only."""
+    import json
+
+    import rasterio
+    import yaml
+
+    from sdb import reference as R
+
+    sd = tmp_path / "data" / "raw" / "scenes" / "S"
+    sd.mkdir(parents=True)
+    n = 40
+    scene = R.Grid(300000.0, 6120400.0, 10.0, 10.0, n, n)
+    prof = dict(driver="GTiff", width=n, height=n, crs="EPSG:32756",
+                transform=scene.transform(), dtype="float32")
+    with rasterio.open(sd / "reflectance.tif", "w", count=4, **prof) as dst:
+        for i, nm in enumerate(("blue", "green", "red", "nir"), 1):
+            dst.write(np.full((n, n), 0.01 if nm != "nir" else 0.001, np.float32), i)
+            dst.set_band_description(i, nm)
+    m = 2 * n
+    dem = R.Grid(300000.0, 6120400.0, 5.0, 5.0, m, m)
+    for name, depth in (("native.tif", 8.0), ("averaged.tif", 9.0)):
+        with rasterio.open(tmp_path / name, "w", driver="GTiff", width=m, height=m, count=1,
+                           crs="EPSG:32756", transform=dem.transform(), dtype="float32") as dst:
+            dst.write(np.full((1, m, m), -depth, np.float32))
+    cfg = tmp_path / "sites.yml"
+    cfg.write_text(yaml.safe_dump({"sites": {"t": {"reference_dem": "native.tif"}}}))
+    common = ["--site", "t", "--config", str(cfg), "--scene", "S", "--root", str(tmp_path),
+              "--out", str(tmp_path / "outputs"), "--water-level", "0"]
+
+    assert R.main(common + ["--dem", "averaged.tif", "--tag", "avg"]) == 0
+    assert (sd / "reference_avg.tif").exists() and (sd / "mask_avg.tif").exists()
+    assert not (sd / "reference.tif").exists()
+    rec = json.loads((tmp_path / "outputs" / "sensitivity" / "reference_S_avg.json").read_text())
+    assert rec["sensitivity"]["tag"] == "avg" and rec["lidar"]["path"] == "averaged.tif"
+
+    assert R.main(common) == 0
+    with rasterio.open(sd / "reference.tif") as a, rasterio.open(sd / "reference_avg.tif") as b:
+        assert np.nanmean(a.read(1)) == pytest.approx(-8.0)
+        assert np.nanmean(b.read(1)) == pytest.approx(-9.0)
+    assert json.loads((tmp_path / "outputs" / "reference_S.json").read_text())["sensitivity"] is None
+
+
+def test_tag_alone_runs_a_water_level_sensitivity(tmp_path):
+    import json
+
+    import rasterio
+    import yaml
+
+    from sdb import reference as R
+
+    sd = tmp_path / "data" / "raw" / "scenes" / "S"
+    sd.mkdir(parents=True)
+    n = 20
+    g = R.Grid(300000.0, 6120200.0, 10.0, 10.0, n, n)
+    prof = dict(driver="GTiff", width=n, height=n, crs="EPSG:32756", transform=g.transform(),
+                dtype="float32")
+    with rasterio.open(sd / "reflectance.tif", "w", count=4, **prof) as dst:
+        for i, nm in enumerate(("blue", "green", "red", "nir"), 1):
+            dst.write(np.full((n, n), 0.01 if nm != "nir" else 0.001, np.float32), i)
+            dst.set_band_description(i, nm)
+    with rasterio.open(tmp_path / "dem.tif", "w", **prof, count=1) as dst:
+        dst.write(np.full((1, n, n), -5.0, np.float32))
+    cfg = tmp_path / "sites.yml"
+    cfg.write_text(yaml.safe_dump({"sites": {"t": {"reference_dem": "dem.tif"}}}))
+    assert R.main(["--site", "t", "--config", str(cfg), "--scene", "S", "--root", str(tmp_path),
+                   "--out", str(tmp_path / "out"), "--water-level", "0.3",
+                   "--tag", "patonga"]) == 0
+    rec = json.loads((tmp_path / "out" / "sensitivity" / "reference_S_patonga.json").read_text())
+    assert rec["water_level_m_ahd"] == pytest.approx(0.3) and rec["lidar"]["path"] == "dem.tif"
+    assert not (sd / "reference.tif").exists()

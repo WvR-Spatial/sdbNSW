@@ -264,11 +264,46 @@ Expect: both fetches pass the water check (red/NIR ≈ +0.004); co-registration
 "apply" at both (Batemans Bay needs 1.5 km windows — the registered fallback).
 
 **→ YOU** — commit the *Phase 4 protocol* in `PROJECT_BRIEF.md` before anything
-below. When the MHL records arrive: add each site's `tide_gauge` block, then
-per site `waterlevel --gauge-file` → `reference` → `validate` (Stumpf) →
-`validate --model gbm` and `gbm_xy`; then the clarity analysis and the
-sensitivity run (code written after the protocol commit, tested first).
-Bring back the comparison.
+below (done: `a5b5f5d`).
+
+**→ CLAUDE** — the Phase 4 code, after that commit and tested on synthetic
+data first: `clarity.py`; `reference --dem/--tag` and `validate
+--reference-tag` for sensitivity runs (they write only to tagged files and
+`outputs/sensitivity/`); and `validate` refusing a site with fewer than 15
+two-kilometre blocks (exit code 3, nothing written).
+
+**→ YOU** — when the MHL records arrive, I add each site's `tide_gauge` block
+from the station sheets. Then, per site (`<site>` / `<scene>`):
+
+```
+python -m sdb.waterlevel --site <site> --scene <scene> --gauge-file data\raw\tide\<file>.csv
+python -m sdb.reference  --site <site> --scene <scene>
+python -m sdb.validate   --site <site> --scene <scene>
+python -m sdb.validate   --site <site> --scene <scene> --model gbm
+python -m sdb.validate   --site <site> --scene <scene> --model gbm_xy
+```
+
+Northern Beaches is `narrabeen_long_reef` / `S2A_56HLH_20180927_1_L2A`; Batemans
+Bay is `batemans_bay` / `S2B_56HKF_20180823_1_L2A`. The sensitivity run (Northern
+Beaches only), on the ELVIS-averaged whole-block extract:
+
+```
+python -m sdb.reference --site narrabeen_long_reef --scene S2A_56HLH_20180927_1_L2A --dem "data/raw/Narrabeen/NSW Government - DCCEEW/DEM/5 Metre/NSW_Marine_5m_TopoBathy_DEM.tif" --tag elvis_avg
+python -m sdb.validate  --site narrabeen_long_reef --scene S2A_56HLH_20180927_1_L2A --reference-tag elvis_avg
+python -m sdb.validate  --site narrabeen_long_reef --scene S2A_56HLH_20180927_1_L2A --reference-tag elvis_avg --model gbm
+```
+
+If Sydney and Patonga differ by more than 0.10 m at the overpass, the
+water-level sensitivity is the same pattern with `--water-level <Patonga's
+level> --tag patonga` on `reference` (no `--dem`) and `--reference-tag patonga`
+on `validate`. Then the cross-site analysis, once, over all three:
+
+```
+python -m sdb.clarity --run jervis_bay=S2A_56HKG_20180907_0_L2A --run narrabeen_long_reef=S2A_56HLH_20180927_1_L2A --run batemans_bay=S2B_56HKF_20180823_1_L2A
+```
+
+It writes `outputs/phase4/clarity.json` and one figure, and prints each
+registered prediction as held or failed. Bring back the comparison.
 
 **Gate:** does error track water clarity monotonically? If it does, you have a
 clean finding. If it does not, that is a more interesting finding — report it

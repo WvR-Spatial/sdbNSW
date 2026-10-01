@@ -375,3 +375,54 @@ def test_exploratory_and_ml_do_not_mix(tmp_path):
     with pytest.raises(SystemExit):
         V.main(["--site", "t", "--config", str(cfg), "--scene", "S", "--root", str(tmp_path),
                 "--out", str(out), "--model", "gbm", "--exploratory", "rule95"])
+
+
+# --- Phase 4: eligibility and the sensitivity path -------------------------------
+
+def test_eligible_blocks_counts_blocks_with_a_usable_pixel():
+    flags = np.full((6, 6), V.FLAG_LAND, np.uint8)
+    flags[0, 0] = 0
+    flags[5, 5] = 0
+    flags[1, 1] = 0                                   # same 3x3 block as (0, 0)
+    assert V.eligible_blocks(flags, block_px=3) == 2
+
+
+def test_a_site_with_too_few_blocks_is_not_fitted(tmp_path):
+    cfg, out, sd = _scene(tmp_path)                    # 1.5 km square: 4 blocks of 1 km
+    rc = V.main(["--site", "t", "--config", str(cfg), "--scene", "S", "--root", str(tmp_path),
+                 "--out", str(out), "--block-m", "1000", "--no-figures"])
+    assert rc == 3
+    assert not (sd / "sdb.tif").exists() and not (out / "sdb_S.json").exists()
+
+
+def test_sensitivity_run_never_touches_the_registered_outputs(tmp_path):
+    import shutil
+
+    cfg, out, sd = _scene(tmp_path)
+    common = ["--site", "t", "--config", str(cfg), "--scene", "S", "--root", str(tmp_path),
+              "--out", str(out), "--block-m", "300", "--curve-blocks", "0,300",
+              "--repeats", "2", "--boot", "20", "--no-figures"]
+    assert V.main(common) == 0
+    reg = (out / "sdb_S.json").read_bytes()
+    reg_tif = (sd / "sdb.tif").read_bytes()
+    # a tagged reference, as `reference --dem ... --tag avg` would write it
+    shutil.copy(sd / "reference.tif", sd / "reference_avg.tif")
+    shutil.copy(sd / "mask.tif", sd / "mask_avg.tif")
+    (out / "sensitivity").mkdir()
+    shutil.copy(out / "reference_S.json", out / "sensitivity" / "reference_S_avg.json")
+    assert V.main(common + ["--reference-tag", "avg"]) == 0
+    assert V.main(common + ["--reference-tag", "avg", "--model", "gbm"]) == 0
+    assert (out / "sdb_S.json").read_bytes() == reg and (sd / "sdb.tif").read_bytes() == reg_tif
+    rec = json.loads((out / "sensitivity" / "sdb_S_avg.json").read_text())
+    assert rec["sensitivity"]["reference_tag"] == "avg"
+    assert any(d.startswith("SENSITIVITY") for d in rec["deviations"])
+    assert set(rec["inputs"]) == {"reflectance.tif", "reference_avg.tif", "mask_avg.tif"}
+    g = json.loads((out / "sensitivity" / "sdb_S_avg_gbm.json").read_text())
+    assert g["vs_stumpf"]["against"]["path"].endswith("sdb_avg.tif")
+    assert (sd / "sdb_avg.tif").exists() and (sd / "sdb_avg_gbm.tif").exists()
+
+
+def test_sensitivity_needs_its_own_reference_record(tmp_path):
+    cfg, out, _ = _scene(tmp_path)
+    assert V.main(["--site", "t", "--config", str(cfg), "--scene", "S", "--root", str(tmp_path),
+                   "--out", str(out), "--reference-tag", "avg", "--no-figures"]) == 2

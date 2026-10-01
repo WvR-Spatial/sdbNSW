@@ -398,12 +398,23 @@ def main(argv: Sequence[str] | None = None) -> int:
     p.add_argument("--depth-max", type=float, default=DEPTH_WINDOW_M[1])
     p.add_argument("--coreg", choices=("auto", "off"), default="auto",
                    help="auto: apply outputs/coreg_<scene>.json if its verdict is 'apply'")
+    p.add_argument("--dem", type=Path, default=None,
+                   help="sensitivity only, with --tag: a different reference DEM (repo-relative)")
+    p.add_argument("--tag", default=None,
+                   help="sensitivity run (another DEM, or another --water-level): writes "
+                        "reference_<tag>.tif / mask_<tag>.tif and "
+                        "<out>/sensitivity/reference_<scene>_<tag>.json; never touches the primary")
     a = p.parse_args(argv)
+    if a.dem is not None and a.tag is None:
+        p.error("--dem needs --tag: a different DEM must never overwrite the registered reference")
 
     site_cfg = yaml.safe_load(a.config.read_text(encoding="utf-8"))["sites"][a.site]
-    dem_path = a.root / site_cfg["reference_dem"]
+    dem_rel = a.dem if a.dem is not None else Path(site_cfg["reference_dem"])
+    dem_path = a.root / dem_rel
     scene_dir = a.root / "data" / "raw" / "scenes" / a.scene
-    print(f"{a.scene}\n  lidar: {dem_path}")
+    sfx = f"_{a.tag}" if a.tag else ""
+    print(f"{a.scene}\n  lidar: {dem_path}"
+          + (f"\n  SENSITIVITY '{a.tag}': not the registered reference" if a.tag else ""))
 
     z, valid, src, src_crs = read_dem(dem_path)
     scene = read_scene(scene_dir)
@@ -458,15 +469,19 @@ def main(argv: Sequence[str] | None = None) -> int:
         p90 = "--" if b["relief_p90_m"] is None else f"{b['relief_p90_m']:.2f}"
         print(f"  {b['band_m']:>8} {b['pixels']:>9,} {b['km2']:>7} {med:>14} {p90:>7}")
 
-    write_layers(scene_dir / "reference.tif", ref, dst, scene["crs"],
-                 ("z_mean", "coverage", "relief", "land_frac"))
-    write_layers(scene_dir / "mask.tif", {"flags": flags}, dst, scene["crs"], ("flags",),
+    ref_tif, mask_tif = scene_dir / f"reference{sfx}.tif", scene_dir / f"mask{sfx}.tif"
+    write_layers(ref_tif, ref, dst, scene["crs"], ("z_mean", "coverage", "relief", "land_frac"))
+    write_layers(mask_tif, {"flags": flags}, dst, scene["crs"], ("flags",),
                  dtype="uint8", nodata=None)
 
-    a.out.mkdir(parents=True, exist_ok=True)
+    out_dir = a.out / "sensitivity" if a.tag else a.out
+    out_dir.mkdir(parents=True, exist_ok=True)
     record = {
         "scene": a.scene,
-        "lidar": {"path": str(site_cfg["reference_dem"]), "md5": md5(dem_path),
+        "sensitivity": ({"tag": a.tag, "status": "SENSITIVITY: not the registered reference; "
+                         "report beside the primary result, never instead of it"}
+                        if a.tag else None),
+        "lidar": {"path": str(dem_rel), "md5": md5(dem_path),
                   "crs": str(src_crs), "grid": vars(src)},
         "scene_grid": {"crs": str(scene["crs"]), "grid": vars(dst)},
         "datum": datum,
@@ -475,13 +490,13 @@ def main(argv: Sequence[str] | None = None) -> int:
         "depth_window_m": [0.0, a.depth_max],
         "flags": {str(k): v for k, v in FLAG_NAMES.items()},
         "summary": summ,
-        "outputs": [str(scene_dir / "reference.tif"), str(scene_dir / "mask.tif")],
+        "outputs": [str(ref_tif), str(mask_tif)],
         "written_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "sdb_version": __version__,
     }
-    jpath = a.out / f"reference_{a.scene}.json"
+    jpath = out_dir / f"reference_{a.scene}{sfx}.json"
     jpath.write_text(json.dumps(record, indent=2), encoding="utf-8")
-    print(f"\n  wrote reference.tif + mask.tif -> {scene_dir}\n  record -> {jpath}")
+    print(f"\n  wrote {ref_tif.name} + {mask_tif.name} -> {scene_dir}\n  record -> {jpath}")
     return 0
 
 
