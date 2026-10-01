@@ -1,0 +1,88 @@
+{
+  "scene": "S2B_56HKF_20180823_1_L2A",
+  "method": "ortho",
+  "n_windows_ok": 3,
+  "windows_dropped": [],
+  "verdict": "insufficient",
+  "reason": "3 usable windows; need 4",
+  "windows": [
+    {
+      "shift_e": 1.05,
+      "shift_n": -5.12,
+      "peak_corr": 0.411,
+      "corr_at_zero": 0.363,
+      "n_px": 35015,
+      "status": "ok",
+      "window": 0,
+      "bbox": [
+        244930.0,
+        6041390.0,
+        246930.0,
+        6043390.0
+      ],
+      "land_frac": 0.908,
+      "texture": 0.13669,
+      "ortho": "E244890_N6041350_2080x2080m_2m.png"
+    },
+    {
+      "shift_e": 2.87,
+      "shift_n": -5.11,
+      "peak_corr": 0.465,
+      "corr_at_zero": 0.398,
+      "n_px": 37585,
+      "status": "ok",
+      "window": 1,
+      "bbox": [
+        244930.0,
+        6045390.0,
+        246930.0,
+        6047390.0
+      ],
+      "land_frac": 0.975,
+      "texture": 0.1098,
+      "ortho": "E244890_N6045350_2080x2080m_2m.png"
+    },
+    {
+      "shift_e": 4.62,
+      "shift_n": -5.12,
+      "peak_corr": 0.501,
+      "corr_at_zero": 0.456,
+      "n_px": 37841,
+      "status": "ok",
+      "window": 2,
+      "bbox": [
+        248930.0,
+        6045390.0,
+        250930.0,
+        6047390.0
+      ],
+      "land_frac": 0.981,
+      "texture": 0.07229,
+      "ortho": "E248890_N6045350_2080x2080m_2m.png"
+    }
+  ],
+  "reference": {
+    "service": "https://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Imagery/MapServer/export",
+    "attribution": "NSW Imagery (c) State of New South Wales (Spatial Services, Department of Customer Service NSW)",
+    "use": "Positional reference only; imagery not redistributed. Catalogue licence CC BY 3.0 AU; Spatial Services' copyright page excludes images.",
+    "resolution_m": 2.0,
+    "cache": "data\\raw\\ortho\\batemans_bay"
+  },
+  "params": {
+    "window_m": 2000.0,
+    "n_windows": 12,
+    "min_land_frac": 0.9,
+    "min_spacing_m": 3000.0,
+    "search_m": 30.0,
+    "coarse_step_m": 3.0,
+    "fine_step_m": 0.5,
+    "psf_sigma_px": 0.5,
+    "min_window_corr": 0.3,
+    "min_windows": 4,
+    "max_scatter_m": 4.0,
+    "apply_threshold_m": 2.0
+  },
+  "sign_convention": "shift = ground position of image pixel minus nominal; apply by aggregating the reference onto the scene grid translated by shift",
+  "written_utc": "2026-10-01T12:19:03+00:00",
+  "sdb_version": "0.1.0"
+}

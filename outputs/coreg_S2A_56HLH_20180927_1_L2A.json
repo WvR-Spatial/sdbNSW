@@ -1,0 +1,174 @@
+{
+  "scene": "S2A_56HLH_20180927_1_L2A",
+  "method": "ortho",
+  "n_windows_ok": 7,
+  "windows_dropped": [],
+  "shift_m": {
+    "east": -0.43,
+    "north": -3.47
+  },
+  "stderr_m": {
+    "east": 0.32,
+    "north": 0.14
+  },
+  "scatter_m": {
+    "east": 0.67,
+    "north": 0.3
+  },
+  "magnitude_m": 3.5,
+  "datum_ambiguity_m": 1.5,
+  "verdict": "apply",
+  "reason": "|shift| 3.50 m; 7 windows agree (scatter E 0.7, N 0.3 m)",
+  "windows": [
+    {
+      "shift_e": -1.15,
+      "shift_n": -3.7,
+      "peak_corr": 0.623,
+      "corr_at_zero": 0.576,
+      "n_px": 38416,
+      "status": "ok",
+      "window": 0,
+      "bbox": [
+        339250.0,
+        6261870.0,
+        341250.0,
+        6263870.0
+      ],
+      "land_frac": 1.0,
+      "texture": 0.22933,
+      "ortho": "E339210_N6261830_2080x2080m_2m.png"
+    },
+    {
+      "shift_e": -0.88,
+      "shift_n": -3.47,
+      "peak_corr": 0.65,
+      "corr_at_zero": 0.612,
+      "n_px": 37799,
+      "status": "ok",
+      "window": 1,
+      "bbox": [
+        341250.0,
+        6271870.0,
+        343250.0,
+        6273870.0
+      ],
+      "land_frac": 0.982,
+      "texture": 0.1697,
+      "ortho": "E341210_N6271830_2080x2080m_2m.png"
+    },
+    {
+      "shift_e": -0.43,
+      "shift_n": -3.67,
+      "peak_corr": 0.743,
+      "corr_at_zero": 0.691,
+      "n_px": 35237,
+      "status": "ok",
+      "window": 2,
+      "bbox": [
+        343250.0,
+        6275870.0,
+        345250.0,
+        6277870.0
+      ],
+      "land_frac": 0.911,
+      "texture": 0.13385,
+      "ortho": "E343210_N6275830_2080x2080m_2m.png"
+    },
+    {
+      "shift_e": 0.54,
+      "shift_n": -3.42,
+      "peak_corr": 0.757,
+      "corr_at_zero": 0.72,
+      "n_px": 35313,
+      "status": "ok",
+      "window": 3,
+      "bbox": [
+        339250.0,
+        6265870.0,
+        341250.0,
+        6267870.0
+      ],
+      "land_frac": 0.918,
+      "texture": 0.13057,
+      "ortho": "E339210_N6265830_2080x2080m_2m.png"
+    },
+    {
+      "shift_e": -0.03,
+      "shift_n": -2.55,
+      "peak_corr": 0.624,
+      "corr_at_zero": 0.616,
+      "n_px": 38335,
+      "status": "ok",
+      "window": 4,
+      "bbox": [
+        337250.0,
+        6269870.0,
+        339250.0,
+        6271870.0
+      ],
+      "land_frac": 0.998,
+      "texture": 0.0536,
+      "ortho": "E337210_N6269830_2080x2080m_2m.png"
+    },
+    {
+      "shift_e": -0.48,
+      "shift_n": -5.25,
+      "peak_corr": 0.52,
+      "corr_at_zero": 0.476,
+      "n_px": 38416,
+      "status": "ok",
+      "window": 5,
+      "bbox": [
+        337250.0,
+        6277870.0,
+        339250.0,
+        6279870.0
+      ],
+      "land_frac": 1.0,
+      "texture": 0.02277,
+      "ortho": "E337210_N6277830_2080x2080m_2m.png"
+    },
+    {
+      "shift_e": 1.57,
+      "shift_n": -3.42,
+      "peak_corr": 0.598,
+      "corr_at_zero": 0.544,
+      "n_px": 37592,
+      "status": "ok",
+      "window": 6,
+      "bbox": [
+        337250.0,
+        6273870.0,
+        339250.0,
+        6275870.0
+      ],
+      "land_frac": 0.976,
+      "texture": 0.01805,
+      "ortho": "E337210_N6273830_2080x2080m_2m.png"
+    }
+  ],
+  "reference": {
+    "service": "https://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Imagery/MapServer/export",
+    "attribution": "NSW Imagery (c) State of New South Wales (Spatial Services, Department of Customer Service NSW)",
+    "use": "Positional reference only; imagery not redistributed. Catalogue licence CC BY 3.0 AU; Spatial Services' copyright page excludes images.",
+    "resolution_m": 2.0,
+    "cache": "data\\raw\\ortho\\narrabeen_long_reef"
+  },
+  "params": {
+    "window_m": 2000.0,
+    "n_windows": 12,
+    "min_land_frac": 0.9,
+    "min_spacing_m": 3000.0,
+    "search_m": 30.0,
+    "coarse_step_m": 3.0,
+    "fine_step_m": 0.5,
+    "psf_sigma_px": 0.5,
+    "min_window_corr": 0.3,
+    "min_windows": 4,
+    "max_scatter_m": 4.0,
+    "apply_threshold_m": 2.0
+  },
+  "sign_convention": "shift = ground position of image pixel minus nominal; apply by aggregating the reference onto the scene grid translated by shift",
+  "written_utc": "2026-10-01T12:18:17+00:00",
+  "sdb_version": "0.1.0"
+}

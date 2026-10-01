@@ -289,3 +289,13 @@ def test_cli_keeps_the_superseded_image_estimate_and_refuses_a_contradicted_head
     bad = root / "bad.csv"
     _write_mhl_export(bad, offset=-JB.ahd_offset_m)
     assert waterlevel.main(args + ["--gauge-file", str(bad)]) == 2
+
+
+def test_gauge_file_needs_gauge_constants_but_the_image_estimate_does_not(tmp_path):
+    """A new site can get its provisional image estimate before MHL replies."""
+    from sdb.waterlevel import main
+    cfg = tmp_path / "sites.yml"
+    cfg.write_text("sites:\n  newsite:\n    label: x\n", encoding="utf-8")
+    rc = main(["--site", "newsite", "--config", str(cfg), "--scene", "S2X",
+               "--root", str(tmp_path), "--gauge-file", str(tmp_path / "g.csv")])
+    assert rc == 2

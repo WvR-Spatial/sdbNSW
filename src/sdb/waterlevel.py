@@ -333,7 +333,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     a = p.parse_args(argv)
 
     site = yaml.safe_load(a.config.read_text(encoding="utf-8"))["sites"][a.site]
-    gauge = Gauge.from_config(site["tide_gauge"])
+    # The image estimate needs no gauge; reading a gauge file needs its constants.
+    if a.gauge_file and "tide_gauge" not in site:
+        print(f"site '{a.site}' has no tide_gauge in {a.config}: add the station's datum "
+              f"offset and tidal planes before reading its record")
+        return 2
+    gauge = Gauge.from_config(site["tide_gauge"]) if "tide_gauge" in site else None
     scene_dir = a.root / "data" / "raw" / "scenes" / a.scene
     prov = json.loads((scene_dir / "provenance.json").read_text(encoding="utf-8"))
     when = datetime.fromisoformat(prov["datetime_utc"].replace("Z", "+00:00"))
@@ -341,7 +346,7 @@ def main(argv: Sequence[str] | None = None) -> int:
           f"{when.astimezone(AEST):%H:%M:%S} AEST")
 
     rec: dict[str, Any] = {"scene": a.scene, "overpass_utc": when.isoformat(),
-                           "gauge": vars(gauge)}
+                           "gauge": vars(gauge) if gauge else None}
     if a.gauge_file:
         t, lv, notes = read_gauge_csv(a.gauge_file, time_col=a.time_col, level_col=a.level_col)
         datum = infer_datum(lv, gauge) if a.datum == "auto" else a.datum
@@ -406,8 +411,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         rec.update({"method": "image", "water_level_m_ahd": est["level_m_ahd"],
                     "status": "provisional", "coregistration_applied_m": list(shift), "estimate": est})
 
-    print(f"  tidal planes 2018-19 (m AHD): MSL {gauge.msl_ahd:+.3f}, ISLW {gauge.islw_ahd:+.3f}, "
-          f"HHWSS {gauge.hhwss_ahd:+.3f}")
+    if gauge is not None:
+        print(f"  tidal planes 2018-19 (m AHD): MSL {gauge.msl_ahd:+.3f}, ISLW {gauge.islw_ahd:+.3f}, "
+              f"HHWSS {gauge.hhwss_ahd:+.3f}")
     rec.update({"written_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
                 "sdb_version": __version__})
     a.out.mkdir(parents=True, exist_ok=True)
