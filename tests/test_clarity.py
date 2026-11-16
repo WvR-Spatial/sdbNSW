@@ -191,6 +191,75 @@ def test_analyse_finds_nothing_where_there_is_nothing():
     assert w["lo"] < 0 < w["hi"]
 
 
+# --- exploratory: depth-standardised block test ---------------------------------
+
+def test_depth_standardised_leaves_the_block_out_by_hand():
+    """Two blocks, two depth bins; expectations come from the other block only."""
+    depth = np.array([[10.5, 10.5, 11.5], [10.5, 11.5, 11.5]])   # bins 0,0,1 / 0,1,1
+    e = np.array([[1.0, 1.0, 2.0], [3.0, 4.0, 4.0]])
+    blocks = np.array([[0, 0, 0], [1, 1, 1]])
+    sel = np.ones_like(e, bool)
+    a, b = C.depth_standardised({"stumpf": e}, depth, sel, blocks, [0, 1], depth_m=(10.0, 12.0),
+                                min_other=1)
+    # block 0: observed 1+1+4 = 6; expected 2 px x 9 (the other block's bin 0) + 1 px x 16
+    assert a["ratio"]["stumpf"] == pytest.approx(np.sqrt(6 / 34)) and a["n_used"] == 3
+    # block 1: observed 9+16+16 = 41; expected 1 px x 1 + 2 px x 4
+    assert b["ratio"]["stumpf"] == pytest.approx(np.sqrt(41 / 9)) and b["n_used"] == 3
+    # a bin the other block barely covers gives no expectation, and is left out of both sums
+    a2, _ = C.depth_standardised({"stumpf": e}, depth, sel, blocks, [0, 1], depth_m=(10.0, 12.0),
+                                 min_other=2)
+    assert a2["n_used"] == 1 and a2["ratio"]["stumpf"] == pytest.approx(np.sqrt(4 / 16))
+
+
+def _synthetic_depth(mix: float, effect: float, n: int = 600, seed: int = 0):
+    """Error grows with depth everywhere. `mix`: redder blocks hold more deep pixels.
+    `effect`: redder blocks err more at any depth. One, both or neither."""
+    rng = np.random.default_rng(seed)
+    g = Grid(300000.0, 6120000.0, 10.0, 10.0, n, n)
+    rows, cols = np.indices((n, n))
+    blk = (rows // 200) * 3 + cols // 200                     # 9 blocks of 2 km
+    red = 0.003 + 0.0005 * blk
+    deep = rng.random((n, n)) < (0.5 + mix * (blk - 4) / 10.0)
+    depth = np.where(deep, rng.uniform(15, 20, (n, n)), rng.uniform(10, 15, (n, n)))
+    e = rng.normal(0, 1, (n, n)) * (0.5 + 0.3 * (depth - 10.0)) * (1.0 + effect * blk)
+    return {"scene": "S", "grid": g, "red": red, "depth": depth,
+            "assessed": np.ones((n, n), bool), "resid": {"stumpf": e, "gbm": 0.7 * e},
+            "records": {}, "water_level_m_ahd": 0.0}
+
+
+def test_depth_mix_alone_fools_the_registered_test_but_not_the_standardised_one():
+    site = _synthetic_depth(mix=1.0, effect=0.0)
+    res = C.analyse_depth_adjusted({"t": site}, n_boot=200)
+    s = res["sites"]["t"]
+    assert s["blocks_used"] == 9 and s["blocks_dropped"] == 0
+    assert s["rho_red_vs_depth"] > 0.9
+    assert s["checks"]["stumpf"]["registered_rho_red_vs_rmse"] > 0.9      # depth, not clarity
+    ratios = np.array([b["ratio"]["stumpf"] for b in s["blocks"]])
+    assert np.allclose(ratios, 1.0, atol=0.03)               # every block errs as its depths predict
+    assert res["reading"]["stumpf"] == "not distinguishable from depth mix"
+
+
+def test_a_real_block_effect_survives_the_standardisation():
+    site = _synthetic_depth(mix=0.0, effect=0.05)
+    res = C.analyse_depth_adjusted({"t": site}, n_boot=200)
+    w = res["sites"]["t"]["within"]["stumpf"]
+    assert w["rho"] > 0.95 and w["lo"] > 0
+    assert res["reading"] == {"rule": C.EXPL_RULE, "stumpf": "supported", "gbm": "supported"}
+    # ... and against an opposing depth mix, which hides it from the registered test
+    hidden = C.analyse_depth_adjusted({"t": _synthetic_depth(mix=-1.0, effect=0.05)}, n_boot=200)
+    h = hidden["sites"]["t"]
+    assert h["checks"]["stumpf"]["registered_rho_red_vs_rmse"] < h["within"]["stumpf"]["rho"]
+    assert h["within"]["stumpf"]["rho"] > 0.95
+
+
+def test_the_reading_rule_needs_every_site_non_negative():
+    up, down = _synthetic_depth(0.0, 0.05), _synthetic_depth(0.0, 0.05, seed=3)
+    down["red"] = 0.01 - down["red"]                          # the trend reversed at one site
+    res = C.analyse_depth_adjusted({"a": up, "b": down}, n_boot=200)
+    assert res["sites"]["b"]["within"]["stumpf"]["rho"] < 0
+    assert res["reading"]["stumpf"] == "not distinguishable from depth mix"
+
+
 # --- end to end through the validate CLI -----------------------------------------
 
 def test_cli_end_to_end(tmp_path):
@@ -215,3 +284,14 @@ def test_cli_end_to_end(tmp_path):
     assert rec["sites"]["t"]["clarity"]["n"] > 0
     assert set(rec["sites"]["t"]["within"]) == {"stumpf", "gbm"}
     assert Path(rec["figures"][0]).exists()
+
+    # the exploratory addendum writes apart and leaves the registered record alone
+    before = (out / "phase4" / "clarity.json").read_bytes()
+    assert C.main(["--run", "t=S", "--root", str(tmp_path), "--out", str(out),
+                   "--boot", "50", "--depth-adjusted"]) == 0
+    assert (out / "phase4" / "clarity.json").read_bytes() == before
+    ex = json.loads((out / "exploratory" / "clarity_depth_adjusted.json").read_text())
+    assert ex["status"].startswith("EXPLORATORY") and ex["addendum_commit"] is None
+    assert ex["definition"]["boot_seed"] == C.EXPL_SEED
+    assert ex["reading"]["stumpf"] == "not evaluated"         # one block: nothing to rank
+    assert Path(ex["figures"][0]).exists()

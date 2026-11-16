@@ -23,6 +23,12 @@ clarity; decision gate 4 (a monotonic relationship) is read here.
 Absolute red reflectance carries each scene's atmospheric correction, so
 differences of a few thousandths between sites may be atmosphere rather than
 water. Within a scene that term is shared.
+
+Exploratory (`--depth-adjusted`; addendum of 16 Nov 2026, defined after the
+registered result was seen). Block RMSE depends on the block's depth mix inside
+10-20 m, which the registered test does not control. This variant ranks each
+block's error against what its depths predict from the site's other blocks. It
+writes to outputs/exploratory/ only and changes no registered result.
 """
 
 from __future__ import annotations
@@ -283,6 +289,98 @@ def compare_records(primary: dict[str, Any], other: dict[str, Any]) -> dict[str,
 # --------------------------------------------------------------------------
 
 
+# --------------------------------------------------------------------------
+# Exploratory: depth-standardised block test (addendum of 16 Nov 2026).
+# Post hoc -- defined after the registered result was seen. Never the result.
+# --------------------------------------------------------------------------
+
+EXPL_MARKER = "depth-standardised block test, defined 16 Nov 2026"
+EXPL_BIN_M = 1.0                 # depth bins inside the clarity range
+EXPL_MIN_OTHER_PX = 30           # other blocks' pixels a bin needs to give an expectation
+EXPL_SEED = 18
+EXPL_RULE = ("supported only if the across-site mean's 95% interval is above zero and no "
+             "site's own correlation is negative; otherwise not distinguishable from depth mix")
+
+
+def depth_standardised(resid: dict[str, np.ndarray], depth: np.ndarray, sel: np.ndarray,
+                       blocks: np.ndarray, ids: Sequence[int], *,
+                       depth_m: tuple[float, float] = CLARITY_DEPTH_M, bin_m: float = EXPL_BIN_M,
+                       min_other: int = EXPL_MIN_OTHER_PX) -> list[dict[str, Any]]:
+    """Per block in `ids`: sqrt(observed / expected squared error), per model.
+
+    Expected is what the block's depth mix predicts: each pixel is given the mean
+    squared error, in its depth bin, of the selected pixels in the site's *other*
+    blocks (leave one block out, so a large block cannot set its own standard).
+    A bin where the other blocks hold fewer than `min_other` pixels gives no
+    expectation, and the block's pixels in it are left out of both sums.
+    1 = the block errs as its depths predict; above 1, worse.
+    """
+    lo, hi = depth_m
+    nb = int(round((hi - lo) / bin_m))
+    k = np.clip(((depth[sel] - lo) // bin_m).astype(int), 0, nb - 1)
+    uniq, bi = np.unique(blocks[sel], return_inverse=True)
+    flat = bi * nb + k
+    n_bk = np.bincount(flat, minlength=uniq.size * nb).reshape(uniq.size, nb).astype(float)
+    n_other = n_bk.sum(0)[None, :] - n_bk
+    ok = n_other >= min_other
+    n_used = np.where(ok, n_bk, 0.0).sum(1)
+    ratio: dict[str, np.ndarray] = {}
+    for m, e in resid.items():
+        s_bk = np.bincount(flat, weights=e[sel].astype(float) ** 2,
+                           minlength=uniq.size * nb).reshape(uniq.size, nb)
+        mse_other = np.where(ok, (s_bk.sum(0)[None, :] - s_bk) / np.where(ok, n_other, 1.0), 0.0)
+        obs = np.where(ok, s_bk, 0.0).sum(1)
+        exp = (np.where(ok, n_bk, 0.0) * mse_other).sum(1)
+        with np.errstate(invalid="ignore", divide="ignore"):
+            ratio[m] = np.sqrt(obs / exp)
+    row = {int(u): i for i, u in enumerate(uniq)}
+    return [{"block": int(b), "n_used": int(n_used[row[int(b)]]),
+             "ratio": {m: float(v[row[int(b)]]) for m, v in ratio.items()}} for b in ids]
+
+
+def analyse_depth_adjusted(sites: dict[str, dict[str, Any]], *, n_boot: int = N_BOOT,
+                           seed: int = EXPL_SEED) -> dict[str, Any]:
+    """The exploratory addendum's analysis: block red against depth-standardised error."""
+    rng = np.random.default_rng(seed)
+    out: dict[str, dict[str, Any]] = {}
+    pairs: dict[str, dict[str, tuple[np.ndarray, np.ndarray]]] = {m: {} for m in MODELS}
+    for name, s in sites.items():
+        sel = clarity_pixels(s["depth"], s["assessed"]) & np.isfinite(s["red"])
+        g = s["grid"]
+        rows, cols = np.indices(s["red"].shape)
+        blocks = block_ids(rows, cols, block_px=int(round(BLOCK_M / g.dx)))
+        tab = block_table(s["red"], s["resid"], sel, blocks, depth=s["depth"])
+        std = depth_standardised(s["resid"], s["depth"], sel, blocks, [t["block"] for t in tab])
+        kept = [dict(t, n_used=d["n_used"], ratio=d["ratio"]) for t, d in zip(tab, std)
+                if d["n_used"] >= MIN_BLOCK_PX]          # the block test's own 200-pixel rule
+        x = np.array([t["clarity"] for t in kept])
+        dm = np.array([t["mean_depth_m"] for t in kept])
+        within, checks = {}, {}
+        for m in s["resid"]:
+            y = np.array([t["ratio"][m] for t in kept])
+            r = np.array([t["rmse"][m] for t in kept])
+            within[m] = spearman_ci(x, y, n_boot=n_boot, rng=rng)
+            checks[m] = {"registered_rho_red_vs_rmse": spearman(x, r),
+                         "rho_depth_vs_rmse": spearman(dm, r),
+                         "rho_depth_vs_standardised": spearman(dm, y)}
+            pairs[m][name] = (x, y)
+        out[name] = {"scene": s["scene"], "clarity": site_clarity(s["red"], sel),
+                     "blocks_used": len(kept), "blocks_dropped": len(tab) - len(kept),
+                     "within": within, "checks": checks,
+                     "rho_red_vs_depth": spearman(x, dm), "blocks": kept}
+    across = {m: mean_within_site(p, n_boot=n_boot, rng=rng) for m, p in pairs.items() if p}
+    reading = {}
+    for m, a in across.items():
+        site_rho = [out[k]["within"][m]["rho"] for k in out if m in out[k]["within"]]
+        if not (np.isfinite(a["mean_rho"]) and np.isfinite(a["lo"])):
+            reading[m] = "not evaluated"                 # too few blocks to rank anywhere
+            continue
+        ok = bool(a["lo"] > 0 and all(np.isfinite(v) and v >= 0 for v in site_rho))
+        reading[m] = "supported" if ok else "not distinguishable from depth mix"
+    return {"sites": out, "across_sites_mean_within_rho": across,
+            "reading": {"rule": EXPL_RULE, **reading}}
+
+
 def _read_band(path: Path, name: str) -> np.ndarray:
     import rasterio
 
@@ -368,6 +466,55 @@ def analyse(sites: dict[str, dict[str, Any]], *, n_boot: int = N_BOOT,
             "gate4": gate, "predictions": evaluate_predictions(summary)}
 
 
+def _depth_adjusted(a: argparse.Namespace, sites: dict[str, dict[str, Any]]) -> int:
+    """Run and write the exploratory addendum; nothing registered is read back or changed."""
+    res = analyse_depth_adjusted(sites, n_boot=a.boot)
+    record = {"status": "EXPLORATORY: post hoc, defined after the registered Phase 4 result was "
+                        "seen; never replaces the registered block test, gate 4 or a prediction",
+              "addendum": "PROJECT_BRIEF.md, Exploratory addendum -- depth-standardised block "
+                          "test (defined 16 Nov 2026)",
+              "addendum_commit": _git_commit(a.root, "PROJECT_BRIEF.md", EXPL_MARKER),
+              "deviations": [f"boot={a.boot} (addendum {N_BOOT})"] if a.boot != N_BOOT else [],
+              "definition": {"pixels": f"assessed, lidar depth {CLARITY_DEPTH_M[0]:g}-"
+                                       f"{CLARITY_DEPTH_M[1]:g} m, red present",
+                             "depth_bin_m": EXPL_BIN_M, "min_other_px": EXPL_MIN_OTHER_PX,
+                             "expected": "mean squared error of the site's other blocks in the "
+                                         "pixel's depth bin (leave one block out)",
+                             "standardised_error": "sqrt(observed / expected squared error)",
+                             "block_m": BLOCK_M, "min_block_px": MIN_BLOCK_PX,
+                             "boot": a.boot, "boot_seed": EXPL_SEED},
+              **res,
+              "written_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+              "sdb_version": __version__}
+    od = a.out / "exploratory"
+    od.mkdir(parents=True, exist_ok=True)
+    if not a.no_figures:
+        from sdb import viz
+        record["figures"] = [str(viz.clarity_blocks(
+            od / "figures" / "clarity_depth_adjusted.png", res["sites"],
+            {k: v["blocks"] for k, v in res["sites"].items()}, key="ratio", hline=1.0,
+            ylabel="Depth-standardised block error, 10–20 m\n(1 = as its depths predict)",
+            tag="EXPLORATORY"))]
+    jp = od / "clarity_depth_adjusted.json"
+    jp.write_text(json.dumps(_r(record, 6), indent=2), encoding="utf-8")
+
+    fr = lambda d: f"{d['rho']:+.2f} [{d['lo']:+.2f}, {d['hi']:+.2f}]"  # noqa: E731
+    print("EXPLORATORY -- depth-standardised block test (addendum of 16 Nov 2026)")
+    print(f"{'site':<22} {'blocks':>6}  {'red~depth':>9}  "
+          f"{'Stumpf: registered':>18} {'depth~std':>9}   standardised [95%]        gbm standardised [95%]")
+    for k, s in res["sites"].items():
+        c, w = s["checks"], s["within"]
+        print(f"{k:<22} {s['blocks_used']:>6}  {s['rho_red_vs_depth']:>+9.2f}  "
+              f"{c['stumpf']['registered_rho_red_vs_rmse']:>+18.2f} "
+              f"{c['stumpf']['rho_depth_vs_standardised']:>+9.2f}   {fr(w['stumpf']):<25} "
+              f"{fr(w['gbm']) if 'gbm' in w else '--'}")
+    for m, v in res["across_sites_mean_within_rho"].items():
+        print(f"  mean within-site rho, {m}: {v['mean_rho']:+.2f} [{v['lo']:+.2f}, {v['hi']:+.2f}]"
+              f"  -> {res['reading'][m]}")
+    print(f"\n  record -> {jp}")
+    return 0
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     p.add_argument("--run", action="append", required=True, metavar="SITE=SCENE",
@@ -376,10 +523,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     p.add_argument("--out", type=Path, default=Path("outputs"))
     p.add_argument("--boot", type=int, default=N_BOOT)
     p.add_argument("--no-figures", action="store_true")
+    p.add_argument("--depth-adjusted", action="store_true",
+                   help="EXPLORATORY (addendum of 16 Nov 2026): the depth-standardised block "
+                        "test only; writes to <out>/exploratory/ and leaves phase4/ untouched")
     a = p.parse_args(argv)
 
     runs = dict(r.split("=", 1) for r in a.run)
     sites = {k: load_site(a.root, a.out, v) for k, v in runs.items()}
+    if a.depth_adjusted:
+        return _depth_adjusted(a, sites)
     res = analyse(sites, n_boot=a.boot)
 
     # Sensitivity records (validate --reference-tag) beside their primaries.

@@ -258,12 +258,17 @@ def phase2_figures(fdir: Path, scene: str, *, depth: np.ndarray, pred: np.ndarra
 
 
 def clarity_blocks(path: Path, sites: dict[str, dict[str, Any]],
-                   blocks: dict[str, list[dict[str, Any]]]) -> Path:
+                   blocks: dict[str, list[dict[str, Any]]], *, key: str = "rmse",
+                   ylabel: str = "Block RMSE, 10–20 m (m)", hline: float | None = None,
+                   tag: str = "") -> Path:
     """Phase 4: block RMSE in 10-20 m against block red reflectance, one panel per site.
 
     Shared axes so the sites can be read against each other -- with the caveat,
     printed on the figure, that absolute red carries each scene's atmospheric
     correction. Stumpf filled, gbm open; within-site Spearman in each panel.
+    `key` picks the per-model block value plotted (the exploratory addendum plots
+    "ratio"); `tag` is stamped on the figure so an exploratory plot cannot be
+    mistaken for the registered one.
     """
     plt = _style()
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -274,9 +279,9 @@ def clarity_blocks(path: Path, sites: dict[str, dict[str, Any]],
         tab = blocks.get(k) or []
         x = np.array([t["clarity"] for t in tab])
         for (m, col), filled in zip((("stumpf", SERIES[0]), ("gbm", SERIES[1])), (True, False)):
-            if not tab or m not in tab[0]["rmse"]:
+            if not tab or m not in tab[0][key]:
                 continue
-            y = np.array([t["rmse"][m] for t in tab])
+            y = np.array([t[key][m] for t in tab])
             ax.scatter(x, y, s=18, color=col if filled else "none", edgecolors=col, lw=1.0,
                        label="Stumpf" if m == "stumpf" else "gbm", zorder=3)
         lines = []
@@ -291,8 +296,13 @@ def clarity_blocks(path: Path, sites: dict[str, dict[str, Any]],
         ax.set_title(f"{k.replace('_', ' ')}" + (f"\nsite median red {c:.4f}" if c is not None
                                                   else ""), fontsize=9)
         ax.set_axisbelow(True)
-    axs[0][0].set_ylabel("Block RMSE, 10–20 m (m)")
-    axs[0][0].legend(loc="lower right", fontsize=7)
+        if hline is not None:
+            ax.axhline(hline, color=AXIS, lw=0.8, zorder=1)
+    axs[0][0].set_ylabel(ylabel)
+    if axs[0][0].get_legend_handles_labels()[0]:
+        axs[0][0].legend(loc="lower right", fontsize=7)
+    if tag:
+        fig.text(0.995, 0.995, tag, ha="right", va="top", fontsize=7, color=MUTED)
     fig.supxlabel("Block median red reflectance, 10–20 m  (higher = more turbid; absolute "
                   "values carry each scene's atmospheric correction)", fontsize=7.5, color=INK_2)
     fig.tight_layout()

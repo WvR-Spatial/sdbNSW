@@ -331,6 +331,17 @@ kept as `outputs/phase4/clarity_run1_superseded.json`; `clarity.json` is the
 corrected rerun and says so under `deviations`. Results and their limits:
 `PROJECT_BRIEF.md`, *Phase 4 result*.
 
+**Exploratory, after the registered run** (addendum defined 16 Nov; commit
+the addendum first, then run):
+
+```
+python -m sdb.clarity --depth-adjusted --run jervis_bay=S2A_56HKG_20180907_0_L2A --run narrabeen_long_reef=S2A_56HLH_20180927_1_L2A --run batemans_bay=S2B_56HKF_20180823_1_L2A
+```
+
+It writes only to `outputs/exploratory/` and prints, per site, the registered
+correlation beside the depth-standardised one, then how the addendum's rule
+reads the result.
+
 **Gate:** does error track water clarity monotonically? If it does, you have a
 clean finding. If it does not, that is a more interesting finding — report it
 and say what you think is confounding it.
@@ -341,6 +352,15 @@ and say what you think is confounding it.
 
 **→ CLAUDE** — `src/sdb/viz.py` and the figures; the GitHub Pages deliverable
 in `site/`; repo hygiene.
+
+**→ YOU** — write the Phase 4 conclusion in your own words first, as you did
+for Phase 3: what it means that gate 4 was not met, and what you think
+confounds the comparison. It goes into the brief under *Phase 4 result*.
+
+**→ YOU, decide · CLAUDE, do** — the reference lidar is CC BY 4.0 and the
+brief promises a reader can reproduce the validation from the repo. Either
+commit the three native extracts under `data/reference/` (49 + 27 + 11 MB) or
+attach them to a GitHub release and point `data/README.md` at it.
 
 **→ YOU · this part cannot be delegated** — write the limitations panel in
 your own words, **before** writing the results section. It is the part of your

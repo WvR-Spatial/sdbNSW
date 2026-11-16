@@ -75,6 +75,14 @@ plumes and seasonal turbidity. Nobody has published the error envelope for it.
 "worse than the literature, and here is the depth-and-clarity boundary where
 it fails." That is a finding. A pretty bathymetry raster is not.
 
+**As found (16 Nov).** Worse than the literature at all three sites, and the
+*depth* boundary is measured: error is roughly flat to about 15 m and climbs
+beyond; Stumpf meets CATZOC C at no depth, and gradient boosting only in the
+top 2–3 m at Jervis Bay and Batemans Bay and nowhere on the surf coast. The
+*clarity* boundary is **not** established — the three scenes did not deliver
+a clarity gradient that this imagery can measure (*Phase 4 result*). The
+write-up says so; it does not claim a gradient.
+
 ## Why this project
 
 Closes three capability gaps in one piece:
@@ -93,6 +101,12 @@ behind the sensor: SDB *is* radiative transfer through a water column.
 Three sites, one pipeline, three bounding boxes. One site gives an RMSE;
 three give the relationship between error and the thing that drives it.
 
+*The gradient was the design intent. Phase 4 could not confirm it in these
+scenes: the clarity metric sits at the floor of the atmospheric correction and
+does not rank the sites reliably. What the three sites do give is three
+settings — a sheltered bay, an exposed surf coast, an estuary mouth — under one
+pipeline.*
+
 | # | Site | Role | bbox (WGS84) |
 |---|---|---|---|
 | 1 | Jervis Bay | Best case — sheltered, clear, mixed substrate | **Measured:** 150.6607, −35.1504, 150.8083, −34.9735 (block NSW020502) |
@@ -105,8 +119,8 @@ on the seam between two blocks flown 27 days apart (decisions register).*
 **Start with Jervis Bay.** If it fails in the clearest water on the coast,
 nothing downstream matters and you have spent one weekend finding out.
 
-Site 2 reuses the Narrabeen survey data and MHL wave/tide workflows already
-built in `narrabeen-stage1`.
+*As built, site 2 uses the same marine lidar and MHL gauge pipeline as the
+other sites; the Narrabeen beach-survey data were not needed.*
 
 ## Data
 
@@ -162,7 +176,7 @@ Report, per site:
 
 - RMSE, bias and R², stratified by **depth band** (0–2, 2–5, 5–10, 10–15, 15–20 m), by lidar depth **and by predicted depth** (a map user only has the latter)
 - Error stratified by **substrate** — dark seagrass reads as deeper water, the classic SDB failure mode
-- Error against **exposure**: inside the bay vs open coast within a scene; sea state and turbidity mainly *between* sites (Phase 4)
+- Error against **exposure**: inside the bay vs open coast within a scene; sea state and turbidity mainly *between* sites (Phase 4 — as run, three sites cannot separate them, and sea state enters only as context: the wave record at Northern Beaches)
 - The depth at which error exceeds a stated threshold — the **breakdown depth**
 - The **denominators**: how much reference water in each band could not be assessed, and why
 
@@ -840,6 +854,53 @@ predicted, though not separably. The question the phase asked — does error
 track clarity — is answered "not across these sites, and not shown within
 them".
 
+### Exploratory addendum — depth-standardised block test, defined 16 Nov 2026
+
+**Not confirmatory.** Defined after the registered Phase 4 result was seen,
+and after one rough look at a partial rank correlation on block mean depth
+(+0.61 Jervis Bay, +0.40 Northern Beaches, +0.53 Batemans Bay; Stumpf, no
+intervals). It cannot change gate 4, a prediction or the registered block
+test, whatever it shows. This definition is committed before the analysis is
+run on the real data; its code was tested on synthetic data only.
+
+**Why.** The registered test asks whether redder blocks have larger RMSE. But
+RMSE grows with depth inside 10–20 m, blocks differ in depth mix, and the mix
+is tied to block red in opposite directions at the two new sites (*Phase 4
+result*). The question that matters is whether a redder block errs more *than
+its depths alone predict*.
+
+**Definition.**
+
+- Same pixels and blocks as the registered test: assessed, lidar depth
+  10–20 m, red present; 2 km blocks with at least 200 such pixels.
+- Per site and model, squared error is tallied in **1 m depth bins**.
+- **Expected** squared error of a block: each of its pixels is given the mean
+  squared error, in that pixel's depth bin, of the selected pixels in the
+  site's *other* blocks — the block is left out of its own standard. A bin in
+  which the other blocks hold fewer than 30 pixels gives no expectation; the
+  block's pixels in it are left out of both sums, and a block left with fewer
+  than 200 pixels is dropped.
+- **Depth-standardised error** = √(observed ÷ expected). 1 means the block
+  errs as its depths predict; above 1, worse.
+- **Statistic:** Spearman between block median red and depth-standardised
+  error, within each site, for Stumpf and gbm; 95% interval from resampling
+  blocks (1,000 draws, seed 18; the standardised errors are not recomputed
+  within a draw); across sites, the mean of the within-site correlations.
+- **Reported with it:** the correlation of block mean depth with the
+  standardised error (near zero if the standardisation has done its job) and
+  the registered correlation over the same blocks.
+
+**How it will be read — stated now.** A link between red reflectance and error
+beyond depth is *supported* only if the across-site mean's interval lies above
+zero **and** no site's own correlation is negative. Otherwise the registered
++0.35 is *not distinguishable from depth mix*. Either way it remains a
+statement about red reflectance, not turbidity: reef, exposure and glint vary
+with location too, and Northern Beaches' red is near the correction's floor.
+
+`python -m sdb.clarity --depth-adjusted --run …` writes
+`outputs/exploratory/clarity_depth_adjusted.json` and one figure stamped
+EXPLORATORY; `outputs/phase4/` is not touched.
+
 ## Error budget
 
 | Term | Magnitude | Note |
@@ -848,6 +909,9 @@ them".
 | Reference horizontal | 5 m + 5% depth ≈ 5.5 m | Sub-pixel at 10 m S2 |
 | Expected SDB error | 1.3–2.2 m clear water; unknown here | The quantity being measured |
 | Water level correction | **−0.392 m AHD measured**: gauge ±20 mm (code 55), timing ±2 min × 0.12 m/h ≈ ±4 mm, 1-minute noise ~1 cm (11-minute mean −0.394). The provisional image estimate was −0.496 | A constant error is absorbed by the Stumpf intercept; it moves depth bands, masks and anything reported against AHD. Moving from −0.496 to −0.392 changed pooled RMSE by 0.02 m |
+| Water level, sites 2–3 | Northern Beaches **+0.501 m AHD** (Sydney); Patonga reads 0.04 m higher — taken as the uncertainty. Batemans Bay **−0.181 m AHD** (Princess Jetty, ~3 km up the Clyde: ~22 min tidal lag ≈ 0.04 m at the overpass) | Same role as at Jervis Bay: a constant is absorbed by the fit; it moves bands and masks. The image estimate was 0.01 m off at Northern Beaches and **0.70 m off** at Batemans Bay |
+| Co-registration, sites 2–3 | Northern Beaches E −0.43 ± 0.32, N −3.47 ± 0.14 m; Batemans Bay E +2.95 ± 0.62, N −4.91 ± 0.09 m (1.5 km windows); both measured on 7 windows and removed | Standard errors under 1 m: minor, as at Jervis Bay |
+| **Clarity metric** | Site medians 0.0022–0.0053 in red reflectance; the protocol's own caveat is "a few thousandths may be atmosphere"; 10% of Northern Beaches' pixels sit on the product floor (0.0001) | The metric cannot rank sites. Within a scene it ranks blocks, but block depth mix confounds the registered test (*Phase 4 result*) |
 | **Co-registration** | 7.5 m measured and removed; residual ±1.0 m E, ±1.1 m N (1σ), plus ~1.5 m possible datum offset in the reference imagery | On a 1:10 seabed slope 1 m of misregistration is 0.1 m of depth. Now a minor term |
 | Sub-pixel relief | Median 0.01–0.09 m, p90 ≤ 0.24 m by depth band | Std of the 5 m cells inside each 10 m pixel. Minor except on reef edges; kept for stratification. **At Jervis Bay suppressed by the ELVIS averaging below** |
 | **Reference processing (ELVIS averaging)** | Jervis Bay only: 0.13 m RMS at 10 m in 0–20 m (+0.05 m mean, p99 0.52 m), surface displaced 2.5 m S and 2.5 m W — measured on the averaged vs native Northern Beaches extracts | Moves Jervis Bay's RMSE by < 0.01 m in quadrature. Phase 4 measures its effect on every statistic directly. Sites 2 and 3 are native |
@@ -932,11 +996,18 @@ in the maths, tests against analytically known answers.
 Replaces the Murray REM card. The card must carry a **number**, which no
 current card does.
 
-Draft: *"Independent accuracy assessment of satellite-derived bathymetry
-across three NSW coastal sites spanning a water-clarity gradient, validated
-against IHO Order 1b airborne lidar. Reports RMSE by depth band, substrate
-and sea state, and the depth at which the method breaks down."*
+Draft, revised 16 Nov to claim only what was measured: *"Independent accuracy
+assessment of satellite-derived bathymetry at three NSW coastal sites — a
+sheltered bay, an exposed surf coast and an estuary mouth — against IHO Order
+1b airborne lidar, under pre-registered protocols and spatially blocked
+validation. RMSE 2.7–3.0 m for the band-ratio method and 1.9–2.5 m for
+gradient boosting over 0–20 m; reports error by depth band, substrate and
+exposure, and the depth at which each method breaks down."*
 Tags: Sentinel-2 · STAC/COG · Accuracy Assessment · Bathymetry · Python
+
+*The 1 Oct draft said "spanning a water-clarity gradient" and "sea state".
+Neither survived: the gradient was not measurable in these scenes, and sea
+state was never a stratum, only context.*
 
 Deliverable: GitHub Pages page with the error figures and a small
 SDB-versus-lidar comparison, plus the repo. Limitations panel above results.
@@ -952,7 +1023,11 @@ SDB-versus-lidar comparison, plus the repo. Limitations panel above results.
 - [x] Substrate layers for sites 2–3 — fetched 16 Nov, before any `validate` run
 - [x] Northern Beaches extent — **open coast only** (*Phase 4 amendment, 16 Nov*)
 - [x] Phase 4 run — 16 Nov (*Phase 4 result*); gate 4 not met; one deviation, both results kept
-- [ ] Depth-adjusted block test — exploratory, not registered; decide whether to run it before the write-up
+- [ ] Depth-standardised block test — **exploratory addendum defined 16 Nov**; run after its commit, report beside the registered test
+- [ ] **Commit the reference lidar** (CC BY 4.0) — the brief's reproducibility promise, not yet kept: `data/reference/` holds only the block index. The three native extracts are 49 + 27 + 11 MB; decide between committing them and attaching them to a GitHub release
+- [ ] **Phase 4 conclusion in Warren's words** (as for Phase 3): what gate 4's failure means and what confounds it
+- [ ] **Limitations panel in Warren's words, before the results section** (`BUILD_GUIDE.md`, Phase 5)
+- [ ] `README.md` (result first), `site/` page, portfolio card with its number
 - [x] Atmospheric correction — **L2A as supplied** for v1; ACOLITE only as diagnosis if the gate fails
 - [x] Sun glint correction — **none** for v1 (register, 27 Sep)
 - [x] Whether ML enters v1 — **no**; v2 pre-registered 29 Sep (*v2 protocol*): gradient boosting, spectral features only, same folds, paired against Stumpf
@@ -1044,6 +1119,8 @@ defensible piece of work.
 | 16 Nov | **Phase 4 run at both new sites** after the amendment commit `2cd2f53`: `waterlevel`, `reference`, `validate` (Stumpf, gbm, gbm_xy), `substrate`, the `elvis_avg` sensitivity pair, `clarity`. No deviation in any fit. Results in *Phase 4 result* | Gate 4 not met; predictions 1, 2 and 4 held (2 and half of 4 on point estimates only), prediction 3 failed |
 | 16 Nov | **`clarity` corrected after its first run; both results kept.** Northern Beaches' block correlation was computed over NaN block medians ranked as the largest values (59 pixels with no red value, 13 of 20 blocks). Corrected: −0.16 → +0.70 (Stumpf); mean within-site +0.06 [−0.19, +0.33] → +0.35 [+0.09, +0.59]. First run kept as `outputs/phase4/clarity_run1_superseded.json`; the record's `deviations` says so | My error, and the test suite's gap: `site_clarity` had a test with a missing value, `block_table` did not, and `spearman` ranked NaN without complaint. Both closed; `spearman` now refuses non-finite input. Caught only because the block table was read row by row before committing — 13 `null` medians beside a correlation claiming 20 blocks. **A correction that moves the headline toward the hoped-for answer needs more scrutiny, not less:** the missing-value rule it applies was written and tested on 1 Oct, before any data; treating the 59 pixels as zero gives the same answer; and nothing else in the record changes |
 | 16 Nov | **The block test does not isolate turbidity** — block depth mix is correlated with block error at every site (+0.6 to +0.7) and with block red in opposite directions at Northern Beaches (+0.70) and Batemans Bay (−0.71). Block mean depth added to `clarity.json`'s block table so this can be checked from the record | A design flaw in the 1 Oct protocol, mine: it guarded against site-level offsets and forgot that RMSE is depth-dependent inside the 10–20 m window. A depth-standardised block error should have been registered. Not repaired after the fact: the registered statistic is reported as registered, with the confound beside it |
+| 16 Nov | **Exploratory addendum defined: a depth-standardised block test** (*Exploratory addendum*), committed before it is run on real data. Each block's error is compared with what its depth mix predicts from the site's other blocks | Warren asked for it if it would add to the project. It does: the phase's question is whether error tracks clarity, and the registered test cannot answer it at two of three sites. It is exploratory because the registered result — and a rough partial correlation — had already been seen; the reading rule is fixed in advance so that a favourable number cannot be argued into more than it is |
+| 16 Nov | **Brief checked against its stated goals before the write-up.** Kept: the question, the blocked-validation design, the "number and an envelope" deliverable. Changed: the portfolio draft no longer claims a clarity gradient or a sea-state stratum; *The question* and *Sites* now say what was and was not found; error-budget rows added for sites 2–3 and for the clarity metric | Three open items carry into Phase 5: the reference lidar is still not committed (the reproducibility promise in *Data*), and the Phase 4 conclusion and the limitations panel are Warren's to write |
 
 ## Sources
 
