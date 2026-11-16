@@ -47,9 +47,12 @@ the site that reads clearest has the largest error. Three predictions held
 (two partly on point estimates alone); **one failed** (no turbidity–error
 trend inside Batemans Bay, 12 blocks). Within sites, block error rises with block
 red reflectance on average (+0.35 [+0.09, +0.59]), but the depth mix of the
-blocks confounds that test in opposite directions at the two new sites, so it
-is not yet evidence about turbidity. One computing error was found and
-corrected after the first run; both results are reported.
+blocks confounds that test in opposite directions at the two new sites. An
+**exploratory** depth-standardised version (defined and committed before it
+was run) gives +0.40 [+0.10, +0.66] with all three sites positive — carried
+mainly by Jervis Bay, and a statement about red reflectance, not turbidity.
+One computing error was found and corrected after the first run; both results
+are reported.
 **Updated:** 16 Nov 2026 · **Repo:** `sdbNSW`
 **Portfolio slot:** replaces *Revealing the Ancient Murray via REM*.
 
@@ -901,6 +904,49 @@ with location too, and Northern Beaches' red is near the correction's floor.
 `outputs/exploratory/clarity_depth_adjusted.json` and one figure stamped
 EXPLORATORY; `outputs/phase4/` is not touched.
 
+### Exploratory result — depth-standardised block test (addendum `884dce1`), 16 Nov
+
+Run once, a minute after the addendum commit, with no deviation; no block
+dropped and no pixel left out. `outputs/exploratory/`.
+
+| Stumpf | Registered: red vs RMSE | **Red vs depth-standardised error** | Depth vs RMSE → depth vs standardised error |
+|---|---|---|---|
+| Jervis Bay (48 blocks) | +0.52 | **+0.55** [+0.29, +0.74] | +0.62 → +0.16 |
+| Northern Beaches (20) | +0.70 | **+0.22** [−0.31, +0.75] | +0.71 → +0.09 |
+| Batemans Bay (12) | −0.18 | **+0.44** [−0.30, +0.96] | +0.64 → −0.22 |
+| **Mean of within-site** | +0.35 [+0.09, +0.59] | **+0.40** [+0.10, +0.66] | |
+
+gbm: +0.58 [+0.31, +0.77], +0.14 [−0.40, +0.63], +0.29 [−0.45, +0.83]; mean
++0.34 [+0.02, +0.60].
+
+**Read by the rule written beforehand: supported, for both models** — the
+mean's interval lies above zero and no site is negative.
+
+**What it shows.**
+
+- The standardisation did its job: the tie between block depth and block
+  error falls from +0.6–0.7 to between −0.22 and +0.16.
+- The registered test's disagreement between sites was depth mix, in the two
+  directions the confound predicted: Northern Beaches' +0.70 shrinks to +0.22,
+  and Batemans Bay's −0.18 becomes +0.44. The sites now agree in sign, and the
+  mean barely moves (+0.35 → +0.40).
+
+**What it does not show.**
+
+- Only Jervis Bay's own interval excludes zero. Northern Beaches and Batemans
+  Bay, taken alone, show nothing; gbm's pooled lower bound is +0.02.
+- It is exploratory: defined after the registered result and a rough look
+  (+0.61, +0.40, +0.53 by partial correlation — the same direction, smaller).
+- It is about red reflectance. Foam, surface roughness and exposure raise red
+  too, and they vary with place just as turbidity does. Prediction 3 still
+  failed, and gate 4 is still not met.
+
+**The sentence the write-up may use:** within a scene, blocks with higher red
+reflectance tend to have larger errors than their depths predict (exploratory;
+mean rank correlation +0.40 [+0.10, +0.66] across three sites, clear at
+Jervis Bay alone). It is a lead for a registered test on new scenes, not a
+finding about turbidity.
+
 ## Error budget
 
 | Term | Magnitude | Note |
@@ -1012,6 +1058,61 @@ state was never a stratum, only context.*
 Deliverable: GitHub Pages page with the error figures and a small
 SDB-versus-lidar comparison, plus the repo. Limitations panel above results.
 
+## Write-up plan — proposed 16 Nov, awaiting Warren's decisions
+
+**Standard:** a short conference paper (the model is a 6–8 page industry
+paper, e.g. *Coasts & Ports* or a hydrographic society conference) that a
+non-specialist can also get the answer from in a minute. One document, three
+layers; each layer complete without the next.
+
+1. **For everyone (top of the page, ~60 seconds).** A plain-language summary
+   of ≤ 150 words with no undefined term; three numbers at most, each with
+   what it means in practice; one figure (satellite depth against lidar depth
+   at one site); and the limitations panel — Warren's, in plain words, above
+   the results.
+2. **The paper.** Structured abstract (≤ 250 words: background, methods,
+   results, conclusion) · Introduction and the gap · Study sites and data ·
+   Methods (pre-registration, pipeline, blocked validation, statistics) ·
+   Results · Discussion (against the literature; what drives the error) ·
+   Limitations · Conclusions · Data and code availability · Author
+   contributions and AI assistance · References. About 3,500 words, 5–6
+   figures, 3 tables.
+3. **The repository.** Protocols, decisions register, every output. Cited from
+   the paper as supplementary material, not repeated in it.
+
+**Rules the paper keeps.**
+
+- Every number carries its interval and its unit of replication (blocks, not
+  pixels); one scene per site is stated as the main limit on generality.
+- Confirmatory and exploratory results are never mixed: a *predictions
+  scorecard* table (every registered prediction and gate, held or failed)
+  and a *deviations and corrections* table (the rerun at the measured water
+  level, the open-coast amendment, the `clarity` correction).
+- Failures are reported at the same size as successes: gate 4, prediction 3,
+  v2 prediction 4.
+- Literature numbers are quoted with their validation design; every reference
+  is checked against its source before it is cited.
+- Figures: one palette, colour-blind safe, assertion-style captions (the
+  caption states what the figure shows), alt text, regenerated in one pass
+  with a single font.
+
+**Figures and tables, provisional.** F1 sites and what SDB measures · F2
+error by depth, three sites × two methods, with the CATZOC C allowance · F3
+blocked against random validation (the leakage demonstration) · F4 reef
+against sediment at three sites · F5 red reflectance against block error,
+registered beside exploratory · F6 residual map, one site. T1 sites, scenes,
+pairing and water levels · T2 results with intervals · T3 predictions
+scorecard.
+
+**Order of work.** Warren: Phase 4 conclusion, limitations panel, lidar
+hosting, the decisions below. Claude: reference check, figure pass, outline
+with word budgets for approval, then the draft.
+
+**Decisions for Warren.** (a) HTML page only, or HTML plus a PDF in conference
+layout from the same source; (b) the wording of the AI-assistance statement —
+the commit history already shows it, so the paper should say plainly who did
+what; (c) title.
+
 ## Open decisions
 
 - [x] Repo name `sdbNSW`
@@ -1023,7 +1124,7 @@ SDB-versus-lidar comparison, plus the repo. Limitations panel above results.
 - [x] Substrate layers for sites 2–3 — fetched 16 Nov, before any `validate` run
 - [x] Northern Beaches extent — **open coast only** (*Phase 4 amendment, 16 Nov*)
 - [x] Phase 4 run — 16 Nov (*Phase 4 result*); gate 4 not met; one deviation, both results kept
-- [ ] Depth-standardised block test — **exploratory addendum defined 16 Nov**; run after its commit, report beside the registered test
+- [x] Depth-standardised block test — exploratory addendum `884dce1`, run 16 Nov (*Exploratory result*): supported by its own rule, carried mainly by Jervis Bay
 - [ ] **Commit the reference lidar** (CC BY 4.0) — the brief's reproducibility promise, not yet kept: `data/reference/` holds only the block index. The three native extracts are 49 + 27 + 11 MB; decide between committing them and attaching them to a GitHub release
 - [ ] **Phase 4 conclusion in Warren's words** (as for Phase 3): what gate 4's failure means and what confounds it
 - [ ] **Limitations panel in Warren's words, before the results section** (`BUILD_GUIDE.md`, Phase 5)
@@ -1121,6 +1222,8 @@ defensible piece of work.
 | 16 Nov | **The block test does not isolate turbidity** — block depth mix is correlated with block error at every site (+0.6 to +0.7) and with block red in opposite directions at Northern Beaches (+0.70) and Batemans Bay (−0.71). Block mean depth added to `clarity.json`'s block table so this can be checked from the record | A design flaw in the 1 Oct protocol, mine: it guarded against site-level offsets and forgot that RMSE is depth-dependent inside the 10–20 m window. A depth-standardised block error should have been registered. Not repaired after the fact: the registered statistic is reported as registered, with the confound beside it |
 | 16 Nov | **Exploratory addendum defined: a depth-standardised block test** (*Exploratory addendum*), committed before it is run on real data. Each block's error is compared with what its depth mix predicts from the site's other blocks | Warren asked for it if it would add to the project. It does: the phase's question is whether error tracks clarity, and the registered test cannot answer it at two of three sites. It is exploratory because the registered result — and a rough partial correlation — had already been seen; the reading rule is fixed in advance so that a favourable number cannot be argued into more than it is |
 | 16 Nov | **Brief checked against its stated goals before the write-up.** Kept: the question, the blocked-validation design, the "number and an envelope" deliverable. Changed: the portfolio draft no longer claims a clarity gradient or a sea-state stratum; *The question* and *Sites* now say what was and was not found; error-budget rows added for sites 2–3 and for the clarity metric | Three open items carry into Phase 5: the reference lidar is still not committed (the reproducibility promise in *Data*), and the Phase 4 conclusion and the limitations panel are Warren's to write |
+| 16 Nov | **Exploratory depth-standardised block test run** after addendum commit `884dce1`: mean within-site +0.40 [+0.10, +0.66] (Stumpf), +0.34 [+0.02, +0.60] (gbm); all three sites positive; *supported* by the rule written beforehand | The registered test's site-to-site disagreement was depth mix. The result is carried mainly by Jervis Bay and concerns red reflectance, not turbidity; it changes neither gate 4 nor prediction 3. Reported as a lead, not a finding |
+| 16 Nov | **Write-up standard set** (Warren): conference-paper quality, readable by a non-technical portfolio audience. Plan proposed in *Write-up plan* — one document in three layers | Nothing is drafted until the limitations panel and Phase 4 conclusion exist in Warren's words and the outline is approved |
 
 ## Sources
 
