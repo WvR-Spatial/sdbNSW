@@ -79,6 +79,7 @@ FLAG_DEPTH = 4
 FLAG_CLOUD = 8
 FLAG_BRIGHT_WATER = 16
 FLAG_NO_IMAGE = 32
+FLAG_NOT_SEA = 64
 FLAG_NAMES = {
     FLAG_NO_LIDAR: "lidar coverage incomplete",
     FLAG_LAND: "any land in pixel",
@@ -86,6 +87,7 @@ FLAG_NAMES = {
     FLAG_CLOUD: "cloud or shadow (SCL)",
     FLAG_BRIGHT_WATER: "bright NIR over lidar water",
     FLAG_NO_IMAGE: "no image data",
+    FLAG_NOT_SEA: "water not connected to the open sea (site rule)",
 }
 
 DEPTH_BANDS_M = ((0, 2), (2, 5), (5, 10), (10, 15), (15, 20))
@@ -276,10 +278,50 @@ def plane_translation(src_crs: Any, dst_crs: Any, grid: Grid, *,
 # --------------------------------------------------------------------------
 
 
+def sea_connected(ref: dict[str, np.ndarray], seed: tuple[int, int]) -> np.ndarray:
+    """Pixels joined, through fully-water pixels, to `seed` (row, col): a pixel the
+    site names as open sea (config `open_sea_point`).
+
+    Water here is a pixel with complete lidar coverage and no land at the water
+    level used (`land_frac` is computed at that level). Neighbours are 4-connected,
+    so a channel must be at least a full pixel wide to join two bodies: a lagoon
+    behind a narrow or closed entrance, whose level is not the sea's, stays apart.
+    An estuary that reaches the sea only outside the AOI (Pittwater, via Broken
+    Bay) is apart too. A seed, not an AOI edge: the scene grid has a lidar-free
+    margin all round, so no water ever touches an edge. Raises if the seed is not
+    water, rather than flag everything.
+    """
+    from scipy import ndimage
+
+    water = (ref["coverage"] >= MIN_COVERAGE) & (ref["land_frac"] == 0)
+    r, c = seed
+    if not (0 <= r < water.shape[0] and 0 <= c < water.shape[1]):
+        raise ValueError(f"open_sea_point falls outside the scene grid (row {r}, col {c})")
+    if not water[r, c]:
+        raise ValueError(f"open_sea_point (row {r}, col {c}) is not fully-covered lidar water "
+                         "at this water level: move it further offshore")
+    lab, _ = ndimage.label(water)
+    return lab == lab[r, c]
+
+
+def point_to_pixel(lon: float, lat: float, crs: Any, grid: Grid) -> tuple[int, int]:
+    """(row, col) of a lon/lat point on `grid`. Lon/lat is read as WGS84; GDA2020
+    differs by under 2 m, which does not matter for a point kilometres offshore."""
+    from pyproj import Transformer
+
+    x, y = Transformer.from_crs("EPSG:4326", crs, always_xy=True).transform(lon, lat)
+    return int((grid.y0 - y) // grid.dy), int((x - grid.x0) // grid.dx)
+
+
 def analysis_mask(ref: dict[str, np.ndarray], *, water_level: float = DEFAULT_WATER_LEVEL_M,
                   depth_window: tuple[float, float] = DEPTH_WINDOW_M,
-                  scl: np.ndarray | None = None, nir: np.ndarray | None = None) -> np.ndarray:
-    """Bit flags per pixel; 0 means usable. A pixel may carry several flags."""
+                  scl: np.ndarray | None = None, nir: np.ndarray | None = None,
+                  sea_seed: tuple[int, int] | None = None) -> np.ndarray:
+    """Bit flags per pixel; 0 means usable. A pixel may carry several flags.
+
+    `sea_seed` (from a site's `open_sea_point`) flags water not joined to it -- see
+    `sea_connected`. Off by default, so sites without it are unchanged.
+    """
     flags = np.zeros(ref["z_mean"].shape, dtype=np.uint8)
     cov = ref["coverage"]
     has = cov > 0
@@ -295,6 +337,9 @@ def analysis_mask(ref: dict[str, np.ndarray], *, water_level: float = DEFAULT_WA
         flags[~np.isfinite(nir)] |= FLAG_NO_IMAGE
         with np.errstate(invalid="ignore"):
             flags[has & (ref["land_frac"] == 0) & (nir > BRIGHT_WATER_NIR)] |= FLAG_BRIGHT_WATER
+    if sea_seed is not None:      # fully-covered water only: partial pixels are already out
+        water = (cov >= MIN_COVERAGE) & (ref["land_frac"] == 0)
+        flags[water & ~sea_connected(ref, sea_seed)] |= FLAG_NOT_SEA
     return flags
 
 
@@ -454,8 +499,14 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     ref = aggregate_dem(z, valid, src.shifted(tx, ty), dst.shifted(*shift),
                         water_level=a.water_level)
+    sea_pt = site_cfg.get("open_sea_point")
+    seed = point_to_pixel(*sea_pt, scene["crs"], dst) if sea_pt else None
     flags = analysis_mask(ref, water_level=a.water_level, depth_window=(0.0, a.depth_max),
-                          scl=scene.get("scl"), nir=scene.get("nir"))
+                          scl=scene.get("scl"), nir=scene.get("nir"), sea_seed=seed)
+    if seed is not None:
+        cut = int(((flags & FLAG_NOT_SEA) > 0).sum())
+        print(f"  site rule: only water joined to the open sea at {sea_pt} is assessed; "
+              f"{cut:,} water pixels ({cut * dst.dx * dst.dy / 1e6:.2f} km2) are not")
     summ = summarise(ref, flags, pixel_area_m2=dst.dx * dst.dy, water_level=a.water_level)
 
     print(f"  water level: {a.water_level:+.3f} m AHD, {wl_src}\n")
@@ -487,6 +538,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "datum": datum,
         "coregistration": {"note": coreg_note, "shift_applied_m": list(shift)},
         "water_level_m_ahd": a.water_level, "water_level_source": wl_src,
+        "open_sea_point": ({"lon_lat": sea_pt, "row_col": list(seed)} if seed is not None else None),
         "depth_window_m": [0.0, a.depth_max],
         "flags": {str(k): v for k, v in FLAG_NAMES.items()},
         "summary": summ,

@@ -79,6 +79,35 @@ sites:
     reference_dem: "data/raw/Narrabeen/B/NSW Government - DCCEEW/DEM/5 Metre/NSW_Marine_5m_TopoBathy_DEM.tif"
     max_depth_m: 41.2
     testable_area_km2: 35.5      # 0-20 m below 0 m AHD, inside bbox; 34 two-km blocks
+    # Phase 4 amendment of 16 Nov 2026 (before any fit): only water joined to the
+    # open sea is assessed -- the lidar water body (4-connected, at the measured
+    # level) that holds this point, ~3 km off Collaroy in 23 m. The bbox also
+    # holds Pittwater (11.4 km2 of 0-20 m water, 15 blocks; it reaches the sea
+    # only via Broken Bay, outside the AOI) and Narrabeen / Dee Why lagoons
+    # (~0.2 km2, not at sea level). Checked with the real reference at the
+    # measured +0.501 m AHD: the rule removes 11.5 km2 of water; 21.6 km2 usable
+    # in 21 two-km blocks remain (32.3 km2, 34 blocks without it) -- eligible.
+    open_sea_point: [151.33, -33.74]     # lon, lat
+    # MHL gauges, constants from MHL's station pages (datum table of the supplied
+    # "Data conditions and limitations"; tidal planes table, 2018-19 column, m AHD).
+    # 213470 is MHL's own Sydney gauge (151.2585, -33.8255, inside the harbour
+    # near Middle Head) -- not Fort Denison, which is a separate station.
+    tide_gauge:
+      station: "213470"
+      name: "Sydney"
+      ahd_offset_m: -0.925       # station datum Zero Fort Denison (1897): AHD = SD - 0.925
+      msl_ahd: 0.050
+      islw_ahd: -0.807
+      hhwss_ahd: 1.005
+      source: "Manly Hydraulics Laboratory for NSW DCCEEW, CC BY 4.0; times AEST"
+    tide_gauge_check:            # cross-check only (Phase 4 protocol): Broken Bay
+      station: "212440"
+      name: "Patonga"
+      ahd_offset_m: 0.0          # recorded in AHD
+      msl_ahd: 0.065
+      islw_ahd: -0.808
+      hhwss_ahd: 1.034
+      source: "Manly Hydraulics Laboratory for NSW DCCEEW, CC BY 4.0; times AEST"
     status: reference_in_hand
 
   batemans_bay:
@@ -98,6 +127,17 @@ sites:
     reference_dem: "data/raw/BatemansBay/BatemansBay_5m_native_AB.tif"
     max_depth_m: 40.6
     testable_area_km2: 28.4      # 0-20 m below 0 m AHD, inside bbox; 21 two-km blocks
+    # Princess Jetty is in the Clyde at the town, ~3 km up from the bay: its M2
+    # tide lags the coast by ~11 deg (~22 min) and is ~7% smaller (2018-19 MHL
+    # harmonics). Used as registered; the lag is reported as uncertainty.
+    tide_gauge:
+      station: "216410"
+      name: "Princess Jetty (Batemans Bay)"
+      ahd_offset_m: 0.0          # recorded in AHD
+      msl_ahd: 0.049
+      islw_ahd: -0.726
+      hhwss_ahd: 0.914
+      source: "Manly Hydraulics Laboratory for NSW DCCEEW, CC BY 4.0; times AEST"
     status: reference_in_hand
 
   richmond_river:

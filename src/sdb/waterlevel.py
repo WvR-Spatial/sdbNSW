@@ -207,6 +207,13 @@ def infer_datum(levels: np.ndarray, gauge: Gauge, *, tol: float = DATUM_TOLERANC
     m = float(np.nanmean(levels))
     d_ahd = abs(m - gauge.msl_ahd)
     d_cd = abs(m - (gauge.msl_ahd - gauge.ahd_offset_m))
+    if gauge.ahd_offset_m == 0:
+        # Station datum is AHD (Patonga, Princess Jetty): nothing to choose between,
+        # but the mean must still sit at MSL -- this catches centimetres or a wrong file.
+        if d_ahd <= tol:
+            return "ahd"
+        raise ValueError(f"record mean {m:+.3f} m is {d_ahd:.2f} m from MSL in AHD for a station "
+                         "recorded in AHD: check the file's units and station")
     hits = [name for name, d in (("ahd", d_ahd), ("cd", d_cd)) if d <= tol]
     if len(hits) != 1:
         raise ValueError(f"cannot tell the datum: record mean {m:+.3f} m is {d_ahd:.2f} m from MSL "
@@ -330,15 +337,23 @@ def main(argv: Sequence[str] | None = None) -> int:
     p.add_argument("--datum", choices=("auto", "ahd", "cd"), default="auto",
                    help="gauge file datum; auto infers it from the record's mean")
     p.add_argument("--time-col"), p.add_argument("--level-col")
+    p.add_argument("--gauge-key", default="tide_gauge",
+                   help="config entry holding the gauge's constants (e.g. tide_gauge_check)")
+    p.add_argument("--tag", default=None,
+                   help="a cross-check gauge: writes <out>/sensitivity/waterlevel_<scene>_<tag>.json, "
+                        "which reference never reads")
     a = p.parse_args(argv)
+    if a.gauge_key != "tide_gauge" and not a.tag:
+        p.error("a gauge other than the site's primary needs --tag, so it can never become the "
+                "water level reference uses")
 
     site = yaml.safe_load(a.config.read_text(encoding="utf-8"))["sites"][a.site]
     # The image estimate needs no gauge; reading a gauge file needs its constants.
-    if a.gauge_file and "tide_gauge" not in site:
-        print(f"site '{a.site}' has no tide_gauge in {a.config}: add the station's datum "
+    if a.gauge_file and a.gauge_key not in site:
+        print(f"site '{a.site}' has no {a.gauge_key} in {a.config}: add the station's datum "
               f"offset and tidal planes before reading its record")
         return 2
-    gauge = Gauge.from_config(site["tide_gauge"]) if "tide_gauge" in site else None
+    gauge = Gauge.from_config(site[a.gauge_key]) if a.gauge_key in site else None
     scene_dir = a.root / "data" / "raw" / "scenes" / a.scene
     prov = json.loads((scene_dir / "provenance.json").read_text(encoding="utf-8"))
     when = datetime.fromisoformat(prov["datetime_utc"].replace("Z", "+00:00"))
@@ -378,7 +393,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                     "status": "measured", "datum_in_file": datum, "interpolation": at,
                     "file": {"path": str(a.gauge_file), "md5": _md5(a.gauge_file), **notes}})
         prev = a.out / f"waterlevel_{a.scene}.json"
-        if prev.exists():
+        if prev.exists() and not a.tag:
             old_rec = json.loads(prev.read_text(encoding="utf-8"))
             if old_rec.get("method") == "image":
                 rec["superseded"] = {k: old_rec.get(k) for k in
@@ -416,11 +431,18 @@ def main(argv: Sequence[str] | None = None) -> int:
               f"HHWSS {gauge.hhwss_ahd:+.3f}")
     rec.update({"written_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
                 "sdb_version": __version__})
-    a.out.mkdir(parents=True, exist_ok=True)
-    jpath = a.out / f"waterlevel_{a.scene}.json"
+    if a.tag:
+        rec["cross_check"] = {"tag": a.tag, "gauge_key": a.gauge_key,
+                              "status": "CROSS-CHECK: never the water level reference uses"}
+    out_dir = a.out / "sensitivity" if a.tag else a.out
+    out_dir.mkdir(parents=True, exist_ok=True)
+    jpath = out_dir / f"waterlevel_{a.scene}{'_' + a.tag if a.tag else ''}.json"
     jpath.write_text(json.dumps(rec, indent=2), encoding="utf-8")
-    print(f"\n  record -> {jpath}\n  reference.py will use {rec['water_level_m_ahd']:+.3f} m AHD "
-          f"({rec['status']}).")
+    if a.tag:
+        print(f"\n  record -> {jpath}\n  cross-check only: reference.py does not read it.")
+    else:
+        print(f"\n  record -> {jpath}\n  reference.py will use {rec['water_level_m_ahd']:+.3f} m AHD "
+              f"({rec['status']}).")
     return 0
 
 

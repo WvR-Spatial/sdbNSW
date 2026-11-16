@@ -379,6 +379,8 @@ PROTOCOL_MARKER = "pre-registered 27 Sep 2026"
 V2_MARKER = "ML, pre-registered 29 Sep 2026"
 #: ...and the Phase 4 (three sites) protocol's.
 PHASE4_MARKER = "three sites, pre-registered 1 Oct 2026"
+#: ...and its one amendment (Northern Beaches open coast only), made before any fit.
+PHASE4_AMENDMENT_MARKER = "Phase 4 amendment, 16 Nov 2026"
 
 #: Phase 4 eligibility: blocks of the primary size holding usable 0-20 m pixels.
 #: Five folds need at least three blocks each; fewer and a site is not fitted.
@@ -596,6 +598,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "protocol_commit": _git_commit(a.root, "PROJECT_BRIEF.md",
                                        V2_MARKER if is_ml else PROTOCOL_MARKER),
         "phase4_protocol_commit": _git_commit(a.root, "PROJECT_BRIEF.md", PHASE4_MARKER),
+        "phase4_amendment_commit": _git_commit(a.root, "PROJECT_BRIEF.md", PHASE4_AMENDMENT_MARKER),
         "eligibility": {"blocks_with_usable_pixels": n_blocks, "min_blocks": MIN_BLOCKS,
                         "block_m": a.block_m},
         "sensitivity": ({"reference_tag": a.reference_tag, "reference_record": str(rpath),

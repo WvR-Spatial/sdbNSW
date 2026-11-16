@@ -141,6 +141,9 @@ def test_cli_end_to_end(tmp_path):
     assert comps[("2-5", "reef")]["bias_diff"]["point"] == pytest.approx(-0.5)
     assert "note" in comps[("2-5", "Zostera/Halophila")]
     assert rec["addendum_commit"] is None and len(rec["figures"]) == 1
+    # no inside_bay polygon: the comparisons cover the whole site, and say so
+    assert rec["comparison_region"].startswith("whole site")
+    assert {r["region"] for r in rec["threshold_0.5"]["errors_by_class"]} == {"whole site"}
     assert all(Path(f).exists() for f in rec["figures"])
     with rasterio.open(sd / "substrate.tif") as s:
         assert s.descriptions[0] == "class_majority"

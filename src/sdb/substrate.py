@@ -211,7 +211,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     poly = (site_cfg.get("strata") or {}).get("inside_bay")
     inside = (inside_polygon(grid.x0 + (cols + 0.5) * grid.dx, grid.y0 - (rows + 0.5) * grid.dy,
                              poly["polygon"]) if poly else np.ones(err.size, bool))
-    regions = {"inside bay": inside, "open coast": ~inside}
+    # Without an inside-bay polygon (sites 2 and 3) the comparisons cover the whole
+    # site. The record keys keep their Jervis Bay names; `comparison_region` says
+    # what they hold.
+    scope = "inside bay" if poly else "whole site"
+    regions = {"inside bay": inside, "open coast": ~inside} if poly else {scope: inside}
     print(f"{a.scene}\n  substrate {gpkg.name}; co-registration shift {shift}; "
           f"assessed pixels {err.size:,}")
 
@@ -267,6 +271,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         "exploratory": ({"name": a.tag, "status": "EXPLORATORY: residuals from an exploratory "
                          "variant of validate.py; not confirmatory"} if a.tag else None),
         "water_level_m_ahd": wl, "coregistration_shift_m": list(shift),
+        "comparison_region": (scope if poly else
+                              "whole site (no inside_bay polygon; keys keep their Jervis Bay names)"),
         "classes": list(CLASSES), "reference_class": CLASSES[REFERENCE],
         "rules": {"majority": MAJORITY, "core": CORE, "trace": TRACE, "supersample_m": grid.dx / SUPERSAMPLE,
                   "min_compare_px": MIN_COMPARE_PX, "boot": a.boot, "boot_seed": BOOT_SEED,
@@ -282,13 +288,14 @@ def main(argv: Sequence[str] | None = None) -> int:
 
         figs = [viz.substrate_contrasts(res_dir / "figures" / f"substrate_{a.scene}{tag}_bias_vs_sediment.png",
                                         record_rules[f"threshold_{MAJORITY:g}"]["vs_reference_inside_bay"],
-                                        COMPARED, band_names)]
+                                        COMPARED, band_names,
+                                        region="inside the bay" if poly else "whole site")]
     record["figures"] = [str(f) for f in figs]
     res_dir.mkdir(parents=True, exist_ok=True)
     jpath = res_dir / f"substrate_{a.scene}{tag}.json"
     jpath.write_text(json.dumps(_r(record), indent=2), encoding="utf-8")
 
-    print(f"\n  inside the bay, bias vs '{CLASSES[REFERENCE]}' (majority rule; core rule in brackets):")
+    print(f"\n  {scope}, bias vs '{CLASSES[REFERENCE]}' (majority rule; core rule in brackets):")
     core = {(c["band_m"], c["class"]): c for c in record_rules[f"threshold_{CORE:g}"]["vs_reference_inside_bay"]}
     for c in record_rules[f"threshold_{MAJORITY:g}"]["vs_reference_inside_bay"]:
         if "bias_diff" in c:
@@ -297,11 +304,12 @@ def main(argv: Sequence[str] | None = None) -> int:
             ks = f"   [{k['point']:+.2f}]" if k else ""
             print(f"    {c['band_m']:>6} m  {c['class']:<18} n {c['n_class']:>7,}  "
                   f"{b['point']:+.2f} m [{b['lo']:+.2f}, {b['hi']:+.2f}]{ks}")
-    print("\n  reef, open coast minus inside bay (bias):")
-    for c in record_rules[f"threshold_{MAJORITY:g}"]["reef_open_minus_inside"]:
-        if "bias_diff" in c:
-            b = c["bias_diff"]
-            print(f"    {c['band_m']:>6} m  {b['point']:+.2f} m [{b['lo']:+.2f}, {b['hi']:+.2f}]")
+    if poly:
+        print("\n  reef, open coast minus inside bay (bias):")
+        for c in record_rules[f"threshold_{MAJORITY:g}"]["reef_open_minus_inside"]:
+            if "bias_diff" in c:
+                b = c["bias_diff"]
+                print(f"    {c['band_m']:>6} m  {b['point']:+.2f} m [{b['lo']:+.2f}, {b['hi']:+.2f}]")
     print(f"\n  record -> {jpath}" + ("" if a.tag else f"\n  layers -> {scene_dir / 'substrate.tif'}"))
     return 0
 

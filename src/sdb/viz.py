@@ -206,7 +206,7 @@ def ratio_depth_curve(path: Path, depth: np.ndarray, ratio: np.ndarray, inside: 
 
 
 def substrate_contrasts(path: Path, comps: list[dict[str, Any]], classes: Sequence[str],
-                        bands: Sequence[str]) -> Path:
+                        bands: Sequence[str], *, region: str = "inside the bay") -> Path:
     """Small multiples: bias of each class minus sediment, by depth band, with 95% CIs."""
     plt = _style()
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -233,7 +233,7 @@ def substrate_contrasts(path: Path, comps: list[dict[str, Any]], classes: Sequen
         ax.set_xlim(-0.5, len(bands) - 0.5)
         ax.set_title(cname, fontsize=9)
     np.atleast_1d(axs)[0].set_ylabel("Bias minus sediment (m)\n+ reads deeper")
-    fig.supxlabel("Lidar depth band (m), inside the bay", fontsize=8, color=INK_2)
+    fig.supxlabel(f"Lidar depth band (m), {region}", fontsize=8, color=INK_2)
     fig.tight_layout()
     fig.savefig(path)
     plt.close(fig)

@@ -37,7 +37,7 @@ from typing import Any, Sequence
 import numpy as np
 
 from sdb import __version__
-from sdb.validate import BLOCK_M, PHASE4_MARKER, _git_commit, _r, block_ids
+from sdb.validate import BLOCK_M, PHASE4_AMENDMENT_MARKER, PHASE4_MARKER, _git_commit, _r, block_ids
 
 # --------------------------------------------------------------------------
 # Constants -- registered in the Phase 4 protocol
@@ -374,6 +374,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     deviations = [f"boot={a.boot} (protocol {N_BOOT})"] if a.boot != N_BOOT else []
     record = {"protocol": "PROJECT_BRIEF.md, Phase 4 protocol (pre-registered 1 Oct 2026)",
               "protocol_commit": _git_commit(a.root, "PROJECT_BRIEF.md", PHASE4_MARKER),
+              "amendment_commit": _git_commit(a.root, "PROJECT_BRIEF.md", PHASE4_AMENDMENT_MARKER),
               "deviations": deviations,
               "metric": {"what": "median red reflectance (B04, as supplied)",
                          "pixels": f"assessed, lidar depth {CLARITY_DEPTH_M[0]:g}-"

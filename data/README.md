@@ -108,7 +108,7 @@ the water level from `waterlevel`, and adds to `raw/scenes/<item id>/`:
 | File | Contents |
 |---|---|
 | `reference.tif` | `z_mean` (m AHD), `coverage` (0–1), `relief` (std of the 5 m cells in each pixel, m), `land_frac` (0–1 at the water level used) — float32, on the scene's own grid |
-| `mask.tif` | uint8 bit flags, 0 = usable: 1 lidar incomplete · 2 land · 4 outside depth window · 8 cloud/shadow · 16 bright NIR over lidar water · 32 no image |
+| `mask.tif` | uint8 bit flags, 0 = usable: 1 lidar incomplete · 2 land · 4 outside depth window · 8 cloud/shadow · 16 bright NIR over lidar water · 32 no image · 64 water not joined to the open sea (sites with `open_sea_point`) |
 
 The small records that explain them — offset measured, datum operation, water
 level assumed, pixel counts by depth band — go to `outputs/` and are committed.
@@ -164,22 +164,71 @@ Received 29 Sep 2026 as `JervisBay.Level1.AHD.Actual.1min.csv`, with MHL's
 and refuses if that contradicts the header. `waterlevel --from-image` remains
 for sites without a gauge; at Jervis Bay it read 0.104 m low.
 
-Sites 2 and 3, requested 1 Oct 2026 in the same format (1-minute, AHD, AEST):
-Sydney **213470** and Patonga **212440**, 26–29 Sep 2018 (Northern Beaches;
-Sydney primary, Patonga cross-check); Princess Jetty, Batemans Bay **216410**,
-22–25 Aug 2018; and the Sydney waverider for 1–29 Sep 2018, as context for
-seabed change between the lidar and the scene. Not Ocean Street Bridge
-(213408D): it records Narrabeen Lagoon, not the sea. Each station's datum
-offset and tidal planes go into its site's `tide_gauge` entry in
-`config/sites.yml` before its record is read.
+Sites 2 and 3, requested 1 Oct 2026 and **received 16 Nov 2026** in the same
+layout, saved as supplied:
+
+```
+raw/MHL/Ocean tide/Sydney.Level1.AHD.Actual.1min.csv          213470  Northern Beaches, primary
+raw/MHL/Ocean tide/Patonga.Level1.AHD.Actual.1min.csv         212440  Northern Beaches, cross-check
+raw/MHL/Ocean tide/PrincessJetty.Level1.AHD.Actual.1min.csv   216410  Batemans Bay
+raw/MHL/Ocean tide/Data conditions and limitations.pdf
+raw/MHL/Wave/SYDDOW 1_9_2018 to 30_9_2018.csv                 Sydney waverider, hourly
+raw/MHL/Wave/sydney_LocationHistory.pdf, Wave Data Analysis and Statistics Aug 2025.pdf
+```
+
+- Each tide record: 1-minute, 22 Aug 00:00 – 30 Sep 00:00 AEST 2018 (more
+  than asked, which covers both overpasses), AHD in the header and confirmed
+  by the mean, quality 55 throughout. One gap: Princess Jetty, 17 minutes
+  from 02:50 AEST 13 Sep.
+- **213470 is MHL's own Sydney gauge** (151.2585, −33.8255, inside the
+  harbour near Middle Head), not Fort Denison.
+- The wave file is hourly Hsig, Hmax, Tz, Tp, direction and sea temperature,
+  1–30 Sep 2018 (647 of 697 hours; MHL filter `DATA_STATUS <= 6`).
+
+Each station's constants are in its site's entry in `config/sites.yml`
+(`tide_gauge`, and `tide_gauge_check` for Patonga), taken from MHL:
+
+| Station | Station datum | AHD = SD − | MSL | ISLW | HHWSS (m AHD, 2018–19) |
+|---|---|---|---|---|---|
+| Jervis Bay 216470 | Jervis Bay Port Datum (1958) | 1.070 | +0.074 | −0.776 | +1.028 |
+| Sydney 213470 | Zero Fort Denison (1897) | 0.925 | +0.050 | −0.807 | +1.005 |
+| Patonga 212440 | AHD | 0.000 | +0.065 | −0.808 | +1.034 |
+| Princess Jetty 216410 | AHD | 0.000 | +0.049 | −0.726 | +0.914 |
+
+Datum adjustments are from the *Data conditions and limitations* PDF. Tidal
+planes are from each station's page, which loads its table by script; the
+table itself is at
+`https://www.mhl.nsw.gov.au/s3/www/stations/planes/<station>_<Name>_table.html`
+(read with a browser-style User-Agent). Not Ocean Street Bridge (213408D): it
+records Narrabeen Lagoon, not the sea.
+
+A cross-check gauge is read into `outputs/sensitivity/` only:
+
+```
+python -m sdb.waterlevel --site narrabeen_long_reef --scene <scene> --gauge-file <Patonga csv> --gauge-key tide_gauge_check --tag patonga
+```
 
 ### 6. Substrate layers  *(fetched via QGIS; never committed)*
 
-Used only to group validation errors, never as model inputs. Saved to
-`raw/substrate/substrate_jervis_bay.gpkg` (layers `macrophytes`, `reef_extent`,
-`reef_sources`; EPSG:4283 as served) with `provenance.json` recording the
-queries, counts and md5. Commit derived statistics only. The services are
-reachable from a desktop (QGIS's Python was used), not from every network.
+Used only to group validation errors, never as model inputs. One GeoPackage
+per site, `raw/substrate/substrate_<site>.gpkg` (layers `macrophytes`,
+`reef_extent`, `reef_sources`; EPSG:4283 as served), which `substrate` reads by
+default, with a provenance JSON recording the queries, counts and md5
+(`provenance.json` for Jervis Bay, `provenance_<site>.json` for the others).
+Commit derived statistics only. The services are reachable from a desktop
+(QGIS's Python was used), not from every network; since Nov 2026 the Fisheries
+service refuses Python's default User-Agent, so send a browser-style one.
+
+| Site | Fetched | Macrophyte / reef-extent / reef-source polygons | Macrophyte mapping |
+|---|---|---|---|
+| Jervis Bay | 27 Sep 2026 | 5,937 / 1,671 / 1,131 | Aug 2019 aerial, field May 2020 |
+| Northern Beaches | 16 Nov 2026 | 1,404 / 1,781 / 475 | Pittwater Aug–Sep 2018 (field Aug 2019); Narrabeen, Dee Why, Manly lagoons Jun 2008 (field May 2010) |
+| Batemans Bay | 16 Nov 2026 | 718 / 1,901 / 1,469 | Clyde, Cullendulla Creek, the bay: 2012–2022 aerial, field Feb 2023 |
+
+The macrophyte layer maps estuaries only. At Northern Beaches every polygon is
+in Pittwater, the lagoons or the Hawkesbury, all outside the open-coast rule,
+so the site's seagrass strata are empty by construction — "not mapped", not
+"absent". Its substrate comparison is reef against sediment.
 
 - **NSW DPI Fisheries — Estuarine Macrophytes** (seagrass: *Posidonia*,
   *Zostera*, *Halophila*). Jervis Bay mapped from Aug 2019 aerial imagery,
@@ -230,6 +279,10 @@ AOI          151.2460, -33.7867, 151.3570, -33.5918  (MGA56 E 337230-347890,
              N 6260100-6281900: clear of SydneyHarbour, flown 18 Aug, and
              BrokenBay, 24 Aug)
 0-20 m       35.5 km2 in the AOI, 34 two-km blocks; laser reached 41.2 m
+open coast   only water joined to the sea at 151.33, -33.74 is assessed
+             (Phase 4 amendment, 16 Nov 2026): at the measured +0.501 m AHD,
+             21.6 km2 usable in 21 two-km blocks; Pittwater and the lagoons
+             (11.5 km2 of water) are flagged 64
 ```
 
 `raw/Narrabeen/NSW Government - DCCEEW/` holds the earlier whole-block extract,

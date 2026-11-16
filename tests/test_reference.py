@@ -307,3 +307,80 @@ def test_tag_alone_runs_a_water_level_sensitivity(tmp_path):
     rec = json.loads((tmp_path / "out" / "sensitivity" / "reference_S_patonga.json").read_text())
     assert rec["water_level_m_ahd"] == pytest.approx(0.3) and rec["lidar"]["path"] == "dem.tif"
     assert not (sd / "reference.tif").exists()
+
+
+# --- site rule: only water joined to the open sea --------------------------------
+
+def _bodies():
+    """Sea on the east, a lagoon behind a one-pixel-wide closed berm, and an estuary
+    cut off by land inside the AOI (as Pittwater is by the Barrenjoey peninsula).
+    A lidar-free margin all round, as on every real scene grid: no water touches
+    an AOI edge, which is why the sea is named by a point, not an edge."""
+    land = np.zeros((12, 14))
+    land[1:-1, 7] = 1.0                 # a peninsula from top to bottom
+    land[4, 1:5] = land[8, 1:5] = 1.0   # inside the west water, a berm all round ...
+    land[5:8, 1] = land[5:8, 4] = 1.0   # ... a lagoon at rows 5-7, cols 2-3
+    cov = np.zeros((12, 14))
+    cov[1:-1, 1:-1] = 1.0
+    land = np.where(cov > 0, land, np.nan)
+    return {"coverage": cov, "land_frac": land,
+            "z_mean": np.where(land > 0, 2.0, -5.0), "relief": np.zeros((12, 14))}
+
+
+SEA = (5, 10)                           # a pixel of open sea
+
+
+def test_sea_connected_keeps_only_water_joined_to_the_seed():
+    from sdb.reference import sea_connected
+
+    ref = _bodies()
+    sea = sea_connected(ref, SEA)
+    assert sea[1:-1, 8:-1].all()                  # open sea, east of the peninsula
+    assert not sea[:, :7].any() and not sea[0].any() and not sea[:, -1].any()
+    west = sea_connected(ref, (2, 2))             # seeded in the estuary instead
+    assert west[1:4, 1:7].all() and not west[5:8, 2:4].any()   # the lagoon stays apart
+
+
+def test_a_corner_touch_does_not_join_two_bodies():
+    from sdb.reference import sea_connected
+
+    land = np.ones((4, 4))
+    land[0:2, 2:4] = 0                            # sea
+    land[2:4, 0:2] = 0                            # a pond touching it only at a corner
+    ref = {"coverage": np.ones((4, 4)), "land_frac": land}
+    sea = sea_connected(ref, (0, 3))
+    assert sea[0:2, 2:4].all() and not sea[2:4, 0:2].any()
+
+
+def test_open_sea_rule_flags_only_cut_off_water_and_is_off_by_default():
+    from sdb.reference import FLAG_NOT_SEA
+
+    ref = _bodies()
+    off = analysis_mask(ref)
+    on = analysis_mask(ref, sea_seed=SEA)
+    assert not (off & FLAG_NOT_SEA).any()
+    cut = (on & FLAG_NOT_SEA) > 0
+    west_water = np.zeros_like(cut)
+    west_water[1:-1, 1:7] = ref["land_frac"][1:-1, 1:7] == 0
+    assert (cut == west_water).all()              # all western water, nothing else
+    assert ((on & ~np.uint8(FLAG_NOT_SEA)) == off).all()       # no other flag changes
+
+
+def test_open_sea_rule_refuses_a_seed_that_is_not_water():
+    from sdb.reference import sea_connected
+
+    ref = _bodies()
+    for bad in ((5, 7), (0, 10), (5, 40)):        # land, the lidar-free margin, off the grid
+        with pytest.raises(ValueError, match="open_sea_point"):
+            sea_connected(ref, bad)
+
+
+def test_point_to_pixel_finds_the_scene_pixel():
+    from pyproj import Transformer
+
+    from sdb.reference import point_to_pixel
+
+    g = Grid(337200.0, 6281920.0, 10.0, 10.0, 1074, 2184)
+    x, y = 337200.0 + 8105.0, 6281920.0 - 16503.0          # inside pixel (1650, 810)
+    lon, lat = Transformer.from_crs("EPSG:32756", "EPSG:4326", always_xy=True).transform(x, y)
+    assert point_to_pixel(lon, lat, "EPSG:32756", g) == (1650, 810)

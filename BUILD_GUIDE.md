@@ -272,20 +272,43 @@ data first: `clarity.py`; `reference --dem/--tag` and `validate
 `outputs/sensitivity/`); and `validate` refusing a site with fewer than 15
 two-kilometre blocks (exit code 3, nothing written).
 
-**→ YOU** — when the MHL records arrive, I add each site's `tide_gauge` block
-from the station sheets. Then, per site (`<site>` / `<scene>`):
+**→ CLAUDE** — when the MHL records arrived (16 Nov): each site's `tide_gauge`
+block (and Northern Beaches' `tide_gauge_check`, Patonga) from MHL's station
+pages, and the *Phase 4 amendment* — Northern Beaches open coast only, by an
+`open_sea_point` in `config/sites.yml` (`reference` flags other water 64).
+Checked on the real Northern Beaches reference before any fit: 21 eligible
+blocks.
+
+**→ YOU** — commit the amendment and config **before** the first `validate` at
+either new site, so its commit predates every fit. Then:
 
 ```
-python -m sdb.waterlevel --site <site> --scene <scene> --gauge-file data\raw\tide\<file>.csv
-python -m sdb.reference  --site <site> --scene <scene>
-python -m sdb.validate   --site <site> --scene <scene>
-python -m sdb.validate   --site <site> --scene <scene> --model gbm
-python -m sdb.validate   --site <site> --scene <scene> --model gbm_xy
+rem water levels (the cross-check writes only to outputs\sensitivity\)
+python -m sdb.waterlevel --site narrabeen_long_reef --scene S2A_56HLH_20180927_1_L2A --gauge-file "data\raw\MHL\Ocean tide\Sydney.Level1.AHD.Actual.1min.csv"
+python -m sdb.waterlevel --site narrabeen_long_reef --scene S2A_56HLH_20180927_1_L2A --gauge-file "data\raw\MHL\Ocean tide\Patonga.Level1.AHD.Actual.1min.csv" --gauge-key tide_gauge_check --tag patonga
+python -m sdb.waterlevel --site batemans_bay --scene S2B_56HKF_20180823_1_L2A --gauge-file "data\raw\MHL\Ocean tide\PrincessJetty.Level1.AHD.Actual.1min.csv"
+```
+
+Expect +0.501 (Sydney), +0.539 (Patonga) and −0.181 m AHD (Princess Jetty),
+each superseding the provisional image estimate. Sydney and Patonga differ by
+0.04 m, under the protocol's 0.10 m, so there is **no water-level sensitivity
+run**. Then per site (`<site>` / `<scene>`):
+
+```
+python -m sdb.reference --site <site> --scene <scene>
+python -m sdb.validate  --site <site> --scene <scene>
+python -m sdb.validate  --site <site> --scene <scene> --model gbm
+python -m sdb.validate  --site <site> --scene <scene> --model gbm_xy
+python -m sdb.substrate --site <site> --scene <scene>
 ```
 
 Northern Beaches is `narrabeen_long_reef` / `S2A_56HLH_20180927_1_L2A`; Batemans
-Bay is `batemans_bay` / `S2B_56HKF_20180823_1_L2A`. The sensitivity run (Northern
-Beaches only), on the ELVIS-averaged whole-block extract:
+Bay is `batemans_bay` / `S2B_56HKF_20180823_1_L2A`. At Northern Beaches
+`reference` should report ~115k pixels (11.5 km²) *not connected to the open
+sea* and 21.6 km² usable, and `validate` 21 blocks; anything far from that,
+stop. `substrate` compares over the whole site (no inside-bay polygon) and says
+so. The reference-averaging sensitivity run (Northern Beaches only), on the
+ELVIS-averaged whole-block extract — the open-sea rule applies to it too:
 
 ```
 python -m sdb.reference --site narrabeen_long_reef --scene S2A_56HLH_20180927_1_L2A --dem "data/raw/Narrabeen/NSW Government - DCCEEW/DEM/5 Metre/NSW_Marine_5m_TopoBathy_DEM.tif" --tag elvis_avg
@@ -293,10 +316,7 @@ python -m sdb.validate  --site narrabeen_long_reef --scene S2A_56HLH_20180927_1_
 python -m sdb.validate  --site narrabeen_long_reef --scene S2A_56HLH_20180927_1_L2A --reference-tag elvis_avg --model gbm
 ```
 
-If Sydney and Patonga differ by more than 0.10 m at the overpass, the
-water-level sensitivity is the same pattern with `--water-level <Patonga's
-level> --tag patonga` on `reference` (no `--dem`) and `--reference-tag patonga`
-on `validate`. Then the cross-site analysis, once, over all three:
+Then the cross-site analysis, once, over all three:
 
 ```
 python -m sdb.clarity --run jervis_bay=S2A_56HKG_20180907_0_L2A --run narrabeen_long_reef=S2A_56HLH_20180927_1_L2A --run batemans_bay=S2B_56HKF_20180823_1_L2A

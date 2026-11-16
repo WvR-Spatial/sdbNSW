@@ -75,6 +75,14 @@ def test_an_ambiguous_mean_is_refused():
         infer_datum(np.full(10, 0.61), JB)
 
 
+def test_a_station_recorded_in_ahd_still_checks_the_mean():
+    g = Gauge(station="212440", name="Patonga", ahd_offset_m=0.0, msl_ahd=0.065,
+              islw_ahd=-0.808, hhwss_ahd=1.034, source="test")
+    assert infer_datum(np.array([0.0, 0.13]), g) == "ahd"
+    with pytest.raises(ValueError, match="recorded in AHD"):
+        infer_datum(np.array([6.5, 6.5]), g)                     # centimetres
+
+
 def test_chart_datum_converts_with_the_station_offset():
     assert to_ahd(np.array([1.144]), "cd", JB)[0] == pytest.approx(0.074)
 
@@ -299,3 +307,34 @@ def test_gauge_file_needs_gauge_constants_but_the_image_estimate_does_not(tmp_pa
     rc = main(["--site", "newsite", "--config", str(cfg), "--scene", "S2X",
                "--root", str(tmp_path), "--gauge-file", str(tmp_path / "g.csv")])
     assert rc == 2
+
+
+def test_a_cross_check_gauge_needs_a_tag_and_never_becomes_the_level(tmp_path):
+    """Phase 4: Patonga is read beside Sydney, but only into sensitivity/."""
+    import yaml
+
+    from sdb import waterlevel
+
+    root = tmp_path
+    sd = root / "data" / "raw" / "scenes" / "S"
+    sd.mkdir(parents=True)
+    (sd / "provenance.json").write_text(json.dumps({"datetime_utc": "2018-09-07T00:02:37Z"}))
+    consts = {"station": "1", "name": "J", "ahd_offset_m": 0.0, "msl_ahd": 0.074,
+              "islw_ahd": -0.776, "hhwss_ahd": 1.028}
+    cfg = root / "sites.yml"
+    cfg.write_text(yaml.safe_dump({"sites": {"t": {"reference_dem": "x", "tide_gauge": consts,
+                                                   "tide_gauge_check": dict(consts, name="P")}}}))
+    out = root / "o"
+    out.mkdir()
+    primary = out / "waterlevel_S.json"
+    primary.write_text(json.dumps({"method": "gauge", "status": "measured", "water_level_m_ahd": 0.5}))
+    csv = root / "p.csv"
+    _write_mhl_export(csv)
+    args = ["--site", "t", "--config", str(cfg), "--scene", "S", "--root", str(root), "--out", str(out),
+            "--gauge-file", str(csv), "--gauge-key", "tide_gauge_check"]
+    with pytest.raises(SystemExit):
+        waterlevel.main(args)                                  # no --tag
+    assert waterlevel.main(args + ["--tag", "patonga"]) == 0
+    rec = json.loads((out / "sensitivity" / "waterlevel_S_patonga.json").read_text())
+    assert rec["cross_check"]["gauge_key"] == "tide_gauge_check" and "superseded" not in rec
+    assert json.loads(primary.read_text())["water_level_m_ahd"] == 0.5   # untouched

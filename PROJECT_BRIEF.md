@@ -29,11 +29,18 @@ helped on 2 km blocks, by interpolating the survey itself.
 **Phase 4 (three sites): protocol pre-registered 1 Oct**, before any fit at the
 new sites. Northern Beaches (Queenscliff–Palm Beach, one survey block) and
 Batemans Bay (site 3; Richmond rejected) have native lidar, scenes and
-co-registration in hand; water levels await MHL. Found on the way: **ELVIS
+co-registration in hand. Found on the way: **ELVIS
 averages any extract that spans more than one survey block** — most of Jervis
 Bay's reference is affected, by ~0.13 m RMS, which leaves its results inside
 their intervals but compromises its relief strata.
-**Updated:** 1 Oct 2026 · **Repo:** `sdbNSW`
+**16 Nov, still before any fit:** water levels **measured** — Northern Beaches
++0.501 m AHD (Sydney; Patonga +0.539, so no water-level sensitivity run),
+Batemans Bay −0.181 m AHD (Princess Jetty). The image estimate was right at the
+surf coast and **0.70 m wrong at the estuary**. **One amendment:** Northern
+Beaches is assessed on the **open coast only** — Pittwater and the lagoons are
+excluded (21 two-km blocks remain; eligible). Substrate layers fetched for
+both new sites.
+**Updated:** 16 Nov 2026 · **Repo:** `sdbNSW`
 **Portfolio slot:** replaces *Revealing the Ancient Murray via REM*.
 
 This is a living document. Revise it as decisions change — do not let the repo
@@ -79,7 +86,7 @@ three give the relationship between error and the thing that drives it.
 | # | Site | Role | bbox (WGS84) |
 |---|---|---|---|
 | 1 | Jervis Bay | Best case — sheltered, clear, mixed substrate | **Measured:** 150.6607, −35.1504, 150.8083, −34.9735 (block NSW020502) |
-| 2 | Northern Beaches (Queenscliff–Palm Beach) | Exposed, surf-dominated | **Measured:** 151.2460, −33.7867, 151.3570, −33.5918 — the single-date part of block NSW020302 (flown to 18 Sep 2018) |
+| 2 | Northern Beaches (Queenscliff–Palm Beach) | Exposed, surf-dominated | **Measured:** 151.2460, −33.7867, 151.3570, −33.5918 — the single-date part of block NSW020302 (flown to 18 Sep 2018). **Open coast only** (amendment, 16 Nov): Pittwater and the lagoons inside the box are excluded |
 | 3 | Batemans Bay / Clyde mouth | Turbid end — estuarine plume | **Measured:** 150.1592, −35.7700, 150.2906, −35.6870 — block NSW020602 (24 Aug 2018), two native boxes joined |
 
 *Richmond River (Ballina) was screened and rejected on 1 Oct: a small plume
@@ -98,7 +105,7 @@ built in `narrabeen-stage1`.
 | [NSW Marine LiDAR Topo-Bathy 2018](https://datasets.seed.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018) | 5 m grid, IHO Order 1b, AHD, shore to 20–40 m, Jul–Dec 2018. **Order inside one survey block's raster**: an extract spanning several is averaged ("Average 16"); check with `scripts/dem_extracts.py` | [ELVIS](https://elevation.fsdf.org.au/) / AODN, manual area select | **CC BY 4.0** | **Yes** — clipped subsets, with attribution |
 | Sentinel-2 L2A | 10 m multispectral COGs | Earth Search STAC on AWS, anonymous | Copernicus open | No — derived results only |
 | MHL tide gauge 216470, Jervis Bay (HMAS Creswell) | Observed water level at overpass. **Received 29 Sep**: `JervisBay.Level1.AHD.Actual.1min.csv`, 6–9 Sep 2018, 1-minute, complete (4,321 samples), supplied in **AHD** (station datum Jervis Bay Port Datum 1958 − 1.070 m), AEST ±2 min, quality code 55 throughout (±20 mm) | MHL data request (form or data-request@mhl.nsw.gov.au) | CC BY 4.0, attribute NSW DCCEEW | Raw file no (`data/raw/tide/`); derived value yes |
-| MHL gauges for sites 2–3 | **Requested 1 Oct**: Sydney 213470 and Patonga 212440, 26–29 Sep 2018; Princess Jetty 216410, 22–25 Aug 2018; 1-minute, AHD. Sydney waverider, 1–29 Sep 2018 (seabed-change context) | As above | As above | As above |
+| MHL gauges for sites 2–3 | **Received 16 Nov** (requested 1 Oct): Sydney 213470, Patonga 212440 and Princess Jetty 216410, each 22 Aug – 30 Sep 2018 AEST, 1-minute, AHD, quality 55 throughout. Sydney waverider, hourly, 1–30 Sep 2018 (seabed-change context). Datum offsets and tidal planes from MHL's station pages (`data/README.md`, section 5) | As above | As above | Raw files no (`data/raw/MHL/`); derived values yes |
 | NSW Imagery (Spatial Services) | Orthophoto windows for co-registration only | ArcGIS REST Export Map, anonymous | Catalogue: CC BY 3.0 AU; Spatial Services excludes images from its CC licence | **No** — cached in `data/raw/ortho/`, never redistributed or drawn |
 | ERA5 10 m wind | Scene selection only — glint pre-screen | [Open-Meteo](https://open-meteo.com/) archive API, anonymous | CC BY 4.0 | No — fetched at run time |
 | NSW DPI Fisheries *Estuarine Macrophytes* | Seagrass stratum: *Posidonia*, *Zostera*, *Halophila*. Jervis Bay from **Aug 2019** aerial imagery (object-based classification), field-checked **May 2020** (project MEMS). 2,356 seagrass polygons in the bay | ArcGIS REST (`Fisheries_Portal/Estuarine_Macrophytes`), fetched via QGIS | © NSW DPI Fisheries; **CC BY 4.0** as stated by the custodian's service (an IMAS redistribution states CC BY-NC) | No (`data/raw/substrate/`) — derived statistics only |
@@ -670,6 +677,39 @@ the gradient into the sample.
   between them — exposure, substrate, scene, atmosphere. The within-site block
   test is the one that can.
 
+### Phase 4 amendment, 16 Nov 2026 — Northern Beaches open coast only
+
+Made before any depth model was fitted at Northern Beaches or Batemans Bay,
+from the lidar, the habitat maps and the gauge records only. Everything else in
+the protocol stands.
+
+**What changes.** At Northern Beaches only water joined to the open sea is
+assessed: the lidar water body, 4-connected at the measured water level, that
+holds a named open-sea point (151.33, −33.74; ~3 km off Collaroy, 23 m deep).
+Other fully-covered water is flagged *not connected to the open sea* (mask bit
+64) and leaves every statistic, including the clarity metric and the block
+count. Batemans Bay and Jervis Bay are unchanged: each is one water body.
+
+**Why.** The box was drawn from the survey block's single-date window, and
+that window also holds **Pittwater** — a sheltered estuary joined to the sea
+only through Broken Bay, outside the box — and Narrabeen and Dee Why lagoons,
+whose levels are not the sea's. Together they hold 10.7 of the 32.3 km² of
+usable water, and 13 of the 34 two-km blocks hold nothing else. The site's registered role is *exposed,
+surf-dominated open coast*; with Pittwater in, a third of it would be sheltered
+estuary, mixing exposure into the very gradient the within-site block test is
+meant to isolate. The lagoons would sit at the wrong water level.
+
+**Effect, checked on the real reference at +0.501 m AHD before any fit.** The
+rule removes 11.5 km² of water; **21.6 km² usable in 21 two-km blocks**
+remain (32.3 km² and 34 blocks without it), so eligibility (≥ 15) still holds.
+About 0.03 km² of near-shore sea at Newport, cut off from the ocean by a
+lidar gap in the surf zone, is excluded with it — conservative, and too small
+to matter.
+
+**Not changed:** the four predictions, the sensitivity runs, the scene, the
+clarity metric's definition. Prediction 2 now refers to the open coast, which
+is what the site was registered to be.
+
 ## Error budget
 
 | Term | Magnitude | Note |
@@ -778,8 +818,9 @@ SDB-versus-lidar comparison, plus the repo. Limitations panel above results.
 - [x] **Observed water level at overpass** — MHL Jervis Bay (216470): −0.392 m AHD at 10:02:37 AEST, 7 Sep 2018
 - [x] Site 3 — **Batemans Bay**; Richmond rejected (register, 1 Oct)
 - [x] Phase 4 protocol — pre-registered 1 Oct (*Phase 4 protocol*)
-- [ ] MHL gauge records for sites 2–3 and the Sydney wave record (requested 1 Oct)
-- [ ] Substrate layers for sites 2–3 — optional; only if fetched before `validate` runs
+- [x] MHL gauge records for sites 2–3 and the Sydney wave record — received 16 Nov; water levels measured
+- [x] Substrate layers for sites 2–3 — fetched 16 Nov, before any `validate` run
+- [x] Northern Beaches extent — **open coast only** (*Phase 4 amendment, 16 Nov*)
 - [x] Atmospheric correction — **L2A as supplied** for v1; ACOLITE only as diagnosis if the gate fails
 - [x] Sun glint correction — **none** for v1 (register, 27 Sep)
 - [x] Whether ML enters v1 — **no**; v2 pre-registered 29 Sep (*v2 protocol*): gradient boosting, spectral features only, same folds, paired against Stumpf
@@ -862,6 +903,12 @@ defensible piece of work.
 | 1 Oct | **Gauges: Sydney 213470 (primary) and Patonga 212440 (cross-check) for Northern Beaches; Princess Jetty 216410 for Batemans Bay. Not Ocean Street Bridge (213408D)** | The two ocean-connected gauges bracket the site, so their difference is a measured uncertainty. Ocean Street Bridge records Narrabeen Lagoon, whose entrance damps and delays the tide |
 | 1 Oct | **Phase 4 protocol pre-registered** before any fit at sites 2 or 3 | Eligibility from the lidar and dates, clarity from the image, the scene and gauge rules, four predictions and two sensitivity runs, all fixed first. The within-site block test is the inferential core, because three sites cannot separate clarity from everything else that differs between them |
 | 1 Oct | **Phase 4 code written after the protocol commit `a5b5f5d`, tested on synthetic data only**: `clarity.py` (metric, block table, Spearman with block-resampled intervals, mean of within-site correlations, gate 4, the four predictions evaluated as written); `reference --dem/--tag` and `validate --reference-tag` for sensitivity runs, which can only write tagged files and `outputs/sensitivity/`; `validate` exits without fitting below 15 blocks | Same order as Phase 2: protocol, then code, then real data. A test pins the design's reason for the within-site mean: two sites that differ only in level give a pooled Spearman above 0.7 and a within-site mean near 0. Another pins that a sensitivity run leaves the registered outputs byte-identical |
+| 16 Nov | **Substrate layers fetched for Northern Beaches and Batemans Bay**, before any `validate` run, as the protocol allows. Same queries and class rules as Jervis Bay; one GeoPackage per site (`substrate_<site>.gpkg`, with `provenance_<site>.json`). Northern Beaches 1,404 macrophyte, 1,781 reef-extent, 475 reef-source polygons; Batemans Bay 718, 1,901, 1,469 | Macrophyte mapping dates differ by water body: Pittwater Aug–Sep 2018 (contemporaneous), the lagoons 2008, Batemans Bay/Clyde 2012–2022. New classes (*Posidonia* – Sparse, *Zostera* – Sparse) fall under the addendum's rules unchanged. The Fisheries service now refuses Python's default User-Agent (403); a browser-style one was sent. `substrate` now defaults to the site's own GeoPackage, so a site can never read another's layers (`391c625`) |
+| 16 Nov | **MHL records received and checked before use.** Sydney 213470, Patonga 212440, Princess Jetty 216410: 1-minute, 22 Aug – 30 Sep 2018 AEST, AHD in the header and confirmed by each record's mean (−0.035 to −0.049 m over five weeks, against MSL +0.05 to +0.065), quality 55 throughout; one 17-minute gap (Princess Jetty, 02:50 AEST 13 Sep). Datum adjustments from MHL's *Data conditions* sheet (Sydney: Zero Fort Denison 1897, 0.925 m; the other two record in AHD); tidal planes from MHL's station pages, 2018–19 column | **213470 is MHL's own Sydney gauge** (151.2585, −33.8255, inside the harbour near Middle Head), **not Fort Denison** as the 1 Oct request assumed. A station recorded in AHD made the datum inference ambiguous by construction (both candidates coincide) and `waterlevel` refused it; for such stations it now checks only that the mean sits at MSL, which still catches centimetres or a wrong file. Pinned by a test |
+| 16 Nov | **Water levels measured.** Northern Beaches **+0.501 m AHD** (Sydney, 10:06:03 AEST 27 Sep, falling 0.09 m/h); Patonga +0.539, a **0.038 m** difference — under the protocol's 0.10 m, so no water-level sensitivity run; the difference is reported as the uncertainty. Batemans Bay **−0.181 m AHD** (Princess Jetty, 10:06:33 AEST 23 Aug, falling 0.12 m/h) | Patonga was read with `waterlevel --gauge-key tide_gauge_check --tag patonga`, which writes only to `outputs/sensitivity/` — a cross-check gauge can never become the level `reference` uses. Princess Jetty sits ~3 km up the Clyde; its M2 tide lags the coast by ~22 min, worth ~0.04 m at the overpass's rate. Reported as uncertainty, not corrected — the protocol named the gauge |
+| 16 Nov | **The image estimate held at the surf coast and failed at the estuary.** Northern Beaches: image +0.493 vs gauge +0.501 (0.008 m low). Batemans Bay: image +0.520 vs gauge −0.181 — **0.70 m high**, opposite in sign to Jervis Bay's 0.10 m low bias | The 1 Oct worry was surf; the failure came from the estuary instead. Cause not investigated (no fit depends on it now). Lesson: the protocol's fallback (image + Jervis Bay's bias) would have put Batemans Bay's reference ~0.8 m wrong. The image estimate is a check on a gauge, not a substitute for one |
+| 16 Nov | **Sydney wave record: no storm between the survey and the scene.** Hourly Hs, 647 of 697 hours present. 18 Sep (lidar end) to the overpass: median 1.53 m, p90 2.18 m, max 2.81 m (04:00 24 Sep, Tp 10 s, S); 1–17 Sep max 2.85 m. At the overpass Hs ~1.8 m, Tp ~15 s from the SSE | Sandbars may still have moved in nine days of ordinary swell; nothing exceptional. Reported beside the 0–5 m results as registered, no correction. A 15 s groundswell at the overpass is consistent with the bright-NIR flag removing 2.0 km² of surf-zone water |
+| 16 Nov | **Phase 4 amendment: Northern Beaches open coast only** (*Phase 4 amendment, 16 Nov 2026*) — Pittwater and the lagoons excluded by a named open-sea point; 21.6 km² in 21 blocks remain | My error: the AOI was drawn from the block's single-date window without checking which water bodies it held, and Pittwater is a third of it. Caught while reading the substrate layers, before any fit; Warren chose the open coast only. **The first implementation was wrong too:** it took water touching the AOI's east edge, tested on synthetic grids filled to the edge; on the real grid a lidar-free margin surrounds everything, so nothing touched any edge and `reference` refused. Replaced by the seed point, and the test fixture now carries the margin. Lesson, again: synthetic tests check the logic, not the assumption about the data's shape — run on the real input before calling it done |
 
 ## Sources
 
