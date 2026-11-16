@@ -325,6 +325,12 @@ python -m sdb.clarity --run jervis_bay=S2A_56HKG_20180907_0_L2A --run narrabeen_
 It writes `outputs/phase4/clarity.json` and one figure, and prints each
 registered prediction as held or failed. Bring back the comparison.
 
+*Run 16 Nov.* The first run's Northern Beaches block correlation was a
+computing error (missing red values ranked as the largest). That record is
+kept as `outputs/phase4/clarity_run1_superseded.json`; `clarity.json` is the
+corrected rerun and says so under `deviations`. Results and their limits:
+`PROJECT_BRIEF.md`, *Phase 4 result*.
+
 **Gate:** does error track water clarity monotonically? If it does, you have a
 clean finding. If it does not, that is a more interesting finding — report it
 and say what you think is confounding it.

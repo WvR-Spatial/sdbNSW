@@ -33,13 +33,23 @@ co-registration in hand. Found on the way: **ELVIS
 averages any extract that spans more than one survey block** — most of Jervis
 Bay's reference is affected, by ~0.13 m RMS, which leaves its results inside
 their intervals but compromises its relief strata.
-**16 Nov, still before any fit:** water levels **measured** — Northern Beaches
+**16 Nov, before any fit:** water levels **measured** — Northern Beaches
 +0.501 m AHD (Sydney; Patonga +0.539, so no water-level sensitivity run),
 Batemans Bay −0.181 m AHD (Princess Jetty). The image estimate was right at the
 surf coast and **0.70 m wrong at the estuary**. **One amendment:** Northern
 Beaches is assessed on the **open coast only** — Pittwater and the lagoons are
-excluded (21 two-km blocks remain; eligible). Substrate layers fetched for
-both new sites.
+excluded (21 two-km blocks remain; eligible).
+**Phase 4 run, 16 Nov** (*Phase 4 result*): Stumpf **3.03 m** at Northern
+Beaches and **2.96 m** at Batemans Bay against Jervis Bay's 2.68; gbm **2.40**
+and **2.45** against 1.88, better than Stumpf at every site. **Gate 4 is not
+met:** error does not rise with the clarity metric across the three sites —
+the site that reads clearest has the largest error. Three predictions held
+(two partly on point estimates alone); **one failed** (no turbidity–error
+trend inside Batemans Bay, 12 blocks). Within sites, block error rises with block
+red reflectance on average (+0.35 [+0.09, +0.59]), but the depth mix of the
+blocks confounds that test in opposite directions at the two new sites, so it
+is not yet evidence about turbidity. One computing error was found and
+corrected after the first run; both results are reported.
 **Updated:** 16 Nov 2026 · **Repo:** `sdbNSW`
 **Portfolio slot:** replaces *Revealing the Ancient Murray via REM*.
 
@@ -710,6 +720,126 @@ to matter.
 clarity metric's definition. Prediction 2 now refers to the open coast, which
 is what the site was registered to be.
 
+### Phase 4 result — three sites, 16 Nov 2026
+
+Run once per site after the amendment commit `2cd2f53` (20:57 AEDT; the first
+fit was written at 21:06), with no deviation in any `validate` run.
+`outputs/`, `outputs/v2/`, `outputs/sensitivity/`, `outputs/phase4/`.
+
+| | Jervis Bay | Northern Beaches (open coast) | Batemans Bay |
+|---|---|---|---|
+| Scene · water level (m AHD) | 7 Sep 2018 · −0.392 | 27 Sep 2018 · +0.501 | 23 Aug 2018 · −0.181 |
+| Assessed · 2 km blocks | 93.3 km² · 68 | 21.6 km² · 21 | 27.5 km² · 20 |
+| **Clarity metric** (median red, 10–20 m) | 0.0037 | 0.0022 | 0.0053 |
+| **Stumpf** pooled RMSE | 2.68 m [2.31, 3.13] | **3.03 m** [2.81, 3.22] | **2.96 m** [2.32, 3.52] |
+| Stumpf bias · depth-balanced RMSE | −0.42 · 2.48 m | −0.55 · 3.02 m | −0.40 · 2.73 m |
+| **gbm** pooled RMSE | 1.88 m [1.67, 2.13] | **2.40 m** [2.20, 2.58] | **2.45 m** [1.86, 2.95] |
+| gbm bias · depth-balanced RMSE | −0.12 · 1.53 m | −0.31 · 2.12 m | −0.15 · 2.10 m |
+| **gbm − Stumpf**, paired | −0.80 [−1.06, −0.57] | −0.63 [−0.78, −0.50] | −0.51 [−0.90, −0.15] |
+| Stumpf RMSE by band, 0–2 / 2–5 / 5–10 / 10–15 / 15–20 m | 2.11 / 2.67 / 2.07 / 2.06 / 3.46 | 3.90 / 2.66 / 2.55 / 2.42 / 3.58 | 2.04 / 2.76 / 2.22 / 2.62 / 4.01 |
+| gbm RMSE by band | 0.55 / 1.32 / 1.88 / 1.80 / 2.11 | 1.51 / 1.74 / 2.44 / 2.34 / 2.57 | 0.60 / 2.24 / 2.43 / 2.27 / 2.94 |
+| Breakdown depth, CATZOC C / B: Stumpf · gbm | 0 / 0 · 3 / 2 m | 0 / 0 · 0 / 0 m | 0 / 0 · 2 / 1 m |
+| Blocked/random: Stumpf · gbm · gbm_xy | 1.008 · 1.060 · 1.777 | 1.010 · 1.069 · 2.936 | 0.982 · 1.159 · 4.260 |
+| Residual correlation range | 4 km | 1 km | 2 km |
+| **Block test:** Spearman, block red vs block RMSE at 10–20 m — Stumpf | +0.52 [+0.25, +0.71], 48 blocks | +0.70 [+0.32, +0.89], 20 blocks | −0.18 [−0.77, +0.51], 12 blocks |
+| — gbm | +0.55 [+0.27, +0.76] | +0.39 [−0.05, +0.74] | −0.00 [−0.63, +0.75] |
+
+**Mean of the within-site correlations** (the registered inferential test):
+Stumpf **+0.35** [+0.09, +0.59], gbm **+0.31** [+0.05, +0.58].
+
+**Gate 4 — not met.** Ordered by the clarity metric the sites run Northern
+Beaches, Jervis Bay, Batemans Bay; Stumpf RMSE runs 3.03, 2.68, 2.96 and gbm
+2.40, 1.88, 2.45. The site that reads clearest has the largest error. As the
+gate says, that is the finding.
+
+**Predictions, as written before the run:**
+
+1. **Held, weakly.** Batemans Bay has the highest red reflectance. But the
+   three values span 0.003, the size the protocol said atmosphere alone could
+   produce, and at Northern Beaches 10% of the 10–20 m pixels sit on the
+   product's red floor (0.0001): its red is at the limit of the atmospheric
+   correction. The ordering is not established as a property of the water.
+2. **Held on the point estimates, as registered** (3.03 and 2.96 against
+   2.68). The intervals overlap, most of all at Batemans Bay; this does not
+   show the new sites are harder.
+3. **Failed.** Inside Batemans Bay, Stumpf block error does not rise with block
+   red reflectance: −0.18 [−0.77, +0.51]. Only 12 blocks hold 200 pixels at
+   10–20 m, and block red spans a narrow range (0.0043–0.0074), so the test
+   could have confirmed only a very strong trend. The block count was knowable
+   from the lidar before the run and should have been checked when the
+   prediction was written.
+4. **Held.** gbm beats Stumpf at every site with intervals clear of zero, by
+   less at Batemans Bay (0.51 m) than at Jervis Bay (0.80 m) — the second half
+   on point estimates; those two intervals overlap.
+
+**One deviation — both results reported.** The first run of `clarity`
+(`outputs/phase4/clarity_run1_superseded.json`) gave Northern Beaches a block
+correlation of −0.16 [−0.63, +0.33] (Stumpf) and −0.22 [−0.72, +0.22] (gbm),
+and a mean within-site correlation of +0.06 [−0.19, +0.33] and +0.11 [−0.18,
++0.39]. Those were a computing error: 59 of the site's 151,486 clarity pixels
+have no red value in the product; the site metric left them out (as written
+and tested on 1 Oct), but the block metric did not, so 13 of 20 block medians
+became NaN and were then ranked as the largest values. The correction leaves
+those pixels out of the block median and RMSE alike; counting them as zero
+instead gives the same correlations to four decimals. Jervis Bay, Batemans
+Bay, gate 4 and all four predictions are identical in both runs.
+
+**The block test is confounded by depth — read it with that.** Stumpf's error
+grows with depth inside the 10–20 m window, and blocks differ in their depth
+mix. From the block table in `clarity.json` (Spearman, no intervals):
+
+| | Block mean depth vs Stumpf block RMSE | Block red vs block mean depth |
+|---|---|---|
+| Jervis Bay | +0.62 | +0.06 |
+| Northern Beaches | +0.71 | **+0.70** |
+| Batemans Bay | +0.64 | **−0.71** |
+
+At Northern Beaches the redder blocks are the deeper, offshore ones, so depth
+alone would produce the +0.70; at Batemans Bay the redder blocks are the
+shallower ones near the Clyde, so depth works against any turbidity effect and
+may be hiding one. Only at Jervis Bay is the test clean of this. The
+registered statistic stands as registered; what it measures is "error rises
+with red reflectance", not yet "error rises with turbidity". A depth-adjusted
+version would be exploratory and is not run here.
+
+**Leakage demonstration, repeated.** A model given coordinates looks three to
+four times better under a random split than on 2 km blocks (Northern Beaches
+0.91 vs 2.66 m; Batemans Bay 0.51 vs 2.16 m). On blocks it is worse than
+spectral gbm at Northern Beaches (2.66 vs 2.40) and better at Batemans Bay
+(2.16 vs 2.45, interval [1.19, 2.99]) — not a registered comparison.
+
+**Substrate, addendum rules unchanged** (whole site; no seagrass class
+reaches 1,000 pixels in any depth band). Reef reads deeper than sediment at the same depth at
+both new sites, as at Jervis Bay from 5 m down: Northern Beaches +1.84 m
+(2–5 m), +2.20 (5–10), +1.27 (10–15), all clear of zero, and +0.03 [−0.58,
++0.57] at 15–20 m; Batemans Bay +3.95 (0–2 m), +3.28, +2.54, +2.79, +2.47,
+all clear of zero. The reef bias is now the most replicated result in the
+project.
+
+**Sensitivity — reference averaging** (Northern Beaches against the
+ELVIS-averaged extract). Pooled RMSE moves by −0.02 m for both models and no
+depth band by more than 0.07 m; gbm − Stumpf by 0.002 m. The relief terciles
+do move — their edges fall from 0.09 / 0.17 m to 0.06 / 0.11 m and tercile
+RMSE shifts by up to 0.17 m. That is the 1 Oct reading of Jervis Bay's
+reference, now measured: its pooled results stand, its relief strata do not.
+
+**Northern Beaches shallows.** Stumpf reads 3.1 m too deep at 0–2 m, and only
+12% of the reference's 0–2 m pixels are assessed (bright-NIR surf removes
+most). The scene is nine days after the lidar with a 1.8 m, 15 s swell
+running; no storm intervened (register, 16 Nov). Surf, foam and moved sand
+cannot be separated here.
+
+**What it means.** Stumpf lands at 2.7–3.0 m at all three sites with
+overlapping intervals. gbm lands at 1.9–2.5 m and is distinguishably worse on
+the open coast than in Jervis Bay (2.40 [2.20, 2.58] against 1.88 [1.67,
+2.13]). Nothing here shows clarity driving the differences between sites:
+the metric is too close to the atmospheric correction's floor to rank them,
+and the drivers that are measured inside sites are depth, reef and exposure.
+The ML advantage survives at every site and is smallest at Batemans Bay, as
+predicted, though not separably. The question the phase asked — does error
+track clarity — is answered "not across these sites, and not shown within
+them".
+
 ## Error budget
 
 | Term | Magnitude | Note |
@@ -748,7 +878,7 @@ between the two dates reported beside them.
 | 1 | Seabed visibly resolvable in the scene; lidar and imagery align | Try another scene/date before touching the method |
 | 2 | Site 1 RMSE within ~2× literature (< ~4 m) | Diagnose water level, glint, atmospheric correction — do not tune blindly |
 | 3 | Blocked-CV result holds within ~30% of naive split | If not, the naive number was the illusion; report both |
-| 4 | Sites 2 and 3 produce a monotonic error–clarity relationship | If not, that is itself the finding — report it |
+| 4 | Sites 2 and 3 produce a monotonic error–clarity relationship | If not, that is itself the finding — report it. **Not met, 16 Nov** (*Phase 4 result*) |
 
 ## What this is not
 
@@ -821,6 +951,8 @@ SDB-versus-lidar comparison, plus the repo. Limitations panel above results.
 - [x] MHL gauge records for sites 2–3 and the Sydney wave record — received 16 Nov; water levels measured
 - [x] Substrate layers for sites 2–3 — fetched 16 Nov, before any `validate` run
 - [x] Northern Beaches extent — **open coast only** (*Phase 4 amendment, 16 Nov*)
+- [x] Phase 4 run — 16 Nov (*Phase 4 result*); gate 4 not met; one deviation, both results kept
+- [ ] Depth-adjusted block test — exploratory, not registered; decide whether to run it before the write-up
 - [x] Atmospheric correction — **L2A as supplied** for v1; ACOLITE only as diagnosis if the gate fails
 - [x] Sun glint correction — **none** for v1 (register, 27 Sep)
 - [x] Whether ML enters v1 — **no**; v2 pre-registered 29 Sep (*v2 protocol*): gradient boosting, spectral features only, same folds, paired against Stumpf
@@ -909,6 +1041,9 @@ defensible piece of work.
 | 16 Nov | **The image estimate held at the surf coast and failed at the estuary.** Northern Beaches: image +0.493 vs gauge +0.501 (0.008 m low). Batemans Bay: image +0.520 vs gauge −0.181 — **0.70 m high**, opposite in sign to Jervis Bay's 0.10 m low bias | The 1 Oct worry was surf; the failure came from the estuary instead. Cause not investigated (no fit depends on it now). Lesson: the protocol's fallback (image + Jervis Bay's bias) would have put Batemans Bay's reference ~0.8 m wrong. The image estimate is a check on a gauge, not a substitute for one |
 | 16 Nov | **Sydney wave record: no storm between the survey and the scene.** Hourly Hs, 647 of 697 hours present. 18 Sep (lidar end) to the overpass: median 1.53 m, p90 2.18 m, max 2.81 m (04:00 24 Sep, Tp 10 s, S); 1–17 Sep max 2.85 m. At the overpass Hs ~1.8 m, Tp ~15 s from the SSE | Sandbars may still have moved in nine days of ordinary swell; nothing exceptional. Reported beside the 0–5 m results as registered, no correction. A 15 s groundswell at the overpass is consistent with the bright-NIR flag removing 2.0 km² of surf-zone water |
 | 16 Nov | **Phase 4 amendment: Northern Beaches open coast only** (*Phase 4 amendment, 16 Nov 2026*) — Pittwater and the lagoons excluded by a named open-sea point; 21.6 km² in 21 blocks remain | My error: the AOI was drawn from the block's single-date window without checking which water bodies it held, and Pittwater is a third of it. Caught while reading the substrate layers, before any fit; Warren chose the open coast only. **The first implementation was wrong too:** it took water touching the AOI's east edge, tested on synthetic grids filled to the edge; on the real grid a lidar-free margin surrounds everything, so nothing touched any edge and `reference` refused. Replaced by the seed point, and the test fixture now carries the margin. Lesson, again: synthetic tests check the logic, not the assumption about the data's shape — run on the real input before calling it done |
+| 16 Nov | **Phase 4 run at both new sites** after the amendment commit `2cd2f53`: `waterlevel`, `reference`, `validate` (Stumpf, gbm, gbm_xy), `substrate`, the `elvis_avg` sensitivity pair, `clarity`. No deviation in any fit. Results in *Phase 4 result* | Gate 4 not met; predictions 1, 2 and 4 held (2 and half of 4 on point estimates only), prediction 3 failed |
+| 16 Nov | **`clarity` corrected after its first run; both results kept.** Northern Beaches' block correlation was computed over NaN block medians ranked as the largest values (59 pixels with no red value, 13 of 20 blocks). Corrected: −0.16 → +0.70 (Stumpf); mean within-site +0.06 [−0.19, +0.33] → +0.35 [+0.09, +0.59]. First run kept as `outputs/phase4/clarity_run1_superseded.json`; the record's `deviations` says so | My error, and the test suite's gap: `site_clarity` had a test with a missing value, `block_table` did not, and `spearman` ranked NaN without complaint. Both closed; `spearman` now refuses non-finite input. Caught only because the block table was read row by row before committing — 13 `null` medians beside a correlation claiming 20 blocks. **A correction that moves the headline toward the hoped-for answer needs more scrutiny, not less:** the missing-value rule it applies was written and tested on 1 Oct, before any data; treating the 59 pixels as zero gives the same answer; and nothing else in the record changes |
+| 16 Nov | **The block test does not isolate turbidity** — block depth mix is correlated with block error at every site (+0.6 to +0.7) and with block red in opposite directions at Northern Beaches (+0.70) and Batemans Bay (−0.71). Block mean depth added to `clarity.json`'s block table so this can be checked from the record | A design flaw in the 1 Oct protocol, mine: it guarded against site-level offsets and forgot that RMSE is depth-dependent inside the 10–20 m window. A depth-standardised block error should have been registered. Not repaired after the fact: the registered statistic is reported as registered, with the confound beside it |
 
 ## Sources
 

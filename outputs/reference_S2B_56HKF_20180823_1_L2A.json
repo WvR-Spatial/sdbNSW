@@ -1,0 +1,117 @@
+{
+  "scene": "S2B_56HKF_20180823_1_L2A",
+  "sensitivity": null,
+  "lidar": {
+    "path": "data\\raw\\BatemansBay\\BatemansBay_5m_native_AB.tif",
+    "md5": "3e79901571ccc8a5d7bdda7d337f2c09",
+    "crs": "EPSG:7856",
+    "grid": {
+      "x0": 243060.44047513595,
+      "y0": 6047256.430647445,
+      "dx": 5.0000000097876365,
+      "dy": 5.0000000097876365,
+      "nx": 2402,
+      "ny": 1883
+    }
+  },
+  "scene_grid": {
+    "crs": "EPSG:32756",
+    "grid": {
+      "x0": 242880.0,
+      "y0": 6047440.0,
+      "dx": 10.0,
+      "dy": 10.0,
+      "nx": 1224,
+      "ny": 966
+    }
+  },
+  "datum": {
+    "operation": "Inverse of Map Grid of Australia zone 56 + GDA2020 to WGS 84 (2) + UTM zone 56S",
+    "stated_accuracy_m": 3.0,
+    "translation_m": [
+      0.0,
+      -0.0001
+    ],
+    "nonuniformity_m": 0.0
+  },
+  "coregistration": {
+    "note": "APPLIED from coreg_S2B_56HKF_20180823_1_L2A.json",
+    "shift_applied_m": [
+      2.95,
+      -4.91
+    ]
+  },
+  "water_level_m_ahd": -0.181,
+  "water_level_source": "measured (gauge) from waterlevel_S2B_56HKF_20180823_1_L2A.json",
+  "open_sea_point": null,
+  "depth_window_m": [
+    0.0,
+    20.0
+  ],
+  "flags": {
+    "1": "lidar coverage incomplete",
+    "2": "any land in pixel",
+    "4": "outside depth window",
+    "8": "cloud or shadow (SCL)",
+    "16": "bright NIR over lidar water",
+    "32": "no image data",
+    "64": "water not connected to the open sea (site rule)"
+  },
+  "summary": {
+    "pixels_total": 1182384,
+    "pixels_usable": 274689,
+    "usable_km2": 27.47,
+    "flagged_any": {
+      "lidar coverage incomplete": 509942,
+      "any land in pixel": 294343,
+      "outside depth window": 397116,
+      "cloud or shadow (SCL)": 5224,
+      "bright NIR over lidar water": 4394,
+      "no image data": 72,
+      "water not connected to the open sea (site rule)": 0
+    },
+    "by_depth_band": [
+      {
+        "band_m": "0-2",
+        "pixels": 16513,
+        "km2": 1.65,
+        "relief_median_m": 0.05,
+        "relief_p90_m": 0.277
+      },
+      {
+        "band_m": "2-5",
+        "pixels": 37651,
+        "km2": 3.77,
+        "relief_median_m": 0.051,
+        "relief_p90_m": 0.379
+      },
+      {
+        "band_m": "5-10",
+        "pixels": 75807,
+        "km2": 7.58,
+        "relief_median_m": 0.047,
+        "relief_p90_m": 0.269
+      },
+      {
+        "band_m": "10-15",
+        "pixels": 69951,
+        "km2": 7.0,
+        "relief_median_m": 0.047,
+        "relief_p90_m": 0.224
+      },
+      {
+        "band_m": "15-20",
+        "pixels": 74767,
+        "km2": 7.48,
+        "relief_median_m": 0.08,
+        "relief_p90_m": 0.367
+      }
+    ]
+  },
+  "outputs": [
+    "data\\raw\\scenes\\S2B_56HKF_20180823_1_L2A\\reference.tif",
+    "data\\raw\\scenes\\S2B_56HKF_20180823_1_L2A\\mask.tif"
+  ],
+  "written_utc": "2026-11-16T10:25:46+00:00",
+  "sdb_version": "0.1.0"
+}

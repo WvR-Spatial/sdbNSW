@@ -1,0 +1,48 @@
+{
+  "scene": "S2A_56HLH_20180927_1_L2A",
+  "overpass_utc": "2018-09-27T00:06:03.889000+00:00",
+  "gauge": {
+    "station": "212440",
+    "name": "Patonga",
+    "ahd_offset_m": 0.0,
+    "msl_ahd": 0.065,
+    "islw_ahd": -0.808,
+    "hhwss_ahd": 1.034,
+    "source": "Manly Hydraulics Laboratory for NSW DCCEEW, CC BY 4.0; times AEST"
+  },
+  "method": "gauge",
+  "water_level_m_ahd": 0.539,
+  "status": "measured",
+  "datum_in_file": "ahd",
+  "interpolation": {
+    "level": 0.5387000000000001,
+    "before_utc": "2018-09-27T00:06:00",
+    "after_utc": "2018-09-27T00:07:00",
+    "gap_before_min": 0.1,
+    "gap_after_min": 0.9,
+    "tidal_rate_m_per_h": -0.129,
+    "centred_11min_mean": 0.5448
+  },
+  "file": {
+    "path": "data\\raw\\MHL\\Ocean tide\\Patonga.Level1.AHD.Actual.1min.csv",
+    "md5": "1833f6f28a8e39656a9234f63396d4bc",
+    "file_rows": 56161,
+    "rows_used": 56161,
+    "time_column": "Date",
+    "clock_column": "Time",
+    "level_column": "Value [m]",
+    "header_lines_skipped": 30,
+    "timezone_assumed": "AEST (UTC+10), per MHL",
+    "datum_stated": "Australian Height Datum (1971)",
+    "quality_codes": {
+      "55": 56161
+    }
+  },
+  "written_utc": "2026-11-16T09:59:10+00:00",
+  "sdb_version": "0.1.0",
+  "cross_check": {
+    "tag": "patonga",
+    "gauge_key": "tide_gauge_check",
+    "status": "CROSS-CHECK: never the water level reference uses"
+  }
+}

@@ -1,0 +1,1222 @@
+{
+  "protocol": "PROJECT_BRIEF.md, Phase 4 protocol (pre-registered 1 Oct 2026)",
+  "protocol_commit": {
+    "commit": "a5b5f5df213aa24fb239dcd1c36c783f3a3069da",
+    "date": "2026-10-01T22:41:19+10:00"
+  },
+  "amendment_commit": {
+    "commit": "2cd2f534a448cbeef9d12003ae6e44b89e1fe023",
+    "date": "2026-11-16T20:57:15+11:00"
+  },
+  "deviations": [
+    "16 Nov 2026, after the first run: block clarity and block RMSE leave out pixels with no red value, as the site metric always did. The first run let one such pixel turn a block's median into NaN and then ranked the NaNs as the largest values (Northern Beaches: 59 pixels, 13 of 20 blocks). First run kept as outputs/phase4/clarity_run1_superseded.json; Jervis Bay, Batemans Bay and the four predictions are identical in both."
+  ],
+  "metric": {
+    "what": "median red reflectance (B04, as supplied)",
+    "pixels": "assessed, lidar depth 10-20 m",
+    "block_m": 2000.0,
+    "min_block_px": 200,
+    "boot": 1000,
+    "boot_seed": 17
+  },
+  "sites": {
+    "jervis_bay": {
+      "scene": "S2A_56HKG_20180907_0_L2A",
+      "water_level_m_ahd": -0.392,
+      "clarity": {
+        "median_red": 0.0037,
+        "n": 651690
+      },
+      "blocks_used": 48,
+      "within": {
+        "stumpf": {
+          "rho": 0.517013,
+          "lo": 0.249527,
+          "hi": 0.707513,
+          "n_blocks": 48,
+          "n_valid_draws": 1000
+        },
+        "gbm": {
+          "rho": 0.550139,
+          "lo": 0.270767,
+          "hi": 0.756134,
+          "n_blocks": 48,
+          "n_valid_draws": 1000
+        }
+      },
+      "stumpf": {
+        "rmse": 2.6825,
+        "ci95": {
+          "bias": {
+            "point": -0.4155,
+            "lo": -0.9501,
+            "hi": 0.0635
+          },
+          "rmse": {
+            "point": 2.6825,
+            "lo": 2.3085,
+            "hi": 3.1259
+          },
+          "mae": {
+            "point": 1.9254,
+            "lo": 1.671,
+            "hi": 2.2392
+          },
+          "r2": {
+            "point": 0.6892,
+            "lo": 0.5668,
+            "hi": 0.7722
+          },
+          "n_blocks": {
+            "point": 68.0,
+            "lo": 68.0,
+            "hi": 68.0
+          }
+        },
+        "bias": -0.4155,
+        "depth_balanced_rmse": 2.4752,
+        "breakdown_depth_m": {
+          "CATZOC_C": 0.0,
+          "CATZOC_B": 0.0
+        }
+      },
+      "gbm": {
+        "rmse": 1.8832,
+        "bias": -0.1168,
+        "depth_balanced_rmse": 1.5313,
+        "breakdown_depth_m": {
+          "CATZOC_C": 3.0,
+          "CATZOC_B": 2.0
+        }
+      },
+      "gbm_vs_stumpf": {
+        "point": -0.7992,
+        "lo": -1.0607,
+        "hi": -0.5691
+      }
+    },
+    "narrabeen_long_reef": {
+      "scene": "S2A_56HLH_20180927_1_L2A",
+      "water_level_m_ahd": 0.501,
+      "clarity": {
+        "median_red": 0.0022,
+        "n": 151427
+      },
+      "blocks_used": 20,
+      "within": {
+        "stumpf": {
+          "rho": 0.69857,
+          "lo": 0.317633,
+          "hi": 0.894824,
+          "n_blocks": 20,
+          "n_valid_draws": 1000
+        },
+        "gbm": {
+          "rho": 0.39337,
+          "lo": -0.048526,
+          "hi": 0.74497,
+          "n_blocks": 20,
+          "n_valid_draws": 1000
+        }
+      },
+      "stumpf": {
+        "rmse": 3.0257,
+        "ci95": {
+          "bias": {
+            "point": -0.5488,
+            "lo": -1.1083,
+            "hi": -0.0101
+          },
+          "rmse": {
+            "point": 3.0257,
+            "lo": 2.8133,
+            "hi": 3.2182
+          },
+          "mae": {
+            "point": 2.3635,
+            "lo": 2.1641,
+            "hi": 2.56
+          },
+          "r2": {
+            "point": 0.6536,
+            "lo": 0.5593,
+            "hi": 0.7012
+          },
+          "n_blocks": {
+            "point": 21.0,
+            "lo": 21.0,
+            "hi": 21.0
+          }
+        },
+        "bias": -0.5488,
+        "depth_balanced_rmse": 3.0208,
+        "breakdown_depth_m": {
+          "CATZOC_C": 0.0,
+          "CATZOC_B": 0.0
+        }
+      },
+      "gbm": {
+        "rmse": 2.3983,
+        "bias": -0.3063,
+        "depth_balanced_rmse": 2.1192,
+        "breakdown_depth_m": {
+          "CATZOC_C": 0.0,
+          "CATZOC_B": 0.0
+        }
+      },
+      "gbm_vs_stumpf": {
+        "point": -0.6274,
+        "lo": -0.7833,
+        "hi": -0.4993
+      }
+    },
+    "batemans_bay": {
+      "scene": "S2B_56HKF_20180823_1_L2A",
+      "water_level_m_ahd": -0.181,
+      "clarity": {
+        "median_red": 0.0053,
+        "n": 144718
+      },
+      "blocks_used": 12,
+      "within": {
+        "stumpf": {
+          "rho": -0.175749,
+          "lo": -0.769467,
+          "hi": 0.512755,
+          "n_blocks": 12,
+          "n_valid_draws": 1000
+        },
+        "gbm": {
+          "rho": -0.003515,
+          "lo": -0.633015,
+          "hi": 0.745465,
+          "n_blocks": 12,
+          "n_valid_draws": 1000
+        }
+      },
+      "stumpf": {
+        "rmse": 2.9636,
+        "ci95": {
+          "bias": {
+            "point": -0.3962,
+            "lo": -1.526,
+            "hi": 0.6682
+          },
+          "rmse": {
+            "point": 2.9636,
+            "lo": 2.324,
+            "hi": 3.5202
+          },
+          "mae": {
+            "point": 2.256,
+            "lo": 1.7339,
+            "hi": 2.8022
+          },
+          "r2": {
+            "point": 0.6998,
+            "lo": 0.4488,
+            "hi": 0.8067
+          },
+          "n_blocks": {
+            "point": 20.0,
+            "lo": 20.0,
+            "hi": 20.0
+          }
+        },
+        "bias": -0.3962,
+        "depth_balanced_rmse": 2.7318,
+        "breakdown_depth_m": {
+          "CATZOC_C": 0.0,
+          "CATZOC_B": 0.0
+        }
+      },
+      "gbm": {
+        "rmse": 2.4505,
+        "bias": -0.1544,
+        "depth_balanced_rmse": 2.0971,
+        "breakdown_depth_m": {
+          "CATZOC_C": 2.0,
+          "CATZOC_B": 1.0
+        }
+      },
+      "gbm_vs_stumpf": {
+        "point": -0.5131,
+        "lo": -0.9046,
+        "hi": -0.1486
+      }
+    }
+  },
+  "blocks": {
+    "jervis_bay": [
+      {
+        "block": 5,
+        "n": 2042,
+        "clarity": 0.0051,
+        "rmse": {
+          "stumpf": 3.230427,
+          "gbm": 2.49979
+        },
+        "mean_depth_m": 13.196743
+      },
+      {
+        "block": 6,
+        "n": 6771,
+        "clarity": 0.0047,
+        "rmse": {
+          "stumpf": 5.675549,
+          "gbm": 3.982057
+        },
+        "mean_depth_m": 16.883104
+      },
+      {
+        "block": 1000006,
+        "n": 16390,
+        "clarity": 0.0057,
+        "rmse": {
+          "stumpf": 4.688076,
+          "gbm": 2.700692
+        },
+        "mean_depth_m": 14.347964
+      },
+      {
+        "block": 1000007,
+        "n": 21309,
+        "clarity": 0.0056,
+        "rmse": {
+          "stumpf": 5.862167,
+          "gbm": 3.759877
+        },
+        "mean_depth_m": 16.302658
+      },
+      {
+        "block": 1000008,
+        "n": 4350,
+        "clarity": 0.0065,
+        "rmse": {
+          "stumpf": 6.224144,
+          "gbm": 4.72237
+        },
+        "mean_depth_m": 15.642864
+      },
+      {
+        "block": 2000001,
+        "n": 200,
+        "clarity": 0.0025,
+        "rmse": {
+          "stumpf": 1.82774,
+          "gbm": 0.405504
+        },
+        "mean_depth_m": 10.193005
+      },
+      {
+        "block": 2000002,
+        "n": 4669,
+        "clarity": 0.0032,
+        "rmse": {
+          "stumpf": 1.211629,
+          "gbm": 0.627043
+        },
+        "mean_depth_m": 10.56253
+      },
+      {
+        "block": 2000003,
+        "n": 17817,
+        "clarity": 0.0037,
+        "rmse": {
+          "stumpf": 1.373934,
+          "gbm": 1.195145
+        },
+        "mean_depth_m": 11.718839
+      },
+      {
+        "block": 2000004,
+        "n": 23057,
+        "clarity": 0.0037,
+        "rmse": {
+          "stumpf": 1.870929,
+          "gbm": 2.416097
+        },
+        "mean_depth_m": 12.182819
+      },
+      {
+        "block": 2000005,
+        "n": 907,
+        "clarity": 0.0033,
+        "rmse": {
+          "stumpf": 1.721857,
+          "gbm": 2.323941
+        },
+        "mean_depth_m": 11.530176
+      },
+      {
+        "block": 2000007,
+        "n": 6447,
+        "clarity": 0.0059,
+        "rmse": {
+          "stumpf": 3.19813,
+          "gbm": 2.389164
+        },
+        "mean_depth_m": 11.972623
+      },
+      {
+        "block": 2000008,
+        "n": 1301,
+        "clarity": 0.0096,
+        "rmse": {
+          "stumpf": 5.29241,
+          "gbm": 4.386331
+        },
+        "mean_depth_m": 15.097982
+      },
+      {
+        "block": 3000001,
+        "n": 17313,
+        "clarity": 0.0035,
+        "rmse": {
+          "stumpf": 1.434611,
+          "gbm": 0.907892
+        },
+        "mean_depth_m": 11.404245
+      },
+      {
+        "block": 3000002,
+        "n": 40000,
+        "clarity": 0.0036,
+        "rmse": {
+          "stumpf": 1.449045,
+          "gbm": 0.929101
+        },
+        "mean_depth_m": 13.449108
+      },
+      {
+        "block": 3000003,
+        "n": 40000,
+        "clarity": 0.0038,
+        "rmse": {
+          "stumpf": 2.120848,
+          "gbm": 1.253582
+        },
+        "mean_depth_m": 15.819198
+      },
+      {
+        "block": 3000004,
+        "n": 40000,
+        "clarity": 0.0038,
+        "rmse": {
+          "stumpf": 2.088784,
+          "gbm": 1.623423
+        },
+        "mean_depth_m": 15.15143
+      },
+      {
+        "block": 3000005,
+        "n": 25051,
+        "clarity": 0.0031,
+        "rmse": {
+          "stumpf": 1.931942,
+          "gbm": 2.203114
+        },
+        "mean_depth_m": 12.553028
+      },
+      {
+        "block": 3000008,
+        "n": 1654,
+        "clarity": 0.0093,
+        "rmse": {
+          "stumpf": 4.136198,
+          "gbm": 3.289965
+        },
+        "mean_depth_m": 14.245997
+      },
+      {
+        "block": 4000001,
+        "n": 19905,
+        "clarity": 0.0038,
+        "rmse": {
+          "stumpf": 1.963527,
+          "gbm": 1.197855
+        },
+        "mean_depth_m": 12.217442
+      },
+      {
+        "block": 4000002,
+        "n": 40000,
+        "clarity": 0.0038,
+        "rmse": {
+          "stumpf": 1.770726,
+          "gbm": 1.090547
+        },
+        "mean_depth_m": 15.319313
+      },
+      {
+        "block": 4000003,
+        "n": 38426,
+        "clarity": 0.0036,
+        "rmse": {
+          "stumpf": 3.527882,
+          "gbm": 1.874717
+        },
+        "mean_depth_m": 17.294849
+      },
+      {
+        "block": 4000004,
+        "n": 36446,
+        "clarity": 0.0035,
+        "rmse": {
+          "stumpf": 3.65577,
+          "gbm": 2.077361
+        },
+        "mean_depth_m": 16.872236
+      },
+      {
+        "block": 4000005,
+        "n": 26710,
+        "clarity": 0.0032,
+        "rmse": {
+          "stumpf": 2.001831,
+          "gbm": 1.721957
+        },
+        "mean_depth_m": 13.647952
+      },
+      {
+        "block": 4000008,
+        "n": 2184,
+        "clarity": 0.011,
+        "rmse": {
+          "stumpf": 5.871667,
+          "gbm": 4.761251
+        },
+        "mean_depth_m": 15.508019
+      },
+      {
+        "block": 5000001,
+        "n": 7993,
+        "clarity": 0.004,
+        "rmse": {
+          "stumpf": 1.579403,
+          "gbm": 1.326266
+        },
+        "mean_depth_m": 11.79772
+      },
+      {
+        "block": 5000002,
+        "n": 33873,
+        "clarity": 0.0039,
+        "rmse": {
+          "stumpf": 2.467438,
+          "gbm": 2.090642
+        },
+        "mean_depth_m": 16.114094
+      },
+      {
+        "block": 5000003,
+        "n": 5078,
+        "clarity": 0.0039,
+        "rmse": {
+          "stumpf": 4.785601,
+          "gbm": 2.823938
+        },
+        "mean_depth_m": 19.348342
+      },
+      {
+        "block": 5000004,
+        "n": 2996,
+        "clarity": 0.0035,
+        "rmse": {
+          "stumpf": 3.813875,
+          "gbm": 1.909338
+        },
+        "mean_depth_m": 18.855704
+      },
+      {
+        "block": 5000005,
+        "n": 15372,
+        "clarity": 0.003,
+        "rmse": {
+          "stumpf": 2.11489,
+          "gbm": 1.444454
+        },
+        "mean_depth_m": 15.317228
+      },
+      {
+        "block": 5000008,
+        "n": 664,
+        "clarity": 0.01435,
+        "rmse": {
+          "stumpf": 7.266021,
+          "gbm": 6.924133
+        },
+        "mean_depth_m": 16.30528
+      },
+      {
+        "block": 6000001,
+        "n": 877,
+        "clarity": 0.0037,
+        "rmse": {
+          "stumpf": 1.359118,
+          "gbm": 1.069206
+        },
+        "mean_depth_m": 10.693702
+      },
+      {
+        "block": 6000002,
+        "n": 25373,
+        "clarity": 0.0037,
+        "rmse": {
+          "stumpf": 2.591694,
+          "gbm": 1.697524
+        },
+        "mean_depth_m": 16.598635
+      },
+      {
+        "block": 6000005,
+        "n": 5954,
+        "clarity": 0.0026,
+        "rmse": {
+          "stumpf": 3.10345,
+          "gbm": 2.955629
+        },
+        "mean_depth_m": 15.602357
+      },
+      {
+        "block": 6000006,
+        "n": 3619,
+        "clarity": 0.0019,
+        "rmse": {
+          "stumpf": 4.126165,
+          "gbm": 2.942909
+        },
+        "mean_depth_m": 16.482898
+      },
+      {
+        "block": 6000007,
+        "n": 1531,
+        "clarity": 0.0057,
+        "rmse": {
+          "stumpf": 7.468283,
+          "gbm": 3.037142
+        },
+        "mean_depth_m": 14.760614
+      },
+      {
+        "block": 6000008,
+        "n": 207,
+        "clarity": 0.0037,
+        "rmse": {
+          "stumpf": 10.181309,
+          "gbm": 5.356136
+        },
+        "mean_depth_m": 15.909186
+      },
+      {
+        "block": 7000002,
+        "n": 25016,
+        "clarity": 0.0038,
+        "rmse": {
+          "stumpf": 2.510739,
+          "gbm": 1.524844
+        },
+        "mean_depth_m": 15.752899
+      },
+      {
+        "block": 8000002,
+        "n": 21059,
+        "clarity": 0.0036,
+        "rmse": {
+          "stumpf": 2.025103,
+          "gbm": 1.503461
+        },
+        "mean_depth_m": 14.044641
+      },
+      {
+        "block": 8000003,
+        "n": 25155,
+        "clarity": 0.0035,
+        "rmse": {
+          "stumpf": 2.84565,
+          "gbm": 1.666994
+        },
+        "mean_depth_m": 17.729732
+      },
+      {
+        "block": 8000004,
+        "n": 20789,
+        "clarity": 0.0031,
+        "rmse": {
+          "stumpf": 2.595145,
+          "gbm": 1.596538
+        },
+        "mean_depth_m": 17.536127
+      },
+      {
+        "block": 8000005,
+        "n": 3111,
+        "clarity": 0.0035,
+        "rmse": {
+          "stumpf": 2.705114,
+          "gbm": 2.521106
+        },
+        "mean_depth_m": 15.091097
+      },
+      {
+        "block": 9000003,
+        "n": 11517,
+        "clarity": 0.0033,
+        "rmse": {
+          "stumpf": 2.121883,
+          "gbm": 1.627988
+        },
+        "mean_depth_m": 13.694547
+      },
+      {
+        "block": 9000004,
+        "n": 3917,
+        "clarity": 0.0024,
+        "rmse": {
+          "stumpf": 2.486954,
+          "gbm": 1.604601
+        },
+        "mean_depth_m": 13.19151
+      },
+      {
+        "block": 9000005,
+        "n": 965,
+        "clarity": 0.0123,
+        "rmse": {
+          "stumpf": 5.137868,
+          "gbm": 4.279456
+        },
+        "mean_depth_m": 15.080404
+      },
+      {
+        "block": 10000004,
+        "n": 358,
+        "clarity": 0.0056,
+        "rmse": {
+          "stumpf": 2.650965,
+          "gbm": 2.945269
+        },
+        "mean_depth_m": 13.172441
+      },
+      {
+        "block": 10000005,
+        "n": 2149,
+        "clarity": 0.0039,
+        "rmse": {
+          "stumpf": 3.353023,
+          "gbm": 2.746756
+        },
+        "mean_depth_m": 16.1285
+      },
+      {
+        "block": 11000004,
+        "n": 230,
+        "clarity": 0.0053,
+        "rmse": {
+          "stumpf": 2.70616,
+          "gbm": 2.850166
+        },
+        "mean_depth_m": 12.552107
+      },
+      {
+        "block": 11000005,
+        "n": 302,
+        "clarity": 0.0036,
+        "rmse": {
+          "stumpf": 2.935975,
+          "gbm": 1.707883
+        },
+        "mean_depth_m": 17.129494
+      }
+    ],
+    "narrabeen_long_reef": [
+      {
+        "block": 3,
+        "n": 1925,
+        "clarity": 0.0001,
+        "rmse": {
+          "stumpf": 2.538732,
+          "gbm": 1.698296
+        },
+        "mean_depth_m": 12.223484
+      },
+      {
+        "block": 4,
+        "n": 7402,
+        "clarity": 0.0015,
+        "rmse": {
+          "stumpf": 2.917516,
+          "gbm": 2.073518
+        },
+        "mean_depth_m": 15.93937
+      },
+      {
+        "block": 1000004,
+        "n": 6395,
+        "clarity": 0.002,
+        "rmse": {
+          "stumpf": 2.952957,
+          "gbm": 2.852845
+        },
+        "mean_depth_m": 15.841827
+      },
+      {
+        "block": 2000004,
+        "n": 5746,
+        "clarity": 0.0015,
+        "rmse": {
+          "stumpf": 3.08512,
+          "gbm": 3.16874
+        },
+        "mean_depth_m": 15.721197
+      },
+      {
+        "block": 3000003,
+        "n": 2857,
+        "clarity": 0.0012,
+        "rmse": {
+          "stumpf": 2.49444,
+          "gbm": 2.209049
+        },
+        "mean_depth_m": 13.105006
+      },
+      {
+        "block": 3000004,
+        "n": 10036,
+        "clarity": 0.0018,
+        "rmse": {
+          "stumpf": 3.337317,
+          "gbm": 2.819389
+        },
+        "mean_depth_m": 15.628023
+      },
+      {
+        "block": 4000003,
+        "n": 12587,
+        "clarity": 0.0016,
+        "rmse": {
+          "stumpf": 2.87516,
+          "gbm": 2.186808
+        },
+        "mean_depth_m": 15.760941
+      },
+      {
+        "block": 4000004,
+        "n": 3003,
+        "clarity": 0.0023,
+        "rmse": {
+          "stumpf": 2.987591,
+          "gbm": 2.21845
+        },
+        "mean_depth_m": 16.873001
+      },
+      {
+        "block": 5000003,
+        "n": 17515,
+        "clarity": 0.0028,
+        "rmse": {
+          "stumpf": 3.352463,
+          "gbm": 2.571515
+        },
+        "mean_depth_m": 15.503538
+      },
+      {
+        "block": 6000002,
+        "n": 2386,
+        "clarity": 0.0012,
+        "rmse": {
+          "stumpf": 3.207819,
+          "gbm": 2.459262
+        },
+        "mean_depth_m": 13.619663
+      },
+      {
+        "block": 6000003,
+        "n": 15753,
+        "clarity": 0.0015,
+        "rmse": {
+          "stumpf": 3.199848,
+          "gbm": 2.375668
+        },
+        "mean_depth_m": 16.37298
+      },
+      {
+        "block": 7000002,
+        "n": 3814,
+        "clarity": 0.001,
+        "rmse": {
+          "stumpf": 2.915545,
+          "gbm": 2.690438
+        },
+        "mean_depth_m": 13.363126
+      },
+      {
+        "block": 7000003,
+        "n": 10286,
+        "clarity": 0.0018,
+        "rmse": {
+          "stumpf": 3.578502,
+          "gbm": 2.772941
+        },
+        "mean_depth_m": 16.952685
+      },
+      {
+        "block": 8000002,
+        "n": 705,
+        "clarity": 0.0008,
+        "rmse": {
+          "stumpf": 1.382753,
+          "gbm": 1.115732
+        },
+        "mean_depth_m": 11.138602
+      },
+      {
+        "block": 8000003,
+        "n": 15230,
+        "clarity": 0.0033,
+        "rmse": {
+          "stumpf": 3.212807,
+          "gbm": 2.596379
+        },
+        "mean_depth_m": 14.348153
+      },
+      {
+        "block": 8000004,
+        "n": 2053,
+        "clarity": 0.0036,
+        "rmse": {
+          "stumpf": 4.810226,
+          "gbm": 2.816045
+        },
+        "mean_depth_m": 18.979834
+      },
+      {
+        "block": 9000002,
+        "n": 8313,
+        "clarity": 0.0026,
+        "rmse": {
+          "stumpf": 2.358116,
+          "gbm": 2.065178
+        },
+        "mean_depth_m": 14.109471
+      },
+      {
+        "block": 9000003,
+        "n": 15110,
+        "clarity": 0.003,
+        "rmse": {
+          "stumpf": 3.711346,
+          "gbm": 2.588409
+        },
+        "mean_depth_m": 17.026719
+      },
+      {
+        "block": 9000004,
+        "n": 820,
+        "clarity": 0.0041,
+        "rmse": {
+          "stumpf": 4.688541,
+          "gbm": 2.270238
+        },
+        "mean_depth_m": 18.468583
+      },
+      {
+        "block": 10000002,
+        "n": 9491,
+        "clarity": 0.0013,
+        "rmse": {
+          "stumpf": 2.169906,
+          "gbm": 1.771706
+        },
+        "mean_depth_m": 14.716691
+      }
+    ],
+    "batemans_bay": [
+      {
+        "block": 1000003,
+        "n": 4472,
+        "clarity": 0.0051,
+        "rmse": {
+          "stumpf": 1.773042,
+          "gbm": 2.086413
+        },
+        "mean_depth_m": 10.483984
+      },
+      {
+        "block": 2000002,
+        "n": 3594,
+        "clarity": 0.0074,
+        "rmse": {
+          "stumpf": 1.506829,
+          "gbm": 1.307153
+        },
+        "mean_depth_m": 10.43595
+      },
+      {
+        "block": 2000003,
+        "n": 33664,
+        "clarity": 0.0057,
+        "rmse": {
+          "stumpf": 2.763618,
+          "gbm": 1.696128
+        },
+        "mean_depth_m": 12.602426
+      },
+      {
+        "block": 2000004,
+        "n": 19580,
+        "clarity": 0.0044,
+        "rmse": {
+          "stumpf": 2.797925,
+          "gbm": 1.534748
+        },
+        "mean_depth_m": 17.069431
+      },
+      {
+        "block": 2000005,
+        "n": 4166,
+        "clarity": 0.0043,
+        "rmse": {
+          "stumpf": 2.711763,
+          "gbm": 1.746313
+        },
+        "mean_depth_m": 17.938539
+      },
+      {
+        "block": 3000002,
+        "n": 5538,
+        "clarity": 0.0055,
+        "rmse": {
+          "stumpf": 2.094975,
+          "gbm": 1.639525
+        },
+        "mean_depth_m": 10.944886
+      },
+      {
+        "block": 3000003,
+        "n": 34209,
+        "clarity": 0.0055,
+        "rmse": {
+          "stumpf": 4.444916,
+          "gbm": 3.04262
+        },
+        "mean_depth_m": 16.019664
+      },
+      {
+        "block": 3000004,
+        "n": 22842,
+        "clarity": 0.0049,
+        "rmse": {
+          "stumpf": 3.117184,
+          "gbm": 2.614236
+        },
+        "mean_depth_m": 16.634085
+      },
+      {
+        "block": 3000005,
+        "n": 710,
+        "clarity": 0.0049,
+        "rmse": {
+          "stumpf": 3.763847,
+          "gbm": 3.024626
+        },
+        "mean_depth_m": 19.282314
+      },
+      {
+        "block": 4000002,
+        "n": 1407,
+        "clarity": 0.0057,
+        "rmse": {
+          "stumpf": 1.68076,
+          "gbm": 1.697735
+        },
+        "mean_depth_m": 11.468294
+      },
+      {
+        "block": 4000003,
+        "n": 14247,
+        "clarity": 0.0063,
+        "rmse": {
+          "stumpf": 4.431573,
+          "gbm": 4.761854
+        },
+        "mean_depth_m": 15.662209
+      },
+      {
+        "block": 4000004,
+        "n": 263,
+        "clarity": 0.0056,
+        "rmse": {
+          "stumpf": 3.413275,
+          "gbm": 3.132168
+        },
+        "mean_depth_m": 15.673056
+      }
+    ]
+  },
+  "across_sites_mean_within_rho": {
+    "stumpf": {
+      "mean_rho": 0.346611,
+      "lo": 0.094683,
+      "hi": 0.587825,
+      "sites": [
+        "jervis_bay",
+        "narrabeen_long_reef",
+        "batemans_bay"
+      ],
+      "n_valid_draws": 1000
+    },
+    "gbm": {
+      "mean_rho": 0.313331,
+      "lo": 0.045278,
+      "hi": 0.576449,
+      "sites": [
+        "jervis_bay",
+        "narrabeen_long_reef",
+        "batemans_bay"
+      ],
+      "n_valid_draws": 1000
+    }
+  },
+  "gate4": {
+    "order_by_clarity": [
+      "narrabeen_long_reef",
+      "jervis_bay",
+      "batemans_bay"
+    ],
+    "stumpf_rmse_monotonic": false,
+    "gbm_rmse_monotonic": false
+  },
+  "predictions": [
+    {
+      "prediction": 1,
+      "text": "Batemans Bay has the highest site clarity metric",
+      "result": "held",
+      "evidence": {
+        "jervis_bay": 0.0037,
+        "narrabeen_long_reef": 0.0022,
+        "batemans_bay": 0.0053
+      }
+    },
+    {
+      "prediction": 2,
+      "text": "Stumpf pooled RMSE at both new sites exceeds Jervis Bay's",
+      "result": "held",
+      "evidence": {
+        "jervis_bay": 2.6825,
+        "narrabeen_long_reef": 3.0257,
+        "batemans_bay": 2.9636
+      }
+    },
+    {
+      "prediction": 3,
+      "text": "At Batemans Bay, Stumpf block RMSE in 10-20 m rises with block red reflectance (Spearman > 0, interval excluding 0)",
+      "result": "failed",
+      "evidence": {
+        "rho": -0.175749,
+        "lo": -0.769467,
+        "hi": 0.512755,
+        "n_blocks": 12,
+        "n_valid_draws": 1000
+      }
+    },
+    {
+      "prediction": 4,
+      "text": "gbm beats Stumpf at every site (paired interval excludes 0), by less at Batemans Bay than at Jervis Bay",
+      "result": "held",
+      "evidence": {
+        "gbm_minus_stumpf": {
+          "jervis_bay": {
+            "point": -0.7992,
+            "lo": -1.0607,
+            "hi": -0.5691
+          },
+          "narrabeen_long_reef": {
+            "point": -0.6274,
+            "lo": -0.7833,
+            "hi": -0.4993
+          },
+          "batemans_bay": {
+            "point": -0.5131,
+            "lo": -0.9046,
+            "hi": -0.1486
+          }
+        },
+        "every_site_interval_below_0": true,
+        "batemans_advantage_smaller": true
+      }
+    }
+  ],
+  "sensitivity": {
+    "sdb_S2A_56HLH_20180927_1_L2A_elvis_avg": {
+      "site": "narrabeen_long_reef",
+      "model": "stumpf",
+      "tag": "elvis_avg",
+      "other_minus_primary": {
+        "pooled_rmse": -0.0178,
+        "pooled_bias": 0.0061,
+        "depth_balanced_rmse": -0.0053,
+        "rmse_by_band": {
+          "0-2": 0.0587,
+          "2-5": -0.0366,
+          "5-10": -0.0132,
+          "10-15": -0.0176,
+          "15-20": -0.0174
+        },
+        "rmse_by_relief_tercile": {
+          "low": 0.1658,
+          "mid": -0.0537,
+          "high": -0.1541
+        },
+        "relief_tercile_edges_m": {
+          "primary": [
+            0.0877,
+            0.1723
+          ],
+          "other": [
+            0.0642,
+            0.1107
+          ]
+        }
+      }
+    },
+    "sdb_S2A_56HLH_20180927_1_L2A_elvis_avg_gbm": {
+      "site": "narrabeen_long_reef",
+      "model": "gbm",
+      "tag": "elvis_avg",
+      "other_minus_primary": {
+        "pooled_rmse": -0.0201,
+        "pooled_bias": 0.0098,
+        "depth_balanced_rmse": -0.0251,
+        "rmse_by_band": {
+          "0-2": -0.0105,
+          "2-5": -0.0623,
+          "5-10": -0.0174,
+          "10-15": -0.0131,
+          "15-20": -0.022
+        },
+        "rmse_by_relief_tercile": {
+          "low": 0.0938,
+          "mid": -0.0162,
+          "high": -0.1208
+        },
+        "relief_tercile_edges_m": {
+          "primary": [
+            0.0877,
+            0.1723
+          ],
+          "other": [
+            0.0642,
+            0.1107
+          ]
+        },
+        "gbm_minus_stumpf": -0.0023
+      }
+    }
+  },
+  "written_utc": "2026-11-16T11:17:13+00:00",
+  "sdb_version": "0.1.0",
+  "figures": [
+    "outputs\\phase4\\figures\\clarity_vs_block_rmse.png"
+  ]
+}

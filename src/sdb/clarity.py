@@ -48,6 +48,17 @@ MIN_BLOCK_PX = 200
 N_BOOT = 1000
 BOOT_SEED = 17
 
+#: Changes made after the first run (16 Nov 2026). The protocol requires each to be
+#: logged and both results reported; the first run is kept beside the record.
+DEVIATIONS = (
+    "16 Nov 2026, after the first run: block clarity and block RMSE leave out pixels with "
+    "no red value, as the site metric always did. The first run let one such pixel turn a "
+    "block's median into NaN and then ranked the NaNs as the largest values (Northern "
+    "Beaches: 59 pixels, 13 of 20 blocks). First run kept as "
+    "outputs/phase4/clarity_run1_superseded.json; Jervis Bay, Batemans Bay and the four "
+    "predictions are identical in both.",
+)
+
 #: Site keys the registered predictions name.
 JB, NB, BB = "jervis_bay", "narrabeen_long_reef", "batemans_bay"
 MODELS = ("stumpf", "gbm")
@@ -72,12 +83,20 @@ def site_clarity(red: np.ndarray, sel: np.ndarray) -> dict[str, Any]:
 
 
 def block_table(red: np.ndarray, resid: dict[str, np.ndarray], sel: np.ndarray,
-                blocks: np.ndarray, *, min_px: int = MIN_BLOCK_PX) -> list[dict[str, Any]]:
+                blocks: np.ndarray, *, min_px: int = MIN_BLOCK_PX,
+                depth: np.ndarray | None = None) -> list[dict[str, Any]]:
     """Per block: pixel count, median red and RMSE per model, over the selected pixels.
 
+    With `depth`, each row also carries the block's mean lidar depth -- description
+    only, so a reader can see how the depth mix varies between blocks.
+
     `blocks` is an image of block ids. Blocks with fewer than `min_px` selected
-    pixels are left out.
+    pixels are left out. Pixels with no red value are left out of both the median
+    and the RMSE, as `site_clarity` leaves them out: one such pixel must not turn
+    a block's median into NaN (Northern Beaches, 16 Nov 2026: 59 pixels did that
+    to 13 of 20 blocks, and the NaNs were then ranked as the largest values).
     """
+    sel = sel & np.isfinite(red)
     ids = blocks[sel]
     out = []
     for b in np.unique(ids):
@@ -87,6 +106,8 @@ def block_table(red: np.ndarray, resid: dict[str, np.ndarray], sel: np.ndarray,
             continue
         row = {"block": int(b), "n": n, "clarity": float(np.median(red[m])),
                "rmse": {k: float(np.sqrt(np.mean(v[m] ** 2))) for k, v in resid.items()}}
+        if depth is not None:
+            row["mean_depth_m"] = float(np.mean(depth[m]))
         out.append(row)
     return out
 
@@ -109,8 +130,13 @@ def _ranks(x: np.ndarray) -> np.ndarray:
 
 
 def spearman(x: np.ndarray, y: np.ndarray) -> float:
-    """Spearman rank correlation; NaN if fewer than 3 points or either is constant."""
+    """Spearman rank correlation; NaN if fewer than 3 points or either is constant.
+
+    Refuses non-finite input: a NaN would be ranked silently, as the largest value.
+    """
     x, y = np.asarray(x, float), np.asarray(y, float)
+    if not (np.isfinite(x).all() and np.isfinite(y).all()):
+        raise ValueError("spearman: non-finite values cannot be ranked")
     if x.size < 3:
         return float("nan")
     rx, ry = _ranks(x), _ranks(y)
@@ -298,7 +324,7 @@ def analyse(sites: dict[str, dict[str, Any]], *, n_boot: int = N_BOOT,
         g = s["grid"]
         rows, cols = np.indices(s["red"].shape)
         blocks = block_ids(rows, cols, block_px=int(round(BLOCK_M / g.dx)))
-        tab = block_table(s["red"], s["resid"], sel, blocks)
+        tab = block_table(s["red"], s["resid"], sel, blocks, depth=s["depth"])
         tables[name] = tab
         within = {}
         for m in s["resid"]:
@@ -371,7 +397,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                                 "other_minus_primary": compare_records(prim, rec)}
     res["sensitivity"] = sens
 
-    deviations = [f"boot={a.boot} (protocol {N_BOOT})"] if a.boot != N_BOOT else []
+    deviations = list(DEVIATIONS) + ([f"boot={a.boot} (protocol {N_BOOT})"] if a.boot != N_BOOT else [])
     record = {"protocol": "PROJECT_BRIEF.md, Phase 4 protocol (pre-registered 1 Oct 2026)",
               "protocol_commit": _git_commit(a.root, "PROJECT_BRIEF.md", PHASE4_MARKER),
               "amendment_commit": _git_commit(a.root, "PROJECT_BRIEF.md", PHASE4_AMENDMENT_MARKER),

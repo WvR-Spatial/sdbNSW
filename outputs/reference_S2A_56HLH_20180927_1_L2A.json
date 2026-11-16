@@ -1,0 +1,126 @@
+{
+  "scene": "S2A_56HLH_20180927_1_L2A",
+  "sensitivity": null,
+  "lidar": {
+    "path": "data\\raw\\Narrabeen\\B\\NSW Government - DCCEEW\\DEM\\5 Metre\\NSW_Marine_5m_TopoBathy_DEM.tif",
+    "md5": "2d577a785cb8a76a2d1b9abd57b55645",
+    "crs": "EPSG:7856",
+    "grid": {
+      "x0": 337000.47865743417,
+      "y0": 6281881.414911009,
+      "dx": 5.0000000156963145,
+      "dy": 5.0000000151724455,
+      "nx": 2200,
+      "ny": 4356
+    }
+  },
+  "scene_grid": {
+    "crs": "EPSG:32756",
+    "grid": {
+      "x0": 337200.0,
+      "y0": 6281920.0,
+      "dx": 10.0,
+      "dy": 10.0,
+      "nx": 1074,
+      "ny": 2184
+    }
+  },
+  "datum": {
+    "operation": "Inverse of Map Grid of Australia zone 56 + GDA2020 to WGS 84 (2) + UTM zone 56S",
+    "stated_accuracy_m": 3.0,
+    "translation_m": [
+      0.0,
+      -0.0001
+    ],
+    "nonuniformity_m": 0.0
+  },
+  "coregistration": {
+    "note": "APPLIED from coreg_S2A_56HLH_20180927_1_L2A.json",
+    "shift_applied_m": [
+      -0.43,
+      -3.47
+    ]
+  },
+  "water_level_m_ahd": 0.501,
+  "water_level_source": "measured (gauge) from waterlevel_S2A_56HLH_20180927_1_L2A.json",
+  "open_sea_point": {
+    "lon_lat": [
+      151.33,
+      -33.74
+    ],
+    "row_col": [
+      1650,
+      810
+    ]
+  },
+  "depth_window_m": [
+    0.0,
+    20.0
+  ],
+  "flags": {
+    "1": "lidar coverage incomplete",
+    "2": "any land in pixel",
+    "4": "outside depth window",
+    "8": "cloud or shadow (SCL)",
+    "16": "bright NIR over lidar water",
+    "32": "no image data",
+    "64": "water not connected to the open sea (site rule)"
+  },
+  "summary": {
+    "pixels_total": 2345616,
+    "pixels_usable": 216259,
+    "usable_km2": 21.63,
+    "flagged_any": {
+      "lidar coverage incomplete": 948267,
+      "any land in pixel": 707720,
+      "outside depth window": 1060080,
+      "cloud or shadow (SCL)": 564,
+      "bright NIR over lidar water": 20426,
+      "no image data": 222,
+      "water not connected to the open sea (site rule)": 115357
+    },
+    "by_depth_band": [
+      {
+        "band_m": "0-2",
+        "pixels": 3467,
+        "km2": 0.35,
+        "relief_median_m": 0.11,
+        "relief_p90_m": 0.309
+      },
+      {
+        "band_m": "2-5",
+        "pixels": 20922,
+        "km2": 2.09,
+        "relief_median_m": 0.129,
+        "relief_p90_m": 0.39
+      },
+      {
+        "band_m": "5-10",
+        "pixels": 40384,
+        "km2": 4.04,
+        "relief_median_m": 0.128,
+        "relief_p90_m": 0.423
+      },
+      {
+        "band_m": "10-15",
+        "pixels": 60514,
+        "km2": 6.05,
+        "relief_median_m": 0.109,
+        "relief_p90_m": 0.335
+      },
+      {
+        "band_m": "15-20",
+        "pixels": 90972,
+        "km2": 9.1,
+        "relief_median_m": 0.123,
+        "relief_p90_m": 0.313
+      }
+    ]
+  },
+  "outputs": [
+    "data\\raw\\scenes\\S2A_56HLH_20180927_1_L2A\\reference.tif",
+    "data\\raw\\scenes\\S2A_56HLH_20180927_1_L2A\\mask.tif"
+  ],
+  "written_utc": "2026-11-16T10:04:41+00:00",
+  "sdb_version": "0.1.0"
+}

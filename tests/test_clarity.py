@@ -74,6 +74,26 @@ def test_block_table_medians_rmse_and_minimum_count():
     assert t["rmse"]["stumpf"] == pytest.approx(1.0)
 
 
+def test_block_table_leaves_out_pixels_with_no_red_value():
+    """One missing red value must not make the block's median NaN (Northern Beaches)."""
+    red = np.array([[0.002, 0.004, np.nan], [0.003, 0.005, 0.010]])
+    resid = {"stumpf": np.array([[1.0, -1.0, 9.0], [1.0, -1.0, 3.0]])}
+    blocks = np.zeros_like(red, int)
+    tab = C.block_table(red, resid, np.ones_like(red, bool), blocks, min_px=5)
+    assert len(tab) == 1 and tab[0]["n"] == 5             # the NaN pixel is not counted
+    assert tab[0]["clarity"] == pytest.approx(0.004)
+    assert tab[0]["rmse"]["stumpf"] == pytest.approx(np.sqrt(13 / 5))   # nor in the RMSE
+    depth = np.array([[10.0, 12.0, 99.0], [14.0, 16.0, 18.0]])
+    with_depth = C.block_table(red, resid, np.ones_like(red, bool), blocks, min_px=5, depth=depth)
+    assert with_depth[0]["mean_depth_m"] == pytest.approx(14.0) and "mean_depth_m" not in tab[0]
+    assert C.block_table(red, resid, np.ones_like(red, bool), blocks, min_px=6) == []
+
+
+def test_spearman_refuses_values_it_cannot_rank():
+    with pytest.raises(ValueError, match="non-finite"):
+        C.spearman(np.array([1.0, np.nan, 3.0, 4.0]), np.array([1.0, 2.0, 3.0, 4.0]))
+
+
 def test_site_clarity_is_the_median_of_selected_finite_pixels():
     red = np.array([0.001, 0.002, 0.003, np.nan, 0.9])
     sel = np.array([True, True, True, True, False])
@@ -191,7 +211,7 @@ def test_cli_end_to_end(tmp_path):
     assert C.main(["--run", "t=S", "--root", str(tmp_path), "--out", str(out),
                    "--boot", "50"]) == 0
     rec = json.loads((out / "phase4" / "clarity.json").read_text())
-    assert rec["deviations"] == ["boot=50 (protocol 1000)"]
+    assert rec["deviations"] == [*C.DEVIATIONS, "boot=50 (protocol 1000)"]
     assert rec["sites"]["t"]["clarity"]["n"] > 0
     assert set(rec["sites"]["t"]["within"]) == {"stumpf", "gbm"}
     assert Path(rec["figures"][0]).exists()

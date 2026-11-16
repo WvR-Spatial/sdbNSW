@@ -1,0 +1,129 @@
+{
+  "scene": "S2A_56HLH_20180927_1_L2A",
+  "sensitivity": {
+    "tag": "elvis_avg",
+    "status": "SENSITIVITY: not the registered reference; report beside the primary result, never instead of it"
+  },
+  "lidar": {
+    "path": "data\\raw\\Narrabeen\\NSW Government - DCCEEW\\DEM\\5 Metre\\NSW_Marine_5m_TopoBathy_DEM.tif",
+    "md5": "e956c123256df2e2595c5682af9473d7",
+    "crs": "EPSG:7856",
+    "grid": {
+      "x0": 336760.48291518044,
+      "y0": 6283951.415085974,
+      "dx": 5.000000015141043,
+      "dy": 5.000000016182313,
+      "nx": 2314,
+      "ny": 5565
+    }
+  },
+  "scene_grid": {
+    "crs": "EPSG:32756",
+    "grid": {
+      "x0": 337200.0,
+      "y0": 6281920.0,
+      "dx": 10.0,
+      "dy": 10.0,
+      "nx": 1074,
+      "ny": 2184
+    }
+  },
+  "datum": {
+    "operation": "Inverse of Map Grid of Australia zone 56 + GDA2020 to WGS 84 (2) + UTM zone 56S",
+    "stated_accuracy_m": 3.0,
+    "translation_m": [
+      0.0,
+      -0.0001
+    ],
+    "nonuniformity_m": 0.0
+  },
+  "coregistration": {
+    "note": "APPLIED from coreg_S2A_56HLH_20180927_1_L2A.json",
+    "shift_applied_m": [
+      -0.43,
+      -3.47
+    ]
+  },
+  "water_level_m_ahd": 0.501,
+  "water_level_source": "measured (gauge) from waterlevel_S2A_56HLH_20180927_1_L2A.json",
+  "open_sea_point": {
+    "lon_lat": [
+      151.33,
+      -33.74
+    ],
+    "row_col": [
+      1650,
+      810
+    ]
+  },
+  "depth_window_m": [
+    0.0,
+    20.0
+  ],
+  "flags": {
+    "1": "lidar coverage incomplete",
+    "2": "any land in pixel",
+    "4": "outside depth window",
+    "8": "cloud or shadow (SCL)",
+    "16": "bright NIR over lidar water",
+    "32": "no image data",
+    "64": "water not connected to the open sea (site rule)"
+  },
+  "summary": {
+    "pixels_total": 2345616,
+    "pixels_usable": 217581,
+    "usable_km2": 21.76,
+    "flagged_any": {
+      "lidar coverage incomplete": 928508,
+      "any land in pixel": 718636,
+      "outside depth window": 1075724,
+      "cloud or shadow (SCL)": 564,
+      "bright NIR over lidar water": 20616,
+      "no image data": 222,
+      "water not connected to the open sea (site rule)": 116703
+    },
+    "by_depth_band": [
+      {
+        "band_m": "0-2",
+        "pixels": 3246,
+        "km2": 0.32,
+        "relief_median_m": 0.07,
+        "relief_p90_m": 0.185
+      },
+      {
+        "band_m": "2-5",
+        "pixels": 20954,
+        "km2": 2.1,
+        "relief_median_m": 0.095,
+        "relief_p90_m": 0.199
+      },
+      {
+        "band_m": "5-10",
+        "pixels": 40757,
+        "km2": 4.08,
+        "relief_median_m": 0.098,
+        "relief_p90_m": 0.253
+      },
+      {
+        "band_m": "10-15",
+        "pixels": 60977,
+        "km2": 6.1,
+        "relief_median_m": 0.083,
+        "relief_p90_m": 0.213
+      },
+      {
+        "band_m": "15-20",
+        "pixels": 91647,
+        "km2": 9.16,
+        "relief_median_m": 0.075,
+        "relief_p90_m": 0.197
+      }
+    ]
+  },
+  "outputs": [
+    "data\\raw\\scenes\\S2A_56HLH_20180927_1_L2A\\reference_elvis_avg.tif",
+    "data\\raw\\scenes\\S2A_56HLH_20180927_1_L2A\\mask_elvis_avg.tif"
+  ],
+  "written_utc": "2026-11-16T10:48:58+00:00",
+  "sdb_version": "0.1.0"
+}
