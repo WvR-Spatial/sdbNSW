@@ -187,3 +187,14 @@ def test_cli_tag_reads_exploratory_residuals_and_writes_apart(tmp_path):
     comp = {(c["band_m"], c["class"]): c for c in rec["threshold_0.5"]["vs_reference_inside_bay"]}
     assert comp[("2-5", "Posidonia")]["bias_diff"]["point"] == pytest.approx(0.7)
     assert not (sd / "substrate.tif").exists() and not (out / "substrate_S.json").exists()
+
+
+def test_default_layers_are_the_sites_own(tmp_path, capsys):
+    """Without --substrate a site reads substrate_<site>.gpkg, never another site's file."""
+    raw = tmp_path / "data" / "raw" / "substrate"
+    raw.mkdir(parents=True)
+    (raw / "substrate_jervis_bay.gpkg").write_bytes(b"")      # present, but the wrong site
+    (tmp_path / "outputs").mkdir()
+    assert SB.main(["--site", "batemans_bay", "--scene", "S", "--root", str(tmp_path),
+                    "--out", str(tmp_path / "outputs")]) == 2
+    assert "substrate_batemans_bay.gpkg" in capsys.readouterr().err

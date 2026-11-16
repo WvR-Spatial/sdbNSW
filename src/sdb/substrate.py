@@ -50,7 +50,8 @@ COMPARED = ("Posidonia", "Posidonia/Zostera", "Zostera/Halophila", "reef")
 FRACTIONS = ("posidonia", "posidonia_zostera", "zostera_halophila", "seagrass_any", "reef",
              "unconsolidated")
 ADDENDUM_MARKER = "Substrate addendum"
-DEFAULT_GPKG = Path("data/raw/substrate/substrate_jervis_bay.gpkg")
+#: One GeoPackage per site, so a site can never silently read another site's layers.
+DEFAULT_GPKG = "data/raw/substrate/substrate_{site}.gpkg"
 
 
 # --------------------------------------------------------------------------
@@ -177,7 +178,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     tag = f"_{a.tag}" if a.tag else ""
     res_dir = a.out / "exploratory" if a.tag else a.out
 
-    gpkg = a.substrate or a.root / DEFAULT_GPKG
+    gpkg = a.substrate or a.root / DEFAULT_GPKG.format(site=a.site)
     scene_dir = a.root / "data" / "raw" / "scenes" / a.scene
     rpath = a.out / f"reference_{a.scene}.json"
     resid_path = scene_dir / f"sdb{tag}.tif"
