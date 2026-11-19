@@ -129,7 +129,7 @@ other sites; the Narrabeen beach-survey data were not needed.*
 
 | Source | What | Access | Licence | Commit to repo? |
 |---|---|---|---|---|
-| [NSW Marine LiDAR Topo-Bathy 2018](https://datasets.seed.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018) | 5 m grid, IHO Order 1b, AHD, shore to 20–40 m, Jul–Dec 2018. **Order inside one survey block's raster**: an extract spanning several is averaged ("Average 16"); check with `scripts/dem_extracts.py` | [ELVIS](https://elevation.fsdf.org.au/) / AODN, manual area select | **CC BY 4.0** | **Yes** — clipped subsets, with attribution |
+| [NSW Marine LiDAR Topo-Bathy 2018](https://datasets.seed.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018) | 5 m grid, IHO Order 1b, AHD, shore to 20–40 m, Jul–Dec 2018. **Order inside one survey block's raster**: an extract spanning several is averaged ("Average 16"); check with `scripts/dem_extracts.py` | [ELVIS](https://elevation.fsdf.org.au/) / AODN, manual area select | **CC BY 4.0** | **Release asset, not the repo** (decided 19 Nov) — the four extracts used, unmodified, in one zip with attribution and md5s; unzip at the repo root (`data/README.md`) |
 | Sentinel-2 L2A | 10 m multispectral COGs | Earth Search STAC on AWS, anonymous | Copernicus open | No — derived results only |
 | MHL tide gauge 216470, Jervis Bay (HMAS Creswell) | Observed water level at overpass. **Received 29 Sep**: `JervisBay.Level1.AHD.Actual.1min.csv`, 6–9 Sep 2018, 1-minute, complete (4,321 samples), supplied in **AHD** (station datum Jervis Bay Port Datum 1958 − 1.070 m), AEST ±2 min, quality code 55 throughout (±20 mm) | MHL data request (form or data-request@mhl.nsw.gov.au) | CC BY 4.0, attribute NSW DCCEEW | Raw file no (`data/raw/tide/`); derived value yes |
 | MHL gauges for sites 2–3 | **Received 16 Nov** (requested 1 Oct): Sydney 213470, Patonga 212440 and Princess Jetty 216410, each 22 Aug – 30 Sep 2018 AEST, 1-minute, AHD, quality 55 throughout. Sydney waverider, hourly, 1–30 Sep 2018 (seabed-change context). Datum offsets and tidal planes from MHL's station pages (`data/README.md`, section 5) | As above | As above | Raw files no (`data/raw/MHL/`); derived values yes |
@@ -140,8 +140,10 @@ other sites; the Narrabeen beach-survey data were not needed.*
 
 **The CC BY licence on the reference data is a structural advantage.** Unlike
 the Narrabeen survey (registration-gated, non-commercial, un-committable), a
-reader can clone this repo and reproduce the validation. Do not squander that
-— commit the reference subsets.
+reader can reproduce the validation from this repo and its reference-lidar
+release. *(1 Oct plan: commit the subsets. 19 Nov: published as a release
+asset instead — 117 MB zipped, beyond git's 100 MB file limit as one file, and
+downloaded only by the rare reader who replicates.)*
 
 ## Method
 
@@ -846,6 +848,29 @@ most). The scene is nine days after the lidar with a 1.8 m, 15 s swell
 running; no storm intervened (register, 16 Nov). Surf, foam and moved sand
 cannot be separated here.
 
+**Descriptive, post hoc (19 Nov) — what the site differences are made of.**
+Computed from the committed `validate` and `substrate` records; no new fit,
+no interval, not a test. Stumpf only, majority rule.
+
+| | Jervis Bay | Northern Beaches | Batemans Bay |
+|---|---|---|---|
+| Share of assessed pixels at 15–20 m | 35% | 42% | 27% |
+| Depth-balanced RMSE, Stumpf · gbm (equal weight per band) | 2.48 · 1.53 m | 3.02 · 2.12 m | 2.73 · 2.10 m |
+| Share of assessed pixels on mapped reef | 10% | **54%** | 20% |
+| Stumpf RMSE on sediment only | 2.42 m | 2.58 m | 2.77 m |
+| Stumpf RMSE on reef only | 4.63 m | 3.35 m | 3.60 m |
+
+- **Depth mix explains little of the gap.** Northern Beaches has the most deep
+  pixels, but with every band weighted equally it still has the largest error.
+- **Reef share explains much of it.** On sediment alone the three sites sit
+  within 0.35 m of each other; Northern Beaches' pooled error is high because
+  more than half its assessed seabed is mapped reef, which reads deeper than
+  sediment at every site. Its reef is not worse than Jervis Bay's.
+- **Reef and exposure cannot be separated here:** Northern Beaches' reef is
+  the exposed rock platforms and headlands. The reef layer says nothing about
+  cover (kelp, urchin barren, bare rock).
+- The open coast has no mapped seagrass — the macrophyte layer maps estuaries.
+
 **What it means.** Stumpf lands at 2.7–3.0 m at all three sites with
 overlapping intervals. gbm lands at 1.9–2.5 m and is distinguishably worse on
 the open coast than in Jervis Bay (2.40 [2.20, 2.58] against 1.88 [1.67,
@@ -1108,10 +1133,19 @@ scorecard.
 hosting, the decisions below. Claude: reference check, figure pass, outline
 with word budgets for approval, then the draft.
 
-**Decisions for Warren.** (a) HTML page only, or HTML plus a PDF in conference
-layout from the same source; (b) the wording of the AI-assistance statement —
-the commit history already shows it, so the paper should say plainly who did
-what; (c) title.
+**Decisions for Warren.** (a) ~~HTML page only, or HTML plus PDF~~ —
+**both, from one source** (19 Nov); (b) the wording of the AI-assistance
+statement — the commit history already shows it, so the paper should say
+plainly who did what; (c) title — open. The project began as a comparison
+with tropical studies; as completed, the tropical literature is the benchmark
+and the gap, not the subject (*The question*). Any comparison with it must
+account for validation design: much of it used random or unreported splits,
+which this project shows can flatter a model.
+
+**Phase 4 conclusion — Warren's first draft received 19 Nov;** feedback given
+(site ranking within intervals; one scene per site; seagrass claim; depth
+mix and reef share measured, not hypothetical; the clarity metric's footprint;
+the exploratory within-site lead). Redraft pending.
 
 ## Open decisions
 
@@ -1125,8 +1159,8 @@ what; (c) title.
 - [x] Northern Beaches extent — **open coast only** (*Phase 4 amendment, 16 Nov*)
 - [x] Phase 4 run — 16 Nov (*Phase 4 result*); gate 4 not met; one deviation, both results kept
 - [x] Depth-standardised block test — exploratory addendum `884dce1`, run 16 Nov (*Exploratory result*): supported by its own rule, carried mainly by Jervis Bay
-- [ ] **Commit the reference lidar** (CC BY 4.0) — the brief's reproducibility promise, not yet kept: `data/reference/` holds only the block index. The three native extracts are 49 + 27 + 11 MB; decide between committing them and attaching them to a GitHub release
-- [ ] **Phase 4 conclusion in Warren's words** (as for Phase 3): what gate 4's failure means and what confounds it
+- [ ] **Reference lidar as a GitHub release asset** — decided 19 Nov; zip built (`data/raw/release/`, md5 `1170eddb15480750a0adf5da849d0616`); Warren to publish release `reference-lidar-2018`
+- [ ] **Phase 4 conclusion in Warren's words** (as for Phase 3) — first draft 19 Nov, redraft pending
 - [ ] **Limitations panel in Warren's words, before the results section** (`BUILD_GUIDE.md`, Phase 5)
 - [ ] `README.md` (result first), `site/` page, portfolio card with its number
 - [x] Atmospheric correction — **L2A as supplied** for v1; ACOLITE only as diagnosis if the gate fails
@@ -1224,6 +1258,9 @@ defensible piece of work.
 | 16 Nov | **Brief checked against its stated goals before the write-up.** Kept: the question, the blocked-validation design, the "number and an envelope" deliverable. Changed: the portfolio draft no longer claims a clarity gradient or a sea-state stratum; *The question* and *Sites* now say what was and was not found; error-budget rows added for sites 2–3 and for the clarity metric | Three open items carry into Phase 5: the reference lidar is still not committed (the reproducibility promise in *Data*), and the Phase 4 conclusion and the limitations panel are Warren's to write |
 | 16 Nov | **Exploratory depth-standardised block test run** after addendum commit `884dce1`: mean within-site +0.40 [+0.10, +0.66] (Stumpf), +0.34 [+0.02, +0.60] (gbm); all three sites positive; *supported* by the rule written beforehand | The registered test's site-to-site disagreement was depth mix. The result is carried mainly by Jervis Bay and concerns red reflectance, not turbidity; it changes neither gate 4 nor prediction 3. Reported as a lead, not a finding |
 | 16 Nov | **Write-up standard set** (Warren): conference-paper quality, readable by a non-technical portfolio audience. Plan proposed in *Write-up plan* — one document in three layers | Nothing is drafted until the limitations panel and Phase 4 conclusion exist in Warren's words and the outline is approved |
+| 19 Nov | **Reference lidar published as a release asset, not committed.** The four extracts used (three references, one sensitivity) in `sdbNSW_reference_lidar_2018.zip`, 117 MB, paths mirroring the repo, attribution and md5s inside | One file over git's 100 MB limit; committed separately they would add 122 MB to every clone for a reader who almost never replicates. A release costs only the reader who downloads it. The md5s match those in the `reference` records |
+| 19 Nov | **Descriptive decomposition of the site differences** (post hoc, no new fit): depth-balanced RMSE and error by substrate class per site (*Phase 4 result*) | Northern Beaches' higher error goes mostly with its reef share (54% of assessed pixels, against 10% and 20%); on sediment the sites are within 0.35 m. Reef and exposure are the same pixels there, so this does not separate them |
+| 19 Nov | **Output format and title.** Web page and conference-layout PDF from one source. Title open: the tropical literature is the benchmark, not the subject | Warren's decisions |
 
 ## Sources
 

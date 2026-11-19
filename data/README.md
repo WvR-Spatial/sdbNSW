@@ -241,6 +241,25 @@ so the site's seagrass strata are empty by construction — "not mapped", not
 
 ---
 
+## Reference lidar for replication — a release, not the repo
+
+The four 5 m extracts the validation used are published, unmodified, as one
+GitHub release asset rather than committed: **release `reference-lidar-2018`**,
+`sdbNSW_reference_lidar_2018.zip` (116,741,451 bytes, md5
+`1170eddb15480750a0adf5da849d0616`). Unzip at the repo root; every file lands
+at the path `config/sites.yml` and `BUILD_GUIDE.md` expect, with the
+attribution above and a `MANIFEST.md5`.
+
+| File (under `raw/`) | md5 | Used for |
+|---|---|---|
+| `JervisBay/…/NSW_Marine_5m_TopoBathy_DEM.tif` | `1fc6c508dc4c5681501722a5234fa10c` | Jervis Bay reference (mostly averaged, see section 1) |
+| `Narrabeen/B/…/NSW_Marine_5m_TopoBathy_DEM.tif` | `2d577a785cb8a76a2d1b9abd57b55645` | Northern Beaches reference (native) |
+| `Narrabeen/…/NSW_Marine_5m_TopoBathy_DEM.tif` | `e956c123256df2e2595c5682af9473d7` | Northern Beaches averaging sensitivity (`--tag elvis_avg`) |
+| `BatemansBay/BatemansBay_5m_native_AB.tif` (+ `.json`) | `3e79901571ccc8a5d7bdda7d337f2c09` | Batemans Bay reference (native union) |
+
+The zip is rebuilt only if a reference changes; its md5s match those recorded
+in `outputs/reference_*.json`.
+
 ## What is committed under `reference/`
 
 | File | Derived from | Notes |
