@@ -9,7 +9,7 @@
 #let muted = rgb("#5a6472")
 #let accent = rgb("#1d5a8c")
 
-#set document(title: [$title$], author: "$author$")
+#set document(title: [$title$], author: "$author$", date: none)
 #set page(
   paper: "a4",
   margin: (x: 16mm, top: 19mm, bottom: 20mm),
