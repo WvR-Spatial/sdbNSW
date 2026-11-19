@@ -4,7 +4,7 @@ Two directories, two different rules.
 
 | Path | Committed? | What it holds |
 |---|---|---|
-| `raw/` | **No** — gitignored | Manual downloads, as supplied. Large, re-orderable, reproducible by following the steps below. |
+| `raw/` | **No** (gitignored) | Manual downloads, as supplied. Large, re-orderable, reproducible by following the steps below. |
 | `reference/` | **Yes** | Small derived products: clipped subsets, indexes, footprints. These are what the analysis reads. |
 
 Code always references these paths relative to the repository root, so a clone
@@ -16,19 +16,19 @@ skipping.
 
 ## What to download
 
-### 1. NSW Marine LiDAR Topo-Bathy 2018 — 5 m DEM  *(the reference surface)*
+### 1. NSW Marine LiDAR Topo-Bathy 2018, 5 m DEM  *(the reference surface)*
 
-The validation reference. **Licence: CC BY 4.0** — attribution required in any
+The validation reference. **Licence: CC BY 4.0**, with attribution required in any
 publication of results, including the portfolio page.
 
 - Portal: [ELVIS](https://elevation.fsdf.org.au/)
 - Draw the area of interest, then under **Digital Elevation Models → 5 Metre**
   select *"5 metre Topo-Bathy DEM derived from NSW Marine LiDAR Project 2018"*.
 - Product: **GeoTIFF**, not the LAS point cloud.
-- **CRS: GDA2020 / MGA zone 56 (EPSG:7856)** — this is the data's native CRS.
+- **CRS: GDA2020 / MGA zone 56 (EPSG:7856)**, the data's native CRS.
   Do not let the portal reproject it; any reprojection resamples the elevation
   values and puts interpolation error into the reference surface.
-- Delivery is asynchronous — ELVIS emails a link.
+- Delivery is asynchronous: ELVIS emails a link.
 - Save to `raw/`.
 
 Attribution string:
@@ -55,19 +55,19 @@ whole-centimetre lattice: 0.97–0.99 for native values, ~0.1 after averaging.
 is identical, and writes a JSON sidecar with the inputs' md5s. Jervis Bay's
 delivery (below) predates this and is mostly averaged.
 
-### 2. Survey coverage index  *(optional — already reduced)*
+### 2. Survey coverage index  *(optional; already reduced)*
 
 The whole-of-NSW block footprints, used to establish per-block capture dates.
 Source: [SEED](https://datasets.seed.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018)
 → **Download Package** (ZIP, ~5 MB).
 
 This is *not* elevation data. It has already been reduced to the two committed
-files below, so you only need it again to re-derive them for another site.
+files below, and is needed again only to re-derive them for another site.
 
 ### 3. Sentinel-2 L2A
 
-Fetched programmatically from the Earth Search STAC catalogue on AWS — no
-account, nothing to download by hand.
+Fetched programmatically from the Earth Search STAC catalogue on AWS, with no
+account and nothing to download by hand.
 
 ```
 python -m sdb.stac --site jervis_bay                      # rank candidates
@@ -80,7 +80,7 @@ Only the AOI's pixels are read (windowed COG requests), and they land in
 
 | File | Contents |
 |---|---|
-| `reflectance.tif` | blue, green, red, nir — BOA reflectance, float32, native UTM 10 m grid, NaN = nodata |
+| `reflectance.tif` | blue, green, red, nir: BOA reflectance, float32, native UTM 10 m grid, NaN = nodata |
 | `scl.tif` | scene classification, upsampled to 10 m by exact replication |
 | `provenance.json` | item id, processing baseline, the scale/offset applied and where it came from, the water plausibility check, AOI cloud/water fractions |
 
@@ -107,22 +107,22 @@ the water level from `waterlevel`, and adds to `raw/scenes/<item id>/`:
 
 | File | Contents |
 |---|---|
-| `reference.tif` | `z_mean` (m AHD), `coverage` (0–1), `relief` (std of the 5 m cells in each pixel, m), `land_frac` (0–1 at the water level used) — float32, on the scene's own grid |
+| `reference.tif` | `z_mean` (m AHD), `coverage` (0–1), `relief` (std of the 5 m cells in each pixel, m), `land_frac` (0–1 at the water level used); float32, on the scene's own grid |
 | `mask.tif` | uint8 bit flags, 0 = usable: 1 lidar incomplete · 2 land · 4 outside depth window · 8 cloud/shadow · 16 bright NIR over lidar water · 32 no image · 64 water not joined to the open sea (sites with `open_sea_point`) |
 
-The small records that explain them — offset measured, datum operation, water
-level assumed, pixel counts by depth band — go to `outputs/` and are committed.
+The small records that explain them (offset measured, datum operation, water
+level assumed, pixel counts by depth band) go to `outputs/` and are committed.
 
 `python -m sdb.validate --scene <item id>` (Phase 2) adds `sdb.tif` beside
-them — `oof_depth` (out-of-fold SDB depth, m) and `residual` (SDB − lidar, m,
+them: `oof_depth` (out-of-fold SDB depth, m) and `residual` (SDB − lidar, m,
 positive = reads too deep), float32, NaN outside assessed pixels. Its record
 (`outputs/sdb_<item id>.json`) and figures (`outputs/figures/`) are committed;
 the raster is not.
 
 `python -m sdb.substrate --scene <item id>` adds `substrate.tif`:
 `class_majority` and `class_core` (index into the class list in
-`outputs/substrate_<item id>.json`), `seagrass_frac`, `reef_frac` — on the
-ground each pixel sees, i.e. with the co-registration shift applied.
+`outputs/substrate_<item id>.json`), `seagrass_frac`, `reef_frac`, on the
+ground each pixel sees, that is, with the co-registration shift applied.
 
 Exploratory variants (`validate --exploratory <name>`) write `sdb_<name>.tif`
 beside the scene and their records to `outputs/exploratory/`; v2 models
@@ -144,7 +144,7 @@ committed and not drawn in any figure.
 ### 5. Tide gauge record
 
 Observed water level at the overpass. Source: Manly Hydraulics Laboratory,
-**Jervis Bay gauge 216470** (HMAS Creswell), by data request — the form under
+**Jervis Bay gauge 216470** (HMAS Creswell), by data request: the form under
 *Data Request* on [mhl.nsw.gov.au](https://www.mhl.nsw.gov.au/Station-216470) or
 data-request@mhl.nsw.gov.au. Ask for 6–8 September 2018. Licence CC BY 4.0;
 attribute NSW DCCEEW. Save the CSV to `raw/tide/`.
@@ -152,8 +152,8 @@ attribute NSW DCCEEW. Save the CSV to `raw/tide/`.
 Received 29 Sep 2026 as `JervisBay.Level1.AHD.Actual.1min.csv`, with MHL's
 *Data conditions and limitations* PDF (keep both):
 
-- A 30-line licence and station block, then `Date,Time,Value [m],Quality` —
-  date and time in **separate columns**, day first, CRLF line endings.
+- A 30-line licence and station block, then `Date,Time,Value [m],Quality`,
+  with date and time in **separate columns**, day first, CRLF line endings.
 - 1-minute samples, 6 Sep 00:00 – 9 Sep 00:00 AEST, none missing.
 - Supplied in **AHD** (the header says so; the record's mean agrees). The
   station's own datum is Jervis Bay Port Datum (1958): AHD = SD − 1.070 m.
@@ -227,19 +227,17 @@ service refuses Python's default User-Agent, so send a browser-style one.
 
 The macrophyte layer maps estuaries only. At Northern Beaches every polygon is
 in Pittwater, the lagoons or the Hawkesbury, all outside the open-coast rule,
-so the site's seagrass strata are empty by construction — "not mapped", not
+so the site's seagrass strata are empty by construction: "not mapped", not
 "absent". Its substrate comparison is reef against sediment.
 
-- **NSW DPI Fisheries — Estuarine Macrophytes** (seagrass: *Posidonia*,
+- **NSW DPI Fisheries, Estuarine Macrophytes** (seagrass: *Posidonia*,
   *Zostera*, *Halophila*). Jervis Bay mapped from Aug 2019 aerial imagery,
   field-checked May 2020. ArcGIS REST:
   `spatial.industry.nsw.gov.au/arcgis/rest/services/Fisheries_Portal/Estuarine_Macrophytes/MapServer/0`.
   © NSW DPI Fisheries; CC BY 4.0 as stated by the service (an IMAS copy states CC BY-NC).
-- **DCCEEW — NSW seabed reef extent**, classified from the 2018 marine lidar.
+- **DCCEEW, NSW seabed reef extent**, classified from the 2018 marine lidar.
   ArcGIS REST: `mapprod3.environment.nsw.gov.au/arcgis/rest/services/Marine/NSW_seabed_reef_extent/MapServer`.
   CC BY 4.0.
-
----
 
 ### 7. Basemap for the location map  *(copied from QGIS; never committed)*
 
@@ -249,7 +247,9 @@ with QGIS (`resources/data/world_map.gpkg` in a QGIS 3.40 install). Copy it to
 `data/raw/basemap/world_map_qgis340.gpkg`; layer `states_provinces` is used.
 Natural Earth's own admin-1 download works too if the layer name is changed.
 
-## Reference lidar for replication — a release, not the repo
+---
+
+## Reference lidar for replication: a release, not the repository
 
 The four 5 m extracts the validation used are published, unmodified, as one
 GitHub release asset rather than committed: **release `reference-lidar-2018`**,
@@ -275,7 +275,7 @@ in `outputs/reference_*.json`.
 | `nsw_marine_lidar_blocks_index.csv` | coverage shapefile | All 48 survey blocks, attributes only. `CAPT_END` is the capture date used for scene pairing. |
 | `jervisbay_lidar_blocks.geojson` | coverage shapefile | The five blocks intersecting the Jervis Bay AOI, simplified to 20 m, WGS84. |
 
-### Site 1 — measured, not estimated
+### Site 1: Jervis Bay
 
 ```
 block        JervisBay  (NS_ID 33, COMPCODE NSW020502)
@@ -292,7 +292,7 @@ pairing targets a two-day window rather than the survey's full
 is therefore ELVIS-averaged except in a patch on the Beecroft coast
 (`dem_extracts.py check`: 9% of underwater cells on the cm lattice).
 
-### Site 2 — Northern Beaches
+### Site 2: Northern Beaches
 
 ```
 block        SydneyNorth  (NS_ID 23, COMPCODE NSW020302)
@@ -316,7 +316,7 @@ open coast   only water joined to the sea at 151.33, -33.74 is assessed
 which ELVIS averaged. It is kept as the input for the Phase 4 sensitivity run,
 never as the reference.
 
-### Site 3 — Batemans Bay
+### Site 3: Batemans Bay
 
 ```
 block        BatemansBay  (COMPCODE NSW020602)

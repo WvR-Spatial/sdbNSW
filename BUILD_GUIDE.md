@@ -1,405 +1,178 @@
-# Build guide — how this gets assembled
+# Reproduction guide
 
-Companion to `PROJECT_BRIEF.md`. Read the brief first; it holds the *why* and
-the decision gates. This holds the *how*, and marks who does what.
+How to rerun every result in this repository, rebuild the figures and the
+paper, and check that what you get matches what was published. The *why*
+behind each step is in [`PROJECT_BRIEF.md`](PROJECT_BRIEF.md) and the
+registered texts in [`protocols/`](protocols/); this guide is the *how*.
 
-**→ YOU** = your hands, your machine, your judgement.
-**→ CLAUDE** = I write it, you review and run it.
+Every result record under `outputs/` names the md5 of each input it read, so a
+rerun can be checked file by file. Expected values are given below at each
+step; numbers that differ beyond the last decimal mean a different input or
+environment, and are worth stopping for.
 
-Neither the cloud container nor the Cowork workspace can reach the Sentinel-2
-STAC endpoint or the Open-Meteo wind API — both sit behind an egress allowlist
-and return 403 at the proxy. **All network fetches run in your own Python environment on Windows**
-(or in GitHub Actions, which has unrestricted network). Plan around that: I
-write and review code, you execute it and bring back the output.
+Commands are written for the Anaconda Prompt on Windows (cmd.exe), where the
+project was run. On Linux or macOS change `\` to `/` in paths and `rem` to `#`.
 
----
-
-## Phase 0 — Setup
-
-**→ YOU · one evening, plus waiting time**
-
-1. **Repo** — `sdbNSW`, cloned to `C:\Study\Claude\sdbNSW`. *Done.*
-2. **Python environment** — conda-forge only, separate from your ArcPy
-   environment. GDAL conflicts are not worth the afternoon. *Done.*
-   ```
-   conda env create -f environment.yml
-   conda activate sdbnsw
-   pip install -e . --no-deps
-   ```
-   `--no-deps` stops pip installing PyPI wheels with their own GDAL on top of
-   conda's. Commands in this guide are written for the **Anaconda Prompt
-   (cmd.exe)**, not PowerShell.
-3. **Order the reference lidar.** ELVIS uses area-select then asynchronous
-   delivery — you draw a polygon, it emails you a download link. This can take
-   hours to a day, so **do it first**, before anything else.
-   - Site 1 (Jervis Bay) only at this stage.
-   - Take the **GeoTIFF** product, not the LAS point cloud, for v1.
-   - Record the acquisition date of each tile. You need it for scene pairing.
-4. **Note the attribution string** required by CC BY 4.0. It goes in the
-   README and on the portfolio page, not just in a footnote.
-
-**Gate:** lidar tile on disk, opens in QGIS, has sensible depth values in AHD.
-
----
-
-## Phase 1 — One site, one scene
-
-**→ CLAUDE** — `src/sdb/stac.py`: query Earth Search for Sentinel-2 L2A over
-the site bbox, filter on cloud cover, sun elevation and glint risk, rank
-candidates by proximity to the lidar acquisition date. Writes a candidate
-table, downloads nothing.
-
-It also pulls ERA5 wind at each overpass (one request to Open-Meteo) and adds
-`glint_sigma`: how unusual a wave slope must be to glint, in standard
-deviations, from wind speed and its direction against the sun. **Lower is more
-glint-prone.** Rank with it; do not treat it as a value. `--no-wind` skips it; if the API is unreachable the search carries on
-with the columns empty.
-
-**→ YOU** — run it. Bring back the candidate table.
-
-**→ YOU + CLAUDE together** — shortlist. This is a judgement call, not a
-sort: lowest cloud is not always best if it sits six months from the lidar
-date, and a glinty calm day can beat a clear windy one.
-
-**→ YOU** — `python -m sdb.fetch quicklook --top 3`. Reads only the SCL and
-true-colour assets over the AOI and reports **cloud over the AOI**, which the
-tile-wide figure cannot tell you, plus a panel stretched over water so seabed
-texture is visible. Bring back the panel and table; we pick the scene.
-
-**→ YOU** — `python -m sdb.fetch scene --item <id>`. Writes the reflectance
-stack to `data/raw/scenes/<id>/`. It refuses to write if the reflectance fails
-the water plausibility check — that means the offset is wrong, and nothing
-downstream should be built on it.
-
-**→ CLAUDE** — `coreg.py` measures how far the image sits from its true
-position by matching it to NSW orthoimagery over land (`ortho.py`);
-`waterlevel.py` gives the water level at overpass; `reference.py` aggregates
-the lidar onto the scene's 10 m grid (never the other way round), applying
-both, and writes the masks. *Done.*
-
-**→ YOU** — run, in this order (the first fetches ~30 MB of orthophoto once,
-into gitignored `data/raw/ortho/`):
-```
-python -m sdb.coreg --scene S2A_56HKG_20180907_0_L2A
-python -m sdb.waterlevel --scene S2A_56HKG_20180907_0_L2A --from-image
-python -m sdb.reference --scene S2A_56HKG_20180907_0_L2A
-```
-Expected at Jervis Bay: shift **E −7.42, N −1.02 m**, verdict `APPLY`; water
-level **−0.496 m AHD (provisional)**; **937,499** usable pixels. Different
-numbers mean a different environment or input — stop and bring them back.
-
-The first co-registration method (steep shorelines) was ~14 m wrong here and is
-kept only as a diagnostic: `python -m sdb.coreg --scene … --method waterline`
-writes a separate record that nothing reads.
-
-**→ YOU** — request the observed water level from MHL, Jervis Bay gauge
-216470, for 6–8 September 2018 (form under *Data Request* on
-mhl.nsw.gov.au, or data-request@mhl.nsw.gov.au). When the CSV arrives, save it
-under `data/raw/tide/` and run:
-```
-python -m sdb.waterlevel --scene S2A_56HKG_20180907_0_L2A --gauge-file data\raw\tide\<file>.csv
-python -m sdb.reference --scene S2A_56HKG_20180907_0_L2A
-```
-The datum is inferred from the record's mean and checked against the header's
-statement (a contradiction is refused); times are taken as AEST. *Done 29 Sep:
-−0.392 m AHD, superseding the provisional −0.496; `reference` then gives
-932,838 usable pixels (93.28 km²).*
-
-**→ YOU · QGIS** — the visual check, done 27 Sep, and it caught the first
-co-registration. It stays in the guide for sites 2 and 3: compare the scene
-with an **independent orthophoto on land** (runways, roads, street grids), not
-at the shoreline, where shadowed cliffs, whitewater and tide all move the edge.
-Also: can you see the seabed? Does `mask.tif` flag 16 sit on beaches, reefs and
-the outer coast rather than open water?
-
-QGIS via MCP is fine for this looking-and-poking. **Nothing that touches the
-pipeline gets done in the GUI** — anything GUI-driven is not reproducible by a
-reader, which is the exact criticism that sinks the Murray REM piece.
-
-**Gate:** seabed visible; co-registration confirmed on land. *Passed on
-geometry; water level measured by the gauge on 29 Sep.*
-
----
-
-## Phase 2 — Empirical SDB, first number
-
-The method is fixed in advance: *Phase 2 protocol* in `PROJECT_BRIEF.md`,
-committed in `8332154` before any model saw real data. The code implements it
-and records any departure as a deviation.
-
-**→ CLAUDE (done)** — `src/sdb/sdb.py` (Stumpf transform and the calibration
-rule), `src/sdb/validate.py` (blocked cross-validation, statistics, breakdown
-depth, CLI), `src/sdb/viz.py` (figures). Tests: `tests/test_sdb.py`,
-`tests/test_validate.py` — including the water-level invariance and a leakage
-demonstration. **225 tests** with `tests/test_substrate.py`.
-
-**→ YOU** —
+## 1. Environment
 
 ```
-pytest -q
-python -m sdb.validate --scene S2A_56HKG_20180907_0_L2A
+conda env create -f environment.yml
+conda activate sdbnsw
+pip install -e . --no-deps
+python -m pytest -q
 ```
 
-~40 s. Expected at the provisional water level (−0.496 m AHD), from inputs with
-md5 `bb441e91…` (reflectance), `5e165671…` (reference), `b3188e21…` (mask):
+Expect `282 passed`. The environment is conda-forge only; `--no-deps` stops pip
+installing PyPI wheels with their own GDAL on top of conda's.
 
-| | |
-|---|---|
-| Pooled RMSE (2 km blocks, 5-fold × 10) | **2.70 m** [2.32, 3.15], bias −0.41 m, R² 0.688 |
-| Naive random split | 2.67 m (blocked / naive 1.009) |
-| Depth-balanced RMSE | 2.48 m |
-| Inside bay / open coast | 2.28 m / 4.72 m |
-| Breakdown depth, CATZOC C and B | **0 m** — exceeded from the shallowest bin |
-| Saturation depth D_cal | 16–20 m (median 20) |
-| Residual correlation range | 4000 m — exceeds the block: caveat applies |
-| Gate | **PASS** |
+Network access is needed for the Sentinel-2 catalogue (Earth Search on AWS),
+NSW orthoimagery (Spatial Services), ERA5 wind (Open-Meteo, scene selection
+only) and the habitat map services. All are public and anonymous.
 
-It writes `outputs/sdb_<scene>.json`, three figures in `outputs/figures/`,
-and `sdb.tif` (out-of-fold depth and residual) beside the scene. Commit the
-JSON and figures; `sdb.tif` stays in gitignored `data/raw/`.
+## 2. Inputs
 
-**With the gauge record (29 Sep):** `waterlevel --gauge-file …` → `reference` →
-`validate` → `substrate`. Expected: pooled RMSE **2.68 m** [2.31, 3.13], bias
-−0.42 m, 932,838 pixels; substrate reef +1.66 m at 5–10 m. Both runs are
-reported in the brief.
+| Input | How to get it | Where it goes |
+|:--|:--|:--|
+| Lidar reference, three sites plus one sensitivity extract | Download `sdbNSW_reference_lidar_2018.zip` from the release [`reference-lidar-2018`](https://github.com/WvR-Spatial/sdbNSW/releases/tag/reference-lidar-2018) and unzip at the repository root; check against its `MANIFEST.md5`. Or order from ELVIS as described in `data/README.md` | `data\raw\...`, at the paths `config\sites.yml` expects |
+| Sentinel-2 Level-2A scenes | Fetched by `sdb.fetch` (step 3) | `data\raw\scenes\<scene>\` |
+| Orthoimagery windows | Fetched by `sdb.coreg` | `data\raw\ortho\` |
+| Tide-gauge records | Manly Hydraulics Laboratory, on request (`data/README.md`, section 5). **Optional:** the measured water levels are committed in `outputs\waterlevel_<scene>.json`, and `reference` reads them from there | `data\raw\MHL\`, `data\raw\tide\` |
+| Reef and seagrass layers | ArcGIS REST services, one GeoPackage per site (`data/README.md`, section 6) | `data\raw\substrate\` |
+| Basemap for Figure 1 | Natural Earth admin-1, from the `world_map.gpkg` bundled with QGIS (`data/README.md`, section 7) | `data\raw\basemap\` |
 
-**Gate:** site 1 RMSE within roughly 2× the literature (< ~4 m). If it is
-wildly worse, the fault is almost always water level, sun glint, or
-misregistration — in that order. **Do not tune the model to make the number
-look better.** Find the cause.
+`data\raw\` is not committed. Everything under it is either downloadable as
+above or recreated by the pipeline.
 
----
+## 3. Each site, in order
 
-## Phase 3 — Validation done properly
+| Site key | Scene | Notes |
+|:--|:--|:--|
+| `jervis_bay` | `S2A_56HKG_20180907_0_L2A` | the default site |
+| `narrabeen_long_reef` | `S2A_56HLH_20180927_1_L2A` | Northern Beaches; open coast only |
+| `batemans_bay` | `S2B_56HKF_20180823_1_L2A` | co-registration needs 1.5 km windows |
 
-Blocked cross-validation, the naive split and the breakdown statistic already
-run in `validate.py` (Phase 2). What remains here is substrate, and ML (v2).
-
-**→ YOU + CLAUDE** — substrate: fetch the NSW DPI *Estuarine Macrophytes*
-(seagrass) and DCCEEW *seabed reef extent* layers for Jervis Bay into
-`data/raw/substrate/` (their ArcGIS REST services are reachable from your
-machine, not from the cloud workspace). Then: check the mapping dates, how much
-of the usable area each class covers by depth band, and alignment against the
-scene; fix the class rules **before** errors by substrate are computed.
-*Done: layers in `data/raw/substrate/`, rules committed in `73d02ce`.*
+For each site (`<site>`, `<scene>`):
 
 ```
-python -m sdb.substrate --scene S2A_56HKG_20180907_0_L2A
+python -m sdb.fetch --site <site> scene --item <scene>
+python -m sdb.coreg --site <site> --scene <scene>
+python -m sdb.reference --site <site> --scene <scene>
+python -m sdb.validate --site <site> --scene <scene>
+python -m sdb.validate --site <site> --scene <scene> --model gbm
+python -m sdb.validate --site <site> --scene <scene> --model gbm_xy
+python -m sdb.substrate --site <site> --scene <scene>
 ```
 
-~15 s. Reads `sdb.tif` from Phase 2 (no refit). Expected: inside the bay,
-*Posidonia* minus sediment −1.89 m (0–2 m), +0.24 (2–5), +0.12 (5–10); reef
-+1.66 (5–10), +1.70 (10–15), +1.66 (15–20). Writes
-`outputs/substrate_<scene>.json`, one figure, and `substrate.tif` beside the
-scene. Commit the JSON and figure.
+At Batemans Bay add `--window-km 1.5` to `coreg`. Scene selection
+(`sdb.stac`, `sdb.fetch quicklook`) is not needed to reproduce the results:
+the scenes are fixed, and the reasons for each choice are in the decisions
+register.
 
-**Exploratory follow-up** (labelled, never replaces a registered result;
-writes only to `outputs/exploratory/`):
+Do not run `waterlevel --from-image` unless you mean to: it overwrites the
+committed, gauge-measured water level with the image's provisional estimate.
+With the gauge records in hand, `waterlevel` reproduces the committed values:
 
 ```
+python -m sdb.waterlevel --site jervis_bay --scene S2A_56HKG_20180907_0_L2A --gauge-file data\raw\tide\JervisBay.Level1.AHD.Actual.1min.csv
+python -m sdb.waterlevel --site narrabeen_long_reef --scene S2A_56HLH_20180927_1_L2A --gauge-file "data\raw\MHL\Ocean tide\Sydney.Level1.AHD.Actual.1min.csv"
+python -m sdb.waterlevel --site batemans_bay --scene S2B_56HKF_20180823_1_L2A --gauge-file "data\raw\MHL\Ocean tide\PrincessJetty.Level1.AHD.Actual.1min.csv"
+```
+
+**Expected values**
+
+| | Jervis Bay | Northern Beaches | Batemans Bay |
+|:--|:--|:--|:--|
+| `fetch`: water check | passes (red over water +0.0039) | passes (+0.0036) | passes (+0.0053) |
+| `coreg`: shift east, north (m); verdict | −7.42, −1.02; apply | −0.43, −3.47; apply | +2.95, −4.91; apply |
+| `waterlevel` (m AHD) | −0.392 | +0.501 | −0.181 |
+| `reference`: usable pixels | 932,838 (93.28 km²) | 216,259 (21.63 km²) | 274,689 (27.47 km²) |
+| `validate`: band-ratio pooled RMSE | 2.68 m [2.31, 3.13] | 3.03 m [2.81, 3.22] | 2.96 m [2.32, 3.52] |
+| `validate --model gbm` | 1.88 m [1.67, 2.13] | 2.40 m [2.20, 2.58] | 2.45 m [1.86, 2.95] |
+| `validate --model gbm_xy`, blocked/random | 1.774 | 2.936 | 4.260 |
+
+At Northern Beaches `reference` also reports 115,357 pixels of water not
+connected to the open sea (Pittwater and the lagoons), and `validate` 21
+eligible blocks. `validate` refuses a site with fewer than 15 blocks and writes
+nothing.
+
+The band ratio takes under a minute per site. Each gradient-boosting run makes
+250 fits and takes about 15 minutes on two cores at Jervis Bay, less at the
+smaller sites. Tree building is multithreaded, so a machine with a different
+number of cores may differ in the last decimal.
+
+Each step writes a JSON record to `outputs\` (committed) and rasters beside
+the scene (not committed): `reference.tif` and `mask.tif`, then `sdb.tif`
+(out-of-fold depth and residual), `sdb_gbm.tif`, `sdb_gbm_xy.tif` and
+`substrate.tif`. Gradient-boosting records go to `outputs\v2\`. No model
+overwrites another's raster.
+
+## 4. Across the three sites
+
+The registered clarity analysis, then the exploratory depth-standardised test:
+
+```
+python -m sdb.clarity --run jervis_bay=S2A_56HKG_20180907_0_L2A --run narrabeen_long_reef=S2A_56HLH_20180927_1_L2A --run batemans_bay=S2B_56HKF_20180823_1_L2A
+python -m sdb.clarity --depth-adjusted --run jervis_bay=S2A_56HKG_20180907_0_L2A --run narrabeen_long_reef=S2A_56HLH_20180927_1_L2A --run batemans_bay=S2B_56HKF_20180823_1_L2A
+```
+
+The first writes `outputs\phase4\clarity.json` and prints each registered
+prediction as held or failed: gate 4 not met; mean within-site correlation
++0.35 [+0.09, +0.59] for the band ratio. The second writes only to
+`outputs\exploratory\`: mean +0.40 [+0.10, +0.66], read as *supported* by the
+rule fixed beforehand. `outputs\phase4\clarity_run1_superseded.json` is the
+first, erroneous run, kept on purpose (decisions register, 16 Nov).
+
+## 5. Sensitivity and exploratory runs
+
+These are labelled in their records and can only write to
+`outputs\sensitivity\` or `outputs\exploratory\`.
+
+```
+rem Reference averaging: Northern Beaches against the ELVIS-averaged extract
+python -m sdb.reference --site narrabeen_long_reef --scene S2A_56HLH_20180927_1_L2A --dem "data/raw/Narrabeen/NSW Government - DCCEEW/DEM/5 Metre/NSW_Marine_5m_TopoBathy_DEM.tif" --tag elvis_avg
+python -m sdb.validate --site narrabeen_long_reef --scene S2A_56HLH_20180927_1_L2A --reference-tag elvis_avg
+python -m sdb.validate --site narrabeen_long_reef --scene S2A_56HLH_20180927_1_L2A --reference-tag elvis_avg --model gbm
+
+rem Second tide gauge at Northern Beaches (Patonga): +0.539 m AHD
+python -m sdb.waterlevel --site narrabeen_long_reef --scene S2A_56HLH_20180927_1_L2A --gauge-file "data\raw\MHL\Ocean tide\Patonga.Level1.AHD.Actual.1min.csv" --gauge-key tide_gauge_check --tag patonga
+
+rem Jervis Bay calibration variants (exploratory, Phase 2)
 python -m sdb.validate --scene S2A_56HKG_20180907_0_L2A --exploratory rule95
 python -m sdb.substrate --scene S2A_56HKG_20180907_0_L2A --tag rule95
 python scripts\calibration_form_check.py --scene S2A_56HKG_20180907_0_L2A
 ```
 
-Expected: pooled RMSE 2.82 m, D_cal 16–18 m; substrate contrasts within 0.1 m
-of the registered ones; the script prints slopes 49.4 vs 62.2 and pooled RMSE
-2.68 vs 3.02 m.
+Expected: the averaged reference moves pooled RMSE by −0.02 m for both models.
+The Jervis Bay exploratory runs were made at the image-estimated water level
+(−0.496 m AHD) before the gauge record arrived and were not repeated, so a
+rerun now, at the measured level, will differ slightly from the recorded
+values (pooled RMSE 2.82 m for `rule95`).
 
-**→ YOU** — read the output and decide whether you believe it. The gap
-between the naive and blocked numbers is a result in its own right and
-deserves a paragraph. *Done 29 Sep — in the brief as the Phase 3 conclusion.*
-
-### v2 — ML, pre-registered
-
-The method is fixed in the brief's *v2 protocol* before any ML model sees real
-data: gradient-boosted trees with fixed settings, image-only features, v1's
-folds, a paired comparison with Stumpf, and four written predictions.
-
-**→ YOU** — commit the protocol first. Then, after `pytest -q`:
+## 6. Figures, web page and PDF
 
 ```
-python -m sdb.validate --scene S2A_56HKG_20180907_0_L2A --model gbm
-python -m sdb.validate --scene S2A_56HKG_20180907_0_L2A --model gbm_xy
+python scripts\figures.py
+python paper\build.py
 ```
 
-Each takes ~15 min on two cores (250 fits: primary, naive and block-size
-curve). Both read the registered Stumpf run (`sdb.tif`, measured water level)
-to pair against, and write only to `outputs/v2/` and `sdb_<model>.tif`.
-`gbm_xy` adds coordinates and is the **leakage demonstration** — its numbers
-are never a result.
+`figures.py` writes the hero figure and Figures 1–6 to `docs\figures\` from the
+committed records and the site rasters (`--no-rasters` makes only the four
+charts that need no rasters). The charts use the Inter typeface if it is
+installed.
 
-Expected (run 29 Sep after `c2baa44`): **gbm** pooled RMSE **1.88 m**
-[1.67, 2.13], blocked/random 1.060, paired difference to Stumpf −0.80 m
-[−1.06, −0.57], CATZOC C to 3 m; **gbm_xy** 1.32 m, random split 0.74 m
-(blocked/random 1.777). Small differences in the last decimal are possible on
-a machine with a different number of cores (multithreaded tree building).
+`build.py` turns `paper\paper.md` into `docs\index.html` and
+`docs\sdbNSW_paper.pdf`. It needs pandoc 3.1 or later on the PATH and the typst
+Python package (`pip install typst`); `build.py --figures` runs `figures.py`
+first. An unchanged source rebuilds the PDF to identical bytes. GitHub Pages
+serves `docs\` from the `main` branch.
 
----
-
-## Phase 4 — Three sites
-
-**→ YOU** — order lidar for sites 2 and 3 from ELVIS (async again — order
-both at the start of this phase). **Keep each order inside one survey
-block's raster**, or ELVIS averages it (`data/README.md`, section 1); check
-every delivery with `python scripts\dem_extracts.py check <tif>`.
-
-**→ CLAUDE** — `config/sites.yml`, and whatever the pipeline needs to run
-per-site without copy-paste. Every command takes `--site`; the default is
-`jervis_bay`, so always pass it.
-
-Done on 1 Oct, before the protocol (data preparation only, no depths fitted):
+## 7. Checks
 
 ```
-python -m sdb.stac --site narrabeen_long_reef            # likewise batemans_bay
-python -m sdb.fetch --site narrabeen_long_reef quicklook --top 3
-python -m sdb.fetch --site narrabeen_long_reef scene --item S2A_56HLH_20180927_1_L2A
-python -m sdb.fetch --site batemans_bay scene --item S2B_56HKF_20180823_1_L2A
-python -m sdb.coreg --site narrabeen_long_reef --scene S2A_56HLH_20180927_1_L2A
-python -m sdb.coreg --site batemans_bay --scene S2B_56HKF_20180823_1_L2A --window-km 1.5
-python -m sdb.waterlevel --site <site> --scene <scene> --from-image      # provisional
+python scripts\freeze_protocols.py --check
+python scripts\dem_extracts.py check <a delivered lidar .tif>
 ```
 
-Expect: both fetches pass the water check (red/NIR ≈ +0.004); co-registration
-"apply" at both (Batemans Bay needs 1.5 km windows — the registered fallback).
-
-**→ YOU** — commit the *Phase 4 protocol* in `PROJECT_BRIEF.md` before anything
-below (done: `a5b5f5d`).
-
-**→ CLAUDE** — the Phase 4 code, after that commit and tested on synthetic
-data first: `clarity.py`; `reference --dem/--tag` and `validate
---reference-tag` for sensitivity runs (they write only to tagged files and
-`outputs/sensitivity/`); and `validate` refusing a site with fewer than 15
-two-kilometre blocks (exit code 3, nothing written).
-
-**→ CLAUDE** — when the MHL records arrived (16 Nov): each site's `tide_gauge`
-block (and Northern Beaches' `tide_gauge_check`, Patonga) from MHL's station
-pages, and the *Phase 4 amendment* — Northern Beaches open coast only, by an
-`open_sea_point` in `config/sites.yml` (`reference` flags other water 64).
-Checked on the real Northern Beaches reference before any fit: 21 eligible
-blocks.
-
-**→ YOU** — commit the amendment and config **before** the first `validate` at
-either new site, so its commit predates every fit. Then:
-
-```
-rem water levels (the cross-check writes only to outputs\sensitivity\)
-python -m sdb.waterlevel --site narrabeen_long_reef --scene S2A_56HLH_20180927_1_L2A --gauge-file "data\raw\MHL\Ocean tide\Sydney.Level1.AHD.Actual.1min.csv"
-python -m sdb.waterlevel --site narrabeen_long_reef --scene S2A_56HLH_20180927_1_L2A --gauge-file "data\raw\MHL\Ocean tide\Patonga.Level1.AHD.Actual.1min.csv" --gauge-key tide_gauge_check --tag patonga
-python -m sdb.waterlevel --site batemans_bay --scene S2B_56HKF_20180823_1_L2A --gauge-file "data\raw\MHL\Ocean tide\PrincessJetty.Level1.AHD.Actual.1min.csv"
-```
-
-Expect +0.501 (Sydney), +0.539 (Patonga) and −0.181 m AHD (Princess Jetty),
-each superseding the provisional image estimate. Sydney and Patonga differ by
-0.04 m, under the protocol's 0.10 m, so there is **no water-level sensitivity
-run**. Then per site (`<site>` / `<scene>`):
-
-```
-python -m sdb.reference --site <site> --scene <scene>
-python -m sdb.validate  --site <site> --scene <scene>
-python -m sdb.validate  --site <site> --scene <scene> --model gbm
-python -m sdb.validate  --site <site> --scene <scene> --model gbm_xy
-python -m sdb.substrate --site <site> --scene <scene>
-```
-
-Northern Beaches is `narrabeen_long_reef` / `S2A_56HLH_20180927_1_L2A`; Batemans
-Bay is `batemans_bay` / `S2B_56HKF_20180823_1_L2A`. At Northern Beaches
-`reference` should report ~115k pixels (11.5 km²) *not connected to the open
-sea* and 21.6 km² usable, and `validate` 21 blocks; anything far from that,
-stop. `substrate` compares over the whole site (no inside-bay polygon) and says
-so. The reference-averaging sensitivity run (Northern Beaches only), on the
-ELVIS-averaged whole-block extract — the open-sea rule applies to it too:
-
-```
-python -m sdb.reference --site narrabeen_long_reef --scene S2A_56HLH_20180927_1_L2A --dem "data/raw/Narrabeen/NSW Government - DCCEEW/DEM/5 Metre/NSW_Marine_5m_TopoBathy_DEM.tif" --tag elvis_avg
-python -m sdb.validate  --site narrabeen_long_reef --scene S2A_56HLH_20180927_1_L2A --reference-tag elvis_avg
-python -m sdb.validate  --site narrabeen_long_reef --scene S2A_56HLH_20180927_1_L2A --reference-tag elvis_avg --model gbm
-```
-
-Then the cross-site analysis, once, over all three:
-
-```
-python -m sdb.clarity --run jervis_bay=S2A_56HKG_20180907_0_L2A --run narrabeen_long_reef=S2A_56HLH_20180927_1_L2A --run batemans_bay=S2B_56HKF_20180823_1_L2A
-```
-
-It writes `outputs/phase4/clarity.json` and one figure, and prints each
-registered prediction as held or failed. Bring back the comparison.
-
-*Run 16 Nov.* The first run's Northern Beaches block correlation was a
-computing error (missing red values ranked as the largest). That record is
-kept as `outputs/phase4/clarity_run1_superseded.json`; `clarity.json` is the
-corrected rerun and says so under `deviations`. Results and their limits:
-`PROJECT_BRIEF.md`, *Phase 4 result*.
-
-**Exploratory, after the registered run** (addendum defined 16 Nov; commit
-the addendum first, then run):
-
-```
-python -m sdb.clarity --depth-adjusted --run jervis_bay=S2A_56HKG_20180907_0_L2A --run narrabeen_long_reef=S2A_56HLH_20180927_1_L2A --run batemans_bay=S2B_56HKF_20180823_1_L2A
-```
-
-It writes only to `outputs/exploratory/` and prints, per site, the registered
-correlation beside the depth-standardised one, then how the addendum's rule
-reads the result.
-
-**Gate:** does error track water clarity monotonically? If it does, you have a
-clean finding. If it does not, that is a more interesting finding — report it
-and say what you think is confounding it.
-
----
-
-## Phase 5 — Publish
-
-**→ CLAUDE** — `src/sdb/viz.py` and the figures; the GitHub Pages deliverable
-in `site/`; repo hygiene.
-
-**→ YOU** — write the Phase 4 conclusion in your own words first, as you did
-for Phase 3: what it means that gate 4 was not met, and what you think
-confounds the comparison. It goes into the brief under *Phase 4 result*.
-
-**→ YOU, decide · CLAUDE, do** — the reference lidar is CC BY 4.0 and the
-brief promises a reader can reproduce the validation from the repo. Either
-commit the three native extracts under `data/reference/` (49 + 27 + 11 MB) or
-attach them to a GitHub release and point `data/README.md` at it.
-
-**→ YOU · this part cannot be delegated** — write the limitations panel in
-your own words, **before** writing the results section. It is the part of your
-work that reads as yours, and it is the reason the fire and seismic pieces
-land. If you cannot say a limitation aloud in plain language, you do not yet
-understand it well enough to publish the result.
-
-**→ YOU** — update the portfolio: remove the Murray REM card, add this one
-with its number, commit the patched `index.html` from
-`C:\Study\Claude\Portfolio\` if not already done.
-
-**→ CLAUDE** — update `PROJECT_BRIEF.md` to match what was actually built,
-and write the portfolio state doc entry.
-
----
-
-## Working rhythm
-
-- Start each session by pointing me at `PROJECT_BRIEF.md`. It is the memory;
-  I have none between sessions.
-- One phase per session where possible. Bring back the output of the last
-  phase, not a description of it.
-- When a gate fails, stop and diagnose rather than proceeding with a worse
-  number. The Narrabeen lesson was not "the data was wrong" — it was that the
-  mismatch surfaced after the effort, not before.
-- Record decisions in the brief as they are made, including the ones we
-  reverse. A decision register is the difference between a portfolio piece and
-  a folder of scripts.
-
-## Tools, at a glance
-
-| Job | Tool | Whose hands |
-|---|---|---|
-| Reference data order | ELVIS web portal | You |
-| Imagery discovery | `pystac-client` → Earth Search | You run, I write |
-| Wind at overpass | Open-Meteo archive (ERA5) | You run, I write |
-| Raster processing | `rioxarray` / `rasterio` | I write, you run |
-| Visual QA | QGIS (incl. MCP) | You |
-| Statistics | `numpy` / `scikit-learn` | I write |
-| Tests | `pytest` | I write, you run |
-| Version control | git / GitHub | You |
-| Publication | GitHub Pages | I write, you deploy |
+The first confirms that each file in `protocols\` still matches the text its
+commit registered. The second reports whether a lidar extract holds native
+values or ELVIS-averaged ones (`data/README.md`, section 1).

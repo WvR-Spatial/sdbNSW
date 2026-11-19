@@ -423,12 +423,43 @@ def residual_map(root: Path, out: Path) -> Path:
     return save(fig, out, "f6_residual_map")
 
 
+def card(root: Path, out: Path) -> Path:
+    """Portfolio card image, 1200 x 800 px: Stumpf error off Long Reef on lidar hillshade."""
+    import geopandas as gpd
+    from matplotlib.colors import LinearSegmentedColormap, TwoSlopeNorm
+    import rasterio
+
+    key, name, scene = SITES[1]
+    with rasterio.open(root / "data/raw/scenes" / scene / "sdb.tif") as r:
+        res, crs = r.read(2), r.crs
+    reef = gpd.read_file(root / "data/raw/substrate/substrate_narrabeen_long_reef.gpkg", layer="reef_extent")
+    reef = reef[reef["REEF"] == "Reef"].to_crs(crs)
+    reef = gpd.GeoSeries([reef.buffer(2.0).union_all().buffer(-2.0)], crs=crs)
+    fig = plt.figure(figsize=(6, 4), dpi=200)
+    ax = fig.add_axes([0, 0, 1, 1])
+    z, bnd, ext = _base(ax, root, scene)
+    ax.imshow(res, extent=ext, cmap=LinearSegmentedColormap.from_list("div", RES_CMAP),
+              norm=TwoSlopeNorm(vmin=-6, vcenter=0, vmax=6), interpolation="nearest", alpha=0.95, zorder=1)
+    reef.boundary.plot(ax=ax, color=INK, lw=0.45, zorder=2)
+    x0, y0, w = 341300.0, 6262500.0, 6300.0
+    ax.set_xlim(x0, x0 + w)
+    ax.set_ylim(y0, y0 + w * 2 / 3)
+    for sp in ax.spines.values():
+        sp.set_visible(False)
+    out.mkdir(parents=True, exist_ok=True)
+    p = out / "sdbNSW_card.png"
+    fig.savefig(p, dpi=200)
+    plt.close(fig)
+    return p
+
+
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     p.add_argument("--root", type=Path, default=Path("."))
     p.add_argument("--out", type=Path, default=Path("docs/figures"))
     p.add_argument("--no-rasters", action="store_true",
                    help="skip the hero figure and maps, which need the pipeline's rasters")
+    p.add_argument("--card", action="store_true", help="also write the portfolio card image")
     a = p.parse_args(argv)
     style()
     recs = records(a.root)
@@ -436,6 +467,8 @@ def main(argv=None) -> int:
             reef_vs_sediment(a.out, recs), clarity(a.root, a.out, recs)]
     if not a.no_rasters:
         made += [hero(a.root, a.out, recs), site_map(a.root, a.out), residual_map(a.root, a.out)]
+        if a.card:
+            made.append(card(a.root, a.out))
     for m in made:
         print(m)
     return 0
