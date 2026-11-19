@@ -972,6 +972,74 @@ mean rank correlation +0.40 [+0.10, +0.66] across three sites, clear at
 Jervis Bay alone). It is a lead for a registered test on new scenes, not a
 finding about turbidity.
 
+### Phase 4 conclusion (Warren's draft of 19 Nov, revised after review)
+
+Gate 4 was not met. Ranked by the clarity metric, the sites run Northern
+Beaches, Jervis Bay, Batemans Bay, yet the error of satellite-derived
+bathymetry (SDB) does not follow that order: the site that reads clearest
+returns the largest Stumpf error (3.03 m), and its gradient-boosting (GBM)
+error is indistinguishable from that of the most turbid site (2.40 m against
+2.45 m). Two qualifications govern how far this can be taken. The Stumpf
+errors overlap within their 95% intervals (2.68 [2.31, 3.13], 3.03 [2.81,
+3.22] and 2.96 [2.32, 3.52] m), so the only resolved contrast between sites is
+GBM's, Jervis Bay (1.88 [1.67, 2.13] m) against Northern Beaches (2.40 [2.20,
+2.58] m). And the clarity metric spans only 0.003 in red reflectance, within
+the margin the protocol attributed in advance to differences in atmospheric
+correction, with 10% of Northern Beaches' 10–20 m pixels at the lowest value
+the product records. The result therefore shows that no monotonic
+relationship was observed, and that this imagery could not establish a
+clarity gradient between the sites. It does not show that clarity is
+immaterial. Each site is also represented by a single scene, so a difference
+between sites is equally a difference in acquisition date, sea state, sun
+geometry and atmosphere. That the two models agree rules out an artefact of
+either model, since they share every pixel and the same reference, but not an
+artefact of the scene.
+
+The composition of the errors points to the seabed rather than the water
+column. Depth distribution accounts for little: Northern Beaches holds the
+largest share of pixels between 15 and 20 m, yet with each depth band weighted
+equally it still has the largest Stumpf error (3.02 m, against 2.48 m at
+Jervis Bay and 2.73 m at Batemans Bay). Substrate accounts for much more.
+Mapped reef makes up 54% of the assessed seabed at Northern Beaches, against
+10% at Jervis Bay and 20% at Batemans Bay, and in most depth bands reef reads
+deeper than sediment at all three sites. On sediment alone the three Stumpf
+errors lie within 0.35 m of one another (2.42, 2.58 and 2.77 m). Northern
+Beaches' reef is no worse than Jervis Bay's (3.35 m against 4.63 m); the site
+simply has far more of it. This breakdown is descriptive and post hoc rather
+than a test, and on this coast it cannot be disentangled from exposure,
+because all of Northern Beaches' reef lies on an open, swell-dominated
+shoreline. The reef layer records presence, not cover, so whether kelp,
+urchin barren or bare rock produces the bias remains open. The open coast
+carries no mapped seagrass: what the original box contained lies in Pittwater
+and the coastal lagoons, both excluded.
+
+Exposure leaves a separate mark in the shallows. At Northern Beaches the
+Stumpf error between 0 and 2 m is 3.90 m, against 2.11 m at Jervis Bay; only
+12% of the reference pixels in that band could be assessed; and a 1.8 m swell
+at a 15 s period was running at the overpass. The scene was acquired nine
+days after the lidar survey, with ordinary swell in between, so within the
+surf zone the lidar may not describe the seabed the satellite observed. These
+effects are confined to shallow water, however. The bands from 0 to 5 m hold
+only 12% of Northern Beaches' assessed pixels, and GBM performs worse there
+than at Jervis Bay in every depth band, so surf and seabed change cannot
+account for the whole difference.
+
+Within each scene the evidence leans the other way. An exploratory analysis,
+committed before it was run but defined after the registered result had been
+seen, compares each 2 km block's error with what its depth mix predicts.
+Blocks with higher red reflectance err more than their depths alone would
+suggest: the mean within-site rank correlation is +0.40 [+0.10, +0.66], with
+the same sign at all three sites, although only Jervis Bay is resolved on its
+own. Red reflectance also rises with foam and glint, so this is a lead
+concerning red reflectance rather than evidence about turbidity, and it
+warrants a registered test on further scenes.
+
+For site selection on this coast, the practical implication is that reef
+cover and exposure merit as much scrutiny at the screening stage as water
+clarity. Three sites with one scene each cannot rank those factors against
+one another; that requires several scenes per site, so that sea state and
+atmosphere vary while the seabed stays fixed.
+
 ## Error budget
 
 | Term | Magnitude | Note |
@@ -1083,7 +1151,7 @@ state was never a stratum, only context.*
 Deliverable: GitHub Pages page with the error figures and a small
 SDB-versus-lidar comparison, plus the repo. Limitations panel above results.
 
-## Write-up plan — proposed 16 Nov, awaiting Warren's decisions
+## Write-up plan (proposed 16 Nov; decisions 19 Nov)
 
 **Standard:** a short conference paper (the model is a 6–8 page industry
 paper, e.g. *Coasts & Ports* or a hydrographic society conference) that a
@@ -1120,6 +1188,22 @@ layers; each layer complete without the next.
 - Figures: one palette, colour-blind safe, assertion-style captions (the
   caption states what the figure shows), alt text, regenerated in one pass
   with a single font.
+- **House style (Warren, 19 Nov), for the paper, the page and every repo
+  document:** Australian spelling; no em-dashes; en-dashes only in numeric
+  ranges; specific words over stock phrases; no inflated claims about the
+  importance of a method or result; a wide vocabulary used precisely. Avoid
+  the usual tells: "delve", "crucial", "pivotal", "robust" outside its
+  statistical sense, "landscape", "leverage", "showcase", "seamless",
+  "underscore", "it is worth noting", "not only … but also", triads for
+  rhythm, and closing sentences that restate the paragraph.
+
+**Tools for figures (decided 19 Nov).** Charts in matplotlib, generated by a
+script from the committed outputs, so every figure is reproducible and shares
+one style. Maps (F1 locator, F6 residual map) from QGIS through the QGIS MCP
+server already connected, driven by a committed PyQGIS script rather than by
+hand, with the lidar's own hillshade as the base so that no unlicensed
+imagery appears. No further MCP servers are needed; ArcGIS and Excel would add
+licence dependence and no reproducibility.
 
 **Figures and tables, provisional.** F1 sites and what SDB measures · F2
 error by depth, three sites × two methods, with the CATZOC C allowance · F3
@@ -1133,19 +1217,88 @@ scorecard.
 hosting, the decisions below. Claude: reference check, figure pass, outline
 with word budgets for approval, then the draft.
 
-**Decisions for Warren.** (a) ~~HTML page only, or HTML plus PDF~~ —
-**both, from one source** (19 Nov); (b) the wording of the AI-assistance
-statement — the commit history already shows it, so the paper should say
-plainly who did what; (c) title — open. The project began as a comparison
-with tropical studies; as completed, the tropical literature is the benchmark
-and the gap, not the subject (*The question*). Any comparison with it must
-account for validation design: much of it used random or unreported splits,
-which this project shows can flatter a model.
+**Decisions (19 Nov).**
 
-**Phase 4 conclusion — Warren's first draft received 19 Nov;** feedback given
-(site ranking within intervals; one scene per site; seagrass claim; depth
-mix and reef share measured, not hypothetical; the clarity metric's footprint;
-the exploratory within-site lead). Redraft pending.
+- **Format:** a web page and a conference-layout PDF, built from one source.
+- **Titles.** Paper and PDF: *Satellite-derived bathymetry on an exposed
+  temperate coast: a pre-registered accuracy assessment against airborne
+  lidar at three New South Wales sites.* Portfolio page and card: *How deep
+  can a satellite see off the NSW coast?*, with the answer beneath it. The
+  project began as a comparison with tropical studies; as completed, the
+  tropical literature is the benchmark and the gap, not the subject. Any
+  comparison with it must account for validation design, since much of it
+  used random or unreported splits, which this project shows can flatter a
+  model.
+- **Phase 4 conclusion:** Warren's draft, revised after review on his
+  instruction (*Phase 4 conclusion*).
+- **AI workflow:** presented as Warren's use of current agentic tools to run
+  a larger study in less time, with the safeguards that made it checkable;
+  not as co-authorship. Draft statements below.
+
+**How it was built: AI-assisted workflow (draft for Warren's approval, 19 Nov).**
+The emphasis is the workflow and its safeguards, not authorship. Two
+lengths, from the same facts.
+
+*Paper version (Data, code and workflow statement):*
+
+> This study was planned and run by the author with Claude (Anthropic) as an
+> agentic assistant. The agent worked in a cloud workspace connected to the
+> author's workstation through Model Context Protocol (MCP) servers, which
+> gave it a shell and file access within the project folder and access to a
+> local QGIS instance for querying web map services. It wrote most of the
+> code and its 281 automated tests, parsed the data services, and drafted
+> protocol and documentation text. The author framed the question, chose the
+> sites, obtained the lidar and gauge records, checked image registration
+> visually in QGIS, made each methodological decision, ran every analysis
+> step and reviewed its output, and wrote the interpretation, which was
+> revised after review against the outputs. Each protocol was committed
+> before any model was fitted, and every change and error, the agent's
+> included, is logged with its date in the repository's decisions register.
+
+*Web page and README version ("How this was built"):*
+
+> I built this over about eight weeks, using an AI agent as the main means
+> of production and organising the work so that everything it produced could
+> be checked.
+>
+> The agent, Claude, ran in a cloud workspace and reached my workstation
+> through MCP connectors: a shell and file bridge into the project folder,
+> and a QGIS server that let it query ArcGIS REST services and inspect
+> layers. It wrote most of the 9,500 lines of Python, including 281 tests,
+> and drafted the protocols and documentation. I set the question and the
+> sites, ordered the lidar and requested the tide records, checked the image
+> registration by eye in QGIS, made each methodological decision, ran every
+> step on my own machine and wrote the interpretation.
+>
+> Three practices made the output checkable. Each analysis was
+> pre-registered, so its protocol was committed before any model saw the
+> reference data. Every change is logged with its reason, including the
+> agent's mistakes: a site boundary that silently took in an estuary, a rule
+> that passed its tests and failed on real data, and a sorting fault that
+> reversed one site's result. And every file moved between machines was
+> verified by checksum at its destination.
+>
+> The outcome is a study of wider scope than I would have attempted alone in
+> the same time, with a record of how each part was made.
+
+*To confirm before use:* the eight weeks (27 Sep to 19 Nov) and whether to
+say part-time; the line and test counts are refreshed at publication.
+
+**Repository documents for readers (at the final draft).** The brief, build
+guide and data README are working records written as a dialogue ("→ YOU",
+"→ CLAUDE", "my error"). For publication they become documents for a reader:
+
+- `PROJECT_BRIEF.md` becomes a project record: question, sites, data, methods,
+  results and the decisions register, in the house style and in the third
+  person or Warren's first person.
+- Each registered protocol is frozen verbatim in `docs/protocols/`, with the
+  commit that registered it, so that editing the readable record cannot alter
+  what was pre-registered. The code's commit lookups search history and are
+  unaffected.
+- The decisions register keeps every entry, date and substance, including the
+  errors; only the voice changes. The working version stays in git history.
+- `BUILD_GUIDE.md` becomes a reproduction guide: install, fetch, run, with
+  expected outputs.
 
 ## Open decisions
 
@@ -1159,8 +1312,10 @@ the exploratory within-site lead). Redraft pending.
 - [x] Northern Beaches extent — **open coast only** (*Phase 4 amendment, 16 Nov*)
 - [x] Phase 4 run — 16 Nov (*Phase 4 result*); gate 4 not met; one deviation, both results kept
 - [x] Depth-standardised block test — exploratory addendum `884dce1`, run 16 Nov (*Exploratory result*): supported by its own rule, carried mainly by Jervis Bay
-- [ ] **Reference lidar as a GitHub release asset** — decided 19 Nov; zip built (`data/raw/release/`, md5 `1170eddb15480750a0adf5da849d0616`); Warren to publish release `reference-lidar-2018`
-- [ ] **Phase 4 conclusion in Warren's words** (as for Phase 3) — first draft 19 Nov, redraft pending
+- [x] Reference lidar as a GitHub release asset: published 19 Nov as `reference-lidar-2018` (zip md5 `1170eddb15480750a0adf5da849d0616`, sha256 `995b70840fc4d133bf6c6ccb18fce22c8a60c8bb915cfa627501d22e4f9f5bce`)
+- [ ] **Make the repository public before the page goes live.** On 19 Nov the GitHub API returned 404 for the repo and its releases without authentication, so neither is visible to a reader yet
+- [x] Phase 4 conclusion: Warren's draft, revised after review (19 Nov)
+- [ ] AI workflow statement: approve or amend the two drafts (*Write-up plan*)
 - [ ] **Limitations panel in Warren's words, before the results section** (`BUILD_GUIDE.md`, Phase 5)
 - [ ] `README.md` (result first), `site/` page, portfolio card with its number
 - [x] Atmospheric correction — **L2A as supplied** for v1; ACOLITE only as diagnosis if the gate fails
@@ -1261,6 +1416,8 @@ defensible piece of work.
 | 19 Nov | **Reference lidar published as a release asset, not committed.** The four extracts used (three references, one sensitivity) in `sdbNSW_reference_lidar_2018.zip`, 117 MB, paths mirroring the repo, attribution and md5s inside | One file over git's 100 MB limit; committed separately they would add 122 MB to every clone for a reader who almost never replicates. A release costs only the reader who downloads it. The md5s match those in the `reference` records |
 | 19 Nov | **Descriptive decomposition of the site differences** (post hoc, no new fit): depth-balanced RMSE and error by substrate class per site (*Phase 4 result*) | Northern Beaches' higher error goes mostly with its reef share (54% of assessed pixels, against 10% and 20%); on sediment the sites are within 0.35 m. Reef and exposure are the same pixels there, so this does not separate them |
 | 19 Nov | **Output format and title.** Web page and conference-layout PDF from one source. Title open: the tropical literature is the benchmark, not the subject | Warren's decisions |
+| 19 Nov | **Titles set; Phase 4 conclusion revised; AI workflow statement drafted; house style set** | Warren's decisions. The conclusion keeps his argument (gate 4 is the finding; exposure and substrate matter) and corrects what the data contradict or already answer: the Stumpf ranking lies within its intervals; one scene per site; no mapped seagrass on the open coast; depth mix measured and small; reef share measured and large; the within-site lead |
+| 19 Nov | **The repository is private.** The release was published, but an unauthenticated request for the repo and its releases returns 404 | Must be public before the page links to it; the release's sha256 is recorded so a reader can verify the download |
 
 ## Sources
 
