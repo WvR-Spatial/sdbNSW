@@ -160,6 +160,16 @@ def test_exclusions_count_reasons_within_reference_water():
     row = exclusions_by_band(flags, depth, ok)[0]
     assert row["reference_px"] == 4 and row["assessed_px"] == 1
     assert (row["cloud_or_shadow"], row["bright_nir"], row["ratio_undefined"]) == (2, 1, 1)
+    assert row["not_sea"] == 0
+
+
+def test_exclusions_name_the_open_sea_rule():
+    """Water cut off from the sea is reference water the site rule removes; say so."""
+    from sdb.reference import FLAG_NOT_SEA
+
+    flags = np.array([0, FLAG_NOT_SEA, FLAG_NOT_SEA | V.FLAG_BRIGHT_WATER], dtype=np.uint8)
+    row = exclusions_by_band(flags, np.array([1.0, 1.0, 1.0]), np.ones(3, bool))[0]
+    assert row["reference_px"] == 3 and row["assessed_px"] == 1 and row["not_sea"] == 2
 
 
 # --- leakage: what blocked folds are for ---------------------------------------------------

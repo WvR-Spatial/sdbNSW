@@ -32,8 +32,8 @@ import numpy as np
 
 from sdb import __version__
 from sdb.reference import (DEPTH_BANDS_M, FLAG_BRIGHT_WATER, FLAG_CLOUD, FLAG_DEPTH,
-                           FLAG_LAND, FLAG_NO_IMAGE, FLAG_NO_LIDAR, md5, read_scene,
-                           write_layers)
+                           FLAG_LAND, FLAG_NO_IMAGE, FLAG_NO_LIDAR, FLAG_NOT_SEA, md5,
+                           read_scene, write_layers)
 from sdb.sdb import calibrate, stumpf_ratio
 
 # --------------------------------------------------------------------------
@@ -299,6 +299,7 @@ def exclusions_by_band(flags: np.ndarray, depth: np.ndarray, ratio_ok: np.ndarra
             "cloud_or_shadow": int((m & ((flags & FLAG_CLOUD) > 0)).sum()),
             "bright_nir": int((m & ((flags & FLAG_BRIGHT_WATER) > 0)).sum()),
             "no_image": int((m & ((flags & FLAG_NO_IMAGE) > 0)).sum()),
+            "not_sea": int((m & ((flags & FLAG_NOT_SEA) > 0)).sum()),
             "ratio_undefined": int((m & (flags == 0) & ~ratio_ok).sum()),
         })
     return out

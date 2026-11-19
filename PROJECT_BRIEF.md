@@ -842,9 +842,12 @@ do move — their edges fall from 0.09 / 0.17 m to 0.06 / 0.11 m and tercile
 RMSE shifts by up to 0.17 m. That is the 1 Oct reading of Jervis Bay's
 reference, now measured: its pooled results stand, its relief strata do not.
 
-**Northern Beaches shallows.** Stumpf reads 3.1 m too deep at 0–2 m, and only
-12% of the reference's 0–2 m pixels are assessed (bright-NIR surf removes
-most). The scene is nine days after the lidar with a 1.8 m, 15 s swell
+**Northern Beaches shallows.** Stumpf reads 3.1 m too deep at 0–2 m. Of the
+open-coast reference water at 0–2 m, 35% is assessed and 65% is flagged as
+too bright in the near-infrared, which on this coast is surf. *(Corrected
+19 Nov: this line first said 12% assessed, a figure that counted the
+Pittwater and lagoon shallows the open-coast rule removes. `validate`'s
+exclusion table did not name that rule; it now does.)* The scene is nine days after the lidar with a 1.8 m, 15 s swell
 running; no storm intervened (register, 16 Nov). Surf, foam and moved sand
 cannot be separated here.
 
@@ -1014,8 +1017,9 @@ carries no mapped seagrass: what the original box contained lies in Pittwater
 and the coastal lagoons, both excluded.
 
 Exposure leaves a separate mark in the shallows. At Northern Beaches the
-Stumpf error between 0 and 2 m is 3.90 m, against 2.11 m at Jervis Bay; only
-12% of the reference pixels in that band could be assessed; and a 1.8 m swell
+Stumpf error between 0 and 2 m is 3.90 m, against 2.11 m at Jervis Bay; 65%
+of the open-coast water in that band was too bright in the near-infrared to
+assess, which on this coast means surf; and a 1.8 m swell
 at a 15 s period was running at the overpass. The scene was acquired nine
 days after the lidar survey, with ordinary swell in between, so within the
 surf zone the lidar may not describe the seabed the satellite observed. These
@@ -1257,7 +1261,8 @@ lengths, from the same facts.
 
 *Web page and README version ("How this was built"):*
 
-> I built this over about eight weeks, using an AI agent as the main means
+> I built this part-time over about eight weeks, a few of them spent waiting
+> for tide-gauge records, using an AI agent as the main means
 > of production and organising the work so that everything it produced could
 > be checked.
 >
@@ -1281,8 +1286,9 @@ lengths, from the same facts.
 > The outcome is a study of wider scope than I would have attempted alone in
 > the same time, with a record of how each part was made.
 
-*To confirm before use:* the eight weeks (27 Sep to 19 Nov) and whether to
-say part-time; the line and test counts are refreshed at publication.
+*Confirmed 19 Nov:* part-time, about eight weeks (27 Sep to 19 Nov), including
+the wait for the MHL records. The line and test counts are refreshed at
+publication.
 
 **Repository documents for readers (at the final draft).** The brief, build
 guide and data README are working records written as a dialogue ("→ YOU",
@@ -1300,6 +1306,85 @@ guide and data README are working records written as a dialogue ("→ YOU",
 - `BUILD_GUIDE.md` becomes a reproduction guide: install, fetch, run, with
   expected outputs.
 
+### Limitations (Warren's draft of 19 Nov, revised after review)
+
+**Layer 1: the plain panel, above the results.**
+
+> **What these results do not tell you**
+>
+> - **They are not for navigation.** Satellite depth estimates are not a
+>   hydrographic survey. Even the lidar used here as ground truth is published
+>   with a warning against navigation use without further processing. The
+>   lidar is specified to within about half a metre; the satellite estimates
+>   are typically 2 to 3 m out.
+> - **Each site was seen on one day.** Every site was assessed on a single
+>   cloud-free image from late winter or early spring 2018. Other days, with
+>   different tides, swell or river flows, could give different results.
+> - **Water clarity could not be isolated.** On these dates the satellite's
+>   measure of clarity sat too close to its own noise floor to rank the three
+>   sites, and with only three sites, clarity cannot be separated from reef
+>   cover, wave exposure or the atmosphere on the day.
+> - **The surf zone is largely missing.** Breaking waves and foam are removed
+>   before any depth is estimated. At Northern Beaches that removed about two
+>   thirds of the water shallower than 2 m, so results there describe the
+>   calmer patches only.
+> - **Depths to 20 m, at three sites.** Nothing here speaks to deeper water or
+>   to other coasts.
+
+**Layer 2: the paper's Limitations section.**
+
+*Single scene per site.* Each site is represented by one Sentinel-2
+acquisition (23 August, 7 September and 27 September 2018). The results
+describe the methods under those days' tide, swell, sun geometry and
+atmosphere, not across seasons, floods or river plumes, and any difference
+between sites is equally a difference between scenes.
+
+*Clarity not isolated.* The clarity metric (median red reflectance at
+10–20 m) spans 0.0022 to 0.0053 across the sites, within the margin
+attributed in advance to differences in atmospheric correction, and 10% of
+Northern Beaches' 10–20 m pixels sit at the product's minimum value. With
+three sites, clarity cannot be separated from reef cover, exposure or
+scene-to-scene atmospheric differences.
+
+*Shallow water.* Pixels too bright in the near-infrared are removed before
+any depth is estimated. In the 0–2 m band this removes 65% of Northern
+Beaches' open-coast water, where the cause is surf, 39% at Jervis Bay and 18%
+at Batemans Bay, where glint on wavelets or very shallow bright sand may
+also be responsible. Results in the top 2 m describe the remaining pixels only.
+
+*Seabed change.* Jervis Bay and Batemans Bay were imaged one day before their
+lidar surveys, so seabed change is unlikely to matter. Northern Beaches'
+nearest clear image followed its survey by nine days on an active surf coast,
+with a 1.8 m, 15 s swell at the overpass though no storm in between; in the
+top 5 m, surf and moved sand cannot be separated.
+
+*Imagery and models.* All runs use standard Sentinel-2 Level-2A surface
+reflectance, with no sun-glint correction, no water-specific atmospheric
+correction and no model tuning. Purpose-built processing and tuned or
+substrate-aware models may reduce the error; none would remove the loss of
+signal with depth.
+
+*Reference uncertainty.* The lidar is specified to IHO Order 1b, about
+±0.5 m at 95% confidence over 0–20 m. That is small against the satellite
+error overall, but comparable to gradient boosting's error in the top 2 m at
+Jervis Bay and Batemans Bay (0.55 and 0.60 m). Jervis Bay's lidar extract was
+also averaged by the supplying portal where it crossed survey blocks
+(about 0.13 m RMS). The same comparison at Northern Beaches moved pooled RMSE
+by 0.02 m, so the headline figures stand, but Jervis Bay's breakdown by
+seabed roughness is unreliable.
+
+*Spatial dependence.* Residual errors stay correlated over 4 km at Jervis
+Bay, beyond the 2 km validation blocks, so its intervals may be somewhat
+narrow. Gradient boosting's error also grows with block size, from 1.92 to
+2.06 m at Jervis Bay and from 2.53 to 2.81 m at Batemans Bay between 2 and
+4 km blocks, while Stumpf's barely changes; its 2 km figures are best read as
+lower bounds. It still outperforms Stumpf at every site on 4 km blocks.
+
+*Scope.* Northern Beaches is assessed on the open coast only, by a
+pre-fit amendment that excluded Pittwater and the coastal lagoons. All
+results are for 0–20 m. The within-site analysis adjusted for depth is
+exploratory: it was defined after the registered result had been seen.
+
 ## Open decisions
 
 - [x] Repo name `sdbNSW`
@@ -1316,7 +1401,7 @@ guide and data README are working records written as a dialogue ("→ YOU",
 - [ ] **Make the repository public before the page goes live.** On 19 Nov the GitHub API returned 404 for the repo and its releases without authentication, so neither is visible to a reader yet
 - [x] Phase 4 conclusion: Warren's draft, revised after review (19 Nov)
 - [ ] AI workflow statement: approve or amend the two drafts (*Write-up plan*)
-- [ ] **Limitations panel in Warren's words, before the results section** (`BUILD_GUIDE.md`, Phase 5)
+- [ ] Limitations: Warren's draft of 19 Nov, revised after review into a plain panel and a paper section (*Limitations*); awaiting approval
 - [ ] `README.md` (result first), `site/` page, portfolio card with its number
 - [x] Atmospheric correction — **L2A as supplied** for v1; ACOLITE only as diagnosis if the gate fails
 - [x] Sun glint correction — **none** for v1 (register, 27 Sep)
@@ -1418,6 +1503,8 @@ defensible piece of work.
 | 19 Nov | **Output format and title.** Web page and conference-layout PDF from one source. Title open: the tropical literature is the benchmark, not the subject | Warren's decisions |
 | 19 Nov | **Titles set; Phase 4 conclusion revised; AI workflow statement drafted; house style set** | Warren's decisions. The conclusion keeps his argument (gate 4 is the finding; exposure and substrate matter) and corrects what the data contradict or already answer: the Stumpf ranking lies within its intervals; one scene per site; no mapped seagrass on the open coast; depth mix measured and small; reef share measured and large; the within-site lead |
 | 19 Nov | **The repository is private.** The release was published, but an unauthenticated request for the repo and its releases returns 404 | Must be public before the page links to it; the release's sha256 is recorded so a reader can verify the download |
+| 19 Nov | **Correction: the share of Northern Beaches' 0–2 m water lost to surf.** The *Phase 4 result* and the first revision of the conclusion said only 12% of the 0–2 m reference water was assessed, attributing the loss to surf. Recomputed from the mask: 66% of that "reference water" is Pittwater and lagoon shallows removed by the open-coast rule; of the open-coast water, 35% is assessed and 65% flagged bright. Jervis Bay 60% assessed (39% bright), Batemans Bay 82% (18%) | My error, found while checking Warren's limitations panel against the outputs: `validate`'s exclusion table counted water the open-coast rule removes as reference water and did not list the rule as a reason. It now reports `not_sea` (tested); committed records are unchanged and the brief carries the corrected figures |
+| 19 Nov | **Limitations drafted** by Warren and revised after review: a five-point plain panel for layer 1, and his fuller list, corrected, as the paper's Limitations section | Corrections: the shallow-water exclusion figures; the averaging check was made at Northern Beaches, not Jervis Bay; reference uncertainty is comparable only to gradient boosting's shallow error at two sites; reef bias is not beyond correction; the block-size caveat applies to gradient boosting at Batemans Bay as well as Jervis Bay. The navigation warning was checked against the lidar metadata |
 
 ## Sources
 
