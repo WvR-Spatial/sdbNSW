@@ -537,12 +537,12 @@ Stumpf run on byte-identical inputs. `outputs/v2/`.
 
 | | Stumpf (v1) | **gbm (v2 result)** | gbm_xy (leakage demonstration) |
 |---|---|---|---|
-| Pooled RMSE, 2 km blocks | 2.68 m [2.31, 3.13] | **1.88 m** [1.67, 2.13] | 1.32 m [1.13, 1.52] |
+| Pooled RMSE, 2 km blocks | 2.68 m [2.31, 3.13] | **1.88 m** [1.67, 2.13] | 1.32 m [1.12, 1.51] |
 | Bias · R² | −0.42 · 0.69 | −0.12 · 0.85 | −0.07 · 0.93 |
-| Depth-balanced RMSE | 2.48 m | 1.53 m | 1.26 m |
-| Random split · blocked/random | 2.66 m · 1.008 | 1.78 m · **1.060** | 0.74 m · **1.777** |
-| Block-size curve, random → 0.5 → 1 → 2 → 4 km | 2.66 → 2.67 → 2.68 → 2.69 → 2.72 | 1.80 → 1.83 → 1.86 → 1.92 → 2.06 | 0.78 → 0.99 → 1.16 → 1.50 → 1.88 |
-| RMSE by band, 0–2 / 2–5 / 5–10 / 10–15 / 15–20 m | 2.11 / 2.67 / 2.07 / 2.06 / 3.46 | 0.55 / 1.32 / 1.88 / 1.80 / 2.11 | 0.77 / 1.54 / 1.47 / 1.15 / 1.36 |
+| Depth-balanced RMSE | 2.48 m | 1.53 m | 1.25 m |
+| Random split · blocked/random | 2.66 m · 1.008 | 1.78 m · **1.060** | 0.74 m · **1.774** |
+| Block-size curve, random → 0.5 → 1 → 2 → 4 km | 2.66 → 2.67 → 2.68 → 2.69 → 2.72 | 1.80 → 1.83 → 1.86 → 1.92 → 2.06 | 0.78 → 0.99 → 1.16 → 1.50 → 1.87 |
+| RMSE by band, 0–2 / 2–5 / 5–10 / 10–15 / 15–20 m | 2.11 / 2.67 / 2.07 / 2.06 / 3.46 | 0.55 / 1.32 / 1.88 / 1.80 / 2.11 | 0.77 / 1.52 / 1.46 / 1.15 / 1.36 |
 | Inside bay / open coast | 2.27 / 4.69 m | 1.65 / 3.08 m | 1.09 / 2.39 m |
 | Breakdown depth, CATZOC C / B | 0 / 0 m | **3 / 2 m** | 2 / 1 m |
 
@@ -766,7 +766,7 @@ fit was written at 21:06), with no deviation in any `validate` run.
 | Stumpf RMSE by band, 0–2 / 2–5 / 5–10 / 10–15 / 15–20 m | 2.11 / 2.67 / 2.07 / 2.06 / 3.46 | 3.90 / 2.66 / 2.55 / 2.42 / 3.58 | 2.04 / 2.76 / 2.22 / 2.62 / 4.01 |
 | gbm RMSE by band | 0.55 / 1.32 / 1.88 / 1.80 / 2.11 | 1.51 / 1.74 / 2.44 / 2.34 / 2.57 | 0.60 / 2.24 / 2.43 / 2.27 / 2.94 |
 | Breakdown depth, CATZOC C / B: Stumpf · gbm | 0 / 0 · 3 / 2 m | 0 / 0 · 0 / 0 m | 0 / 0 · 2 / 1 m |
-| Blocked/random: Stumpf · gbm · gbm_xy | 1.008 · 1.060 · 1.777 | 1.010 · 1.069 · 2.936 | 0.982 · 1.159 · 4.260 |
+| Blocked/random: Stumpf · gbm · gbm_xy | 1.008 · 1.060 · 1.774 | 1.010 · 1.069 · 2.936 | 0.982 · 1.159 · 4.260 |
 | Residual correlation range | 4 km | 1 km | 2 km |
 | **Block test:** Spearman, block red vs block RMSE at 10–20 m — Stumpf | +0.52 [+0.25, +0.71], 48 blocks | +0.70 [+0.32, +0.89], 20 blocks | −0.18 [−0.77, +0.51], 12 blocks |
 | — gbm | +0.55 [+0.27, +0.76] | +0.39 [−0.05, +0.74] | −0.00 [−0.63, +0.75] |
@@ -1032,7 +1032,7 @@ at a 15 s period was running at the overpass. The scene was acquired nine
 days after the lidar survey, with ordinary swell in between, so within the
 surf zone the lidar may not describe the seabed the satellite observed. These
 effects are confined to shallow water, however. The bands from 0 to 5 m hold
-only 12% of Northern Beaches' assessed pixels, and GBM performs worse there
+only 11% of Northern Beaches' assessed pixels, and GBM performs worse there
 than at Jervis Bay in every depth band, so surf and seabed change cannot
 account for the whole difference.
 
@@ -1517,6 +1517,12 @@ defensible piece of work.
 | 19 Nov | **Limitations drafted** by Warren and revised after review: a five-point plain panel for layer 1, and his fuller list, corrected, as the paper's Limitations section | Corrections: the shallow-water exclusion figures; the averaging check was made at Northern Beaches, not Jervis Bay; reference uncertainty is comparable only to gradient boosting's shallow error at two sites; reef bias is not beyond correction; the block-size caveat applies to gradient boosting at Batemans Bay as well as Jervis Bay. The navigation warning was checked against the lidar metadata |
 | 19 Nov | **Every reference checked before drafting** (`paper/reference_check.md`); 33 entries in `paper/references.bib`, each against Crossref or the publisher, and every quoted figure against its abstract or text | Two framing claims in *The question* were wrong: SDB validation is not "almost entirely clear tropical water" (Ireland, the Aegean, Japan and Adelaide are published), and the 1.3 / 1.8 / 2.2 m benchmark is one study with an 80/20 split of unstated design. The novelty claim narrows to "no published assessment on the NSW open coast", which the searches support. Corrected before any text depends on it |
 | 19 Nov | **Outline proposed** (`paper/outline.md`): about 4,300 words, six figures plus a hero figure, four tables; Pandoc and Typst build the page and PDF from one Markdown source | Awaiting Warren's approval, author line and PDF layout |
+| 19 Nov | **Figures built** (`scripts/figures.py`, one script, one style): the hero figure, F1–F6, 300 dpi, from the committed records and the pipeline's rasters. **Maps drawn in matplotlib, not a PyQGIS layout** as planned | One style and one command for every figure, and nothing driven through a GUI. QGIS's part was the basemap: its bundled Natural Earth `world_map.gpkg` (public domain), copied through the QGIS MCP server to `data/raw/basemap/` |
+| 19 Nov | **Paper drafted** (`paper/paper.md`) and built by `paper/build.py` (Pandoc with citeproc, then Typst) into the web page `docs/index.html` and the two-column PDF `docs/sdbNSW_paper.pdf`; the page carries the paper in full beneath the plain-language opening | The signed-off conclusion becomes Discussion 5.2 nearly as written; the signed-off limitations are the paper's section 6 and the page's panel; the workflow statements close the PDF and the page. Author lines as Warren gave them, the page's name linking to the portfolio |
+| 19 Nov | **Two transcription errors found while checking the draft against the records.** (1) The conclusion said the 0–5 m bands hold 12% of Northern Beaches' assessed pixels: 24,388 of 216,258 is 11%. (2) The v2 result table's coordinate-model column at Jervis Bay (interval [1.13, 1.52], depth-balanced 1.26, blocked/random 1.777, 4 km 1.88, two band RMSEs) differed in the last digit from the committed record (`4be3c62`): [1.12, 1.51], 1.25, 1.774, 1.87. Corrected here; the paper uses the record | Neither changes a reading. The paper's numbers were checked against the records and this brief by script: every multi-digit number in it occurs in one or the other |
+| 19 Nov | **Reference check closed.** Nechad et al. (2010) confirmed as a single-band algorithm whose best validation bands are red (665–681 nm); Pope and Fry (1997) pages 8710–8723; Hao Quang et al. (2025) entered with the family name Crossref records; Stumpf et al. (2003) issue "1, part 2" | `paper/reference_check.md` updated |
+| 19 Nov | **Descriptive, post hoc: share of pixels within the CATZOC C allowance** (2 m + 5% of lidar depth), from the out-of-fold rasters. gbm 88%, 78%, 79%; Stumpf 75%, 63%, 66% | A plain-language reading of the hero figure; labelled descriptive in the paper. Not a registered statistic |
+| 19 Nov | **Licence proposed: code MIT, paper and figures CC BY 4.0** (`LICENSE`, the page footer, the PDF's first-page footer) | The repository was public with no licence, so nothing in it could be reused. Warren to confirm or change before committing |
 
 ## Sources
 

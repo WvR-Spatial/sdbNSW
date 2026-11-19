@@ -241,6 +241,14 @@ so the site's seagrass strata are empty by construction — "not mapped", not
 
 ---
 
+### 7. Basemap for the location map  *(copied from QGIS; never committed)*
+
+`scripts/figures.py` draws the locator panel of Figure 1 from Natural Earth
+admin-1 boundaries (public domain), read from the `world_map.gpkg` that ships
+with QGIS (`resources/data/world_map.gpkg` in a QGIS 3.40 install). Copy it to
+`data/raw/basemap/world_map_qgis340.gpkg`; layer `states_provinces` is used.
+Natural Earth's own admin-1 download works too if the layer name is changed.
+
 ## Reference lidar for replication — a release, not the repo
 
 The four 5 m extracts the validation used are published, unmodified, as one

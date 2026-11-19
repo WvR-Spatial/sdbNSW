@@ -11,3 +11,7 @@ venv/
 
 # Scratch
 outputs/cache/
+
+# Paper build intermediates; locally exported references
+paper/_build/
+paper/refs/

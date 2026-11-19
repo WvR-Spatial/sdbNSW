@@ -1,0 +1,1685 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How deep can a satellite see off the NSW
+coast? | Warren van Ryn</title>
+<meta name="description" content="A pre-registered test of Sentinel-2
+satellite-derived bathymetry against 2018 airborne lidar at Jervis Bay,
+Sydney’s Northern Beaches and Batemans Bay.">
+<meta name="author" content="Warren van Ryn">
+<meta property="og:type" content="article">
+<meta property="og:title" content="How deep can a satellite see off the
+NSW coast?">
+<meta property="og:description" content="A pre-registered test of
+Sentinel-2 satellite-derived bathymetry against 2018 airborne lidar at
+Jervis Bay, Sydney’s Northern Beaches and Batemans Bay.">
+<meta property="og:url" content="https://wvr-spatial.github.io/sdbNSW/">
+<meta property="og:image" content="https://wvr-spatial.github.io/sdbNSW/figures/hero_satellite_vs_lidar.png">
+<meta name="color-scheme" content="light dark">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f5f7f9;
+  --surface: #ffffff;
+  --ink: #0f172a;
+  --ink-2: #334155;
+  --muted: #5b6878;
+  --rule: #d8dfe7;
+  --accent: #0b6aa2;
+  --accent-ink: #075985;
+  --sand: #a8732a;
+  --sand-wash: #fbf4e9;
+  --figure-bg: #fcfcfb;
+  --mast: #0f172a;
+  --mast-ink: #f8fafc;
+  --mast-muted: #a3b1c2;
+  --mast-accent: #38bdf8;
+  --grat-major: rgba(148,163,184,0.10);
+  --grat-minor: rgba(148,163,184,0.045);
+  --serif: "Source Serif 4", "Iowan Old Style", Georgia, serif;
+  --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --measure: 40rem;
+  --wide: 62rem;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f172a;
+    --surface: #1e293b;
+    --ink: #e2e8f0;
+    --ink-2: #cbd5e1;
+    --muted: #94a3b8;
+    --rule: #334155;
+    --accent: #38bdf8;
+    --accent-ink: #7dd3fc;
+    --sand: #e0a458;
+    --sand-wash: #2a2620;
+    --mast: #0b1222;
+  }
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  font-optical-sizing: auto;
+  text-rendering: optimizeLegibility;
+}
+a { color: var(--accent-ink); text-decoration-thickness: 1px; text-underline-offset: 0.18em; }
+a:hover { text-decoration-thickness: 2px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+
+/* Masthead: the portfolio's slate and graticule */
+.masthead {
+  background-color: var(--mast);
+  background-image:
+    linear-gradient(var(--grat-major) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grat-major) 1px, transparent 1px),
+    linear-gradient(var(--grat-minor) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grat-minor) 1px, transparent 1px);
+  background-size: 120px 120px, 120px 120px, 24px 24px, 24px 24px;
+  background-position: -1px -1px;
+  color: var(--mast-ink);
+  border-bottom: 1px solid #1e293b;
+}
+.masthead .inner { max-width: var(--measure); margin: 0 auto; padding: 3.4rem 0 2.6rem; }
+@media (max-width: 42rem) { .masthead .inner { padding-left: 1rem; padding-right: 1rem; } }
+.masthead h1 {
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: clamp(2rem, 5.2vw, 3.4rem);
+  line-height: 1.06;
+  letter-spacing: -0.025em;
+  margin: 0 0 1.1rem;
+  max-width: 16ch;
+}
+.masthead .answer {
+  font-family: var(--serif);
+  font-size: clamp(1.15rem, 2.2vw, 1.4rem);
+  line-height: 1.45;
+  color: #dbe4ee;
+  max-width: 34rem;
+  margin: 0 0 1.8rem;
+  padding-left: 1rem;
+  border-left: 3px solid var(--mast-accent);
+}
+.masthead .byline { font-family: var(--sans); font-size: 0.92rem; color: var(--mast-muted); margin: 0 0 1.1rem; }
+.masthead .byline a { color: var(--mast-ink); font-weight: 600; text-decoration: none; border-bottom: 1px solid rgba(248,250,252,0.35); }
+.nowrap { white-space: nowrap; }
+.masthead .byline a:hover { border-bottom-color: var(--mast-ink); }
+.masthead nav { display: flex; flex-wrap: wrap; gap: 0.6rem; font-family: var(--sans); font-size: 0.9rem; }
+.masthead nav a {
+  color: var(--mast-ink); text-decoration: none;
+  padding: 0.42rem 0.8rem; border: 1px solid rgba(148,163,184,0.45); border-radius: 6px;
+}
+.masthead nav a:hover { border-color: var(--mast-accent); color: #fff; }
+.masthead nav a.primary { background: var(--mast-accent); border-color: var(--mast-accent); color: #062033; font-weight: 600; }
+
+/* Reading column */
+main { padding: 0 1rem 4rem; }
+main > *, .layer1 > *, .built > * { max-width: var(--measure); margin-left: auto; margin-right: auto; }
+main > .layer1, main > .built { max-width: none; }
+p { margin-top: 0; margin-bottom: 1.05em; hyphens: auto; }
+ul { padding-left: 1.2em; }
+li { margin: 0.3em 0; }
+h2, h3, h4 { font-family: var(--sans); color: var(--ink); line-height: 1.25; letter-spacing: -0.01em; }
+h2 { font-size: 1.45rem; font-weight: 700; margin: 3rem auto 1rem; }
+h3 { font-size: 1.12rem; font-weight: 600; margin: 2.2rem auto 0.7rem; }
+h4 { font-size: 1rem; font-weight: 600; margin: 1.6rem auto 0.5rem; }
+.secno { color: var(--muted); font-weight: 500; margin-right: 0.15em; font-variant-numeric: tabular-nums; }
+em { font-style: italic; }
+strong { font-weight: 600; }
+
+/* Layer 1 */
+.layer1 { padding-top: 2.4rem; }
+.layer1 > p:first-child { font-size: 1.14rem; line-height: 1.65; }
+.numbers dl, dl { margin: 2rem auto; }
+.numbers dl { display: grid; grid-template-columns: minmax(7.5rem, auto) 1fr; column-gap: 1.4rem; row-gap: 1.1rem; }
+.numbers dt { font-family: var(--sans); font-weight: 700; font-size: 1.45rem; line-height: 1.2; color: var(--ink); white-space: nowrap; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+.numbers dd { margin: 0; color: var(--ink-2); font-size: 1rem; line-height: 1.55; padding-top: 0.15rem; border-top: 1px solid var(--rule); padding-top: 0.55rem; }
+.numbers dt { border-top: 1px solid var(--rule); padding-top: 0.45rem; }
+.limits {
+  background: var(--sand-wash);
+  border-left: 3px solid var(--sand);
+  padding: 0.4rem 1.4rem 0.9rem;
+  margin: 2.6rem auto;
+  border-radius: 0 6px 6px 0;
+}
+.limits h3 { margin-top: 1rem; font-size: 1.05rem; }
+.limits ul { padding-left: 1.1em; font-size: 0.98rem; line-height: 1.6; }
+
+/* Figures */
+figure { max-width: var(--wide) !important; margin: 2.4rem auto; }
+figure img {
+  display: block; width: 100%; height: auto;
+  background: var(--figure-bg); border-radius: 6px; padding: 0.6rem;
+  border: 1px solid var(--rule);
+}
+figcaption {
+  max-width: var(--measure); margin: 0.75rem auto 0;
+  font-family: var(--sans); font-size: 0.86rem; line-height: 1.55; color: var(--muted);
+}
+figcaption strong { color: var(--ink); }
+figure a.zoom { display: block; cursor: zoom-in; }
+
+/* Tables */
+.table-wide, .table-scroll { max-width: var(--wide) !important; }
+.table-scroll { overflow-x: auto; margin: 2.2rem auto; -webkit-overflow-scrolling: touch; }
+table { border-collapse: collapse; width: 100%; font-family: var(--sans); font-size: 0.82rem; line-height: 1.45; font-variant-numeric: tabular-nums; }
+table caption { caption-side: top; text-align: left; color: var(--muted); font-size: 0.86rem; padding-bottom: 0.6rem; line-height: 1.5; }
+table caption strong { color: var(--ink); }
+thead th { text-align: left; font-weight: 600; border-top: 1.5px solid var(--ink); border-bottom: 1px solid var(--ink); padding: 0.5rem 0.6rem; vertical-align: bottom; }
+tbody td { padding: 0.42rem 0.6rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+tbody tr:last-child td { border-bottom: 1.5px solid var(--ink); }
+td:first-child, th:first-child { padding-left: 0; }
+@media (min-width: 46rem) { td:first-child { min-width: 11rem; } }
+
+/* The paper */
+.paper-title { font-size: clamp(1.35rem, 2.6vw, 1.7rem) !important; line-height: 1.3; margin-top: 4.5rem !important; padding-top: 2.4rem; border-top: 1px solid var(--rule); max-width: var(--measure); }
+.paper-byline p { font-family: var(--sans); font-size: 0.92rem; color: var(--muted); }
+.abstract { background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 0.2rem 1.4rem 0.6rem; margin: 1.6rem auto 2.4rem; }
+.abstract h4 { margin-top: 1.1rem; font-size: 0.95rem; }
+.abstract p { font-size: 0.98rem; line-height: 1.62; }
+#refs { font-size: 0.92rem; line-height: 1.55; }
+.csl-entry { padding-left: 1.6em; text-indent: -1.6em; margin-bottom: 0.55em; overflow-wrap: anywhere; }
+.built { margin-top: 3rem; }
+.built h2 { border-top: 1px solid var(--rule); padding-top: 2.4rem; }
+
+/* Contents */
+nav#TOC { display: none; }
+@media (min-width: 88rem) {
+  nav#TOC {
+    display: block; position: fixed; top: 2rem; left: max(1rem, calc(50vw - 44rem));
+    width: 12.5rem; font-family: var(--sans); font-size: 0.78rem; line-height: 1.4;
+    max-height: calc(100vh - 4rem); overflow-y: auto;
+    opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
+  }
+  nav#TOC.show { opacity: 1; pointer-events: auto; }
+  nav#TOC ul { list-style: none; padding: 0; margin: 0; }
+  nav#TOC li { margin: 0.35rem 0; }
+  nav#TOC a { color: var(--muted); text-decoration: none; }
+  nav#TOC a:hover, nav#TOC a.here { color: var(--ink); }
+}
+footer.site { border-top: 1px solid var(--rule); padding: 1.6rem 1rem 2.4rem; font-family: var(--sans); font-size: 0.85rem; color: var(--muted); }
+footer.site .inner { max-width: var(--measure); margin: 0 auto; }
+@media (max-width: 40rem) {
+  body { font-size: 1rem; }
+  .numbers dl { grid-template-columns: 1fr; row-gap: 0.2rem; }
+  .numbers dd { border-top: 0; padding-top: 0; margin-bottom: 1rem; }
+  figure img { padding: 0.3rem; }
+  .masthead .inner { padding-top: 2.2rem; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+@media print {
+  .masthead { background: none; color: #000; }
+  nav#TOC, .masthead nav { display: none; }
+}
+</style>
+</head>
+<body>
+<header class="masthead">
+  <div class="inner">
+    <h1>How deep can a satellite see off the NSW coast?</h1>
+    <p class="answer">Down to about 15 m before its error starts to
+climb, and typically 2 to 3 m out even there: good enough for
+reconnaissance, not for navigation.</p>
+    <p class="byline"><a href="https://wvr-spatial.github.io/Portfolio/">Warren
+van Ryn</a> &nbsp;<span class="nowrap">Melbourne, Australia · November
+2026</span></p>
+    <nav aria-label="Downloads and code">
+      <a class="primary" href="sdbNSW_paper.pdf">Paper (PDF)</a>
+      <a href="https://github.com/WvR-Spatial/sdbNSW">Code, protocols and outputs</a>
+      <a href="https://github.com/WvR-Spatial/sdbNSW/releases/tag/reference-lidar-2018">Reference lidar (117 MB)</a>
+    </nav>
+  </div>
+</header>
+<nav id="TOC" aria-label="Contents">
+<ul>
+<li><a href="#introduction" id="toc-introduction"><span
+class="secno">1</span> Introduction</a></li>
+<li><a href="#study-sites-and-data" id="toc-study-sites-and-data"><span
+class="secno">2</span> Study sites and data</a></li>
+<li><a href="#methods" id="toc-methods"><span class="secno">3</span>
+Methods</a></li>
+<li><a href="#results" id="toc-results"><span class="secno">4</span>
+Results</a></li>
+<li><a href="#discussion" id="toc-discussion"><span
+class="secno">5</span> Discussion</a></li>
+<li><a href="#limitations" id="toc-limitations"><span
+class="secno">6</span> Limitations</a></li>
+<li><a href="#conclusions" id="toc-conclusions"><span
+class="secno">7</span> Conclusions</a></li>
+<li><a href="#data-and-code" id="toc-data-and-code">Data and
+code</a></li>
+<li><a href="#acknowledgements"
+id="toc-acknowledgements">Acknowledgements</a></li>
+<li><a href="#references" id="toc-references">References</a></li>
+<li><a href="#how-this-was-built" id="toc-how-this-was-built">How this
+was built</a></li>
+</ul>
+</nav>
+<main>
+<div class="web-only layer1">
+<p>Satellite images can show water depth, because sunlight reflected
+from the seabed fades with depth, and fades at a different rate in each
+colour. This study tested how well that works on the New South Wales
+coast, for which no published test was found. Depths estimated from free
+Sentinel-2 images were compared with airborne laser (lidar) surveys
+flown within nine days of each image at three sites: sheltered Jervis
+Bay, the surf coast of Sydney’s Northern Beaches, and Batemans Bay at
+the mouth of the Clyde River. Two methods were tested, a standard
+colour-ratio formula and a machine-learning model, with every rule fixed
+in writing before any result was seen. The machine-learning model was
+the more accurate at every site. Neither is accurate enough for a
+navigation chart, and both erred more over reef than over sand.</p>
+<div class="numbers">
+<dl>
+<dt><span class="figure-number">1.9–3.0 m</span></dt>
+<dd>
+The typical error between 0 and 20 m deep: 1.9 to 2.5 m for the
+machine-learning model and 2.7 to 3.0 m for the colour ratio, depending
+on the site.
+</dd>
+<dt><span class="figure-number">≈ 15 m</span></dt>
+<dd>
+The depth beyond which the error climbs. Deeper than this, too little
+light returns from the seabed, and the estimates fall short of the true
+depth.
+</dd>
+<dt><span class="figure-number">1.8–4.3 ×</span></dt>
+<dd>
+How much better a model given map coordinates looked when it was tested
+on pixels picked at random than on separate 2 km squares it had never
+seen. A random test rewards memorising the place, not reading the water.
+</dd>
+</dl>
+</div>
+<figure id="fig-hero">
+<a href="figures/hero_satellite_vs_lidar.png" class="zoom"><img
+src="figures/hero_satellite_vs_lidar.png" loading="lazy"
+alt="Depth from the machine-learning model against lidar depth for every assessed 10 m pixel. A perfect estimate lies on the solid line; the dashed lines mark the tolerance of chart category CATZOC C, 2 m plus 5% of depth. 88%, 78% and 79% of estimates fall inside it. Beyond about 15 m the estimates bunch below the true depth." /></a>
+<figcaption>Depth from the machine-learning model against lidar depth
+for every assessed 10 m pixel. A perfect estimate lies on the solid
+line; the dashed lines mark the tolerance of chart category CATZOC C,
+2 m plus 5% of depth. 88%, 78% and 79% of estimates fall inside it.
+Beyond about 15 m the estimates bunch below the true depth.</figcaption>
+</figure>
+<section id="what-these-results-do-not-tell-you"
+class="unnumbered limits">
+<h3 class="unnumbered">What these results do not tell you</h3>
+<ul>
+<li><strong>They are not for navigation.</strong> Satellite depth
+estimates are not a hydrographic survey. Even the lidar used here as
+ground truth is published with a warning against navigation use without
+further processing. The lidar is specified to within about half a metre;
+the satellite estimates are typically 2 to 3 m out.</li>
+<li><strong>Each site was seen on one day.</strong> Every site was
+assessed on a single cloud-free image from late winter or early spring
+2018. Other days, with different tides, swell or river flows, could give
+different results.</li>
+<li><strong>Water clarity could not be isolated.</strong> On these dates
+the satellite’s measure of clarity sat too close to its own noise floor
+to rank the three sites, and with only three sites, clarity cannot be
+separated from reef cover, wave exposure or the atmosphere on the
+day.</li>
+<li><strong>The surf zone is largely missing.</strong> Breaking waves
+and foam are removed before any depth is estimated. At Northern Beaches
+that removed about two thirds of the water shallower than 2 m, so
+results there describe the calmer patches only.</li>
+<li><strong>Depths to 20 m, at three sites.</strong> Nothing here speaks
+to deeper water or to other coasts.</li>
+</ul>
+</section>
+</div>
+<h2 class="paper-title unlisted unnumbered" id="paper">Satellite-derived
+bathymetry on an exposed temperate coast: a pre-registered accuracy
+assessment against airborne lidar at three New South Wales sites</h2>
+<div class="paper-byline">
+<p>Warren van Ryn, Independent Researcher, Melbourne, Australia</p>
+</div>
+<section class="unnumbered unlisted abstract">
+<h4 class="unnumbered unlisted">Abstract</h4>
+<p><strong>Background.</strong> Satellite-derived bathymetry (SDB) from
+Sentinel-2 has mostly been tested in clear or sheltered water; no
+assessment on the swell-exposed coast of New South Wales (NSW),
+Australia, was found. <strong>Methods.</strong> At three sites (a
+sheltered embayment, a surf coast and an estuary mouth), depths from one
+Sentinel-2 Level-2A scene per site were compared over 0–20 m with 2018
+NSW marine lidar aggregated to 10 m. The Stumpf band-ratio method and a
+gradient-boosting model with image-only features were validated by
+spatially blocked cross-validation (2 km blocks, five folds, ten
+repeats) with block-bootstrap intervals. All protocols and predictions
+were committed before fitting. <strong>Results.</strong> Pooled RMSE was
+2.68–3.03 m for the band ratio and 1.88–2.45 m for gradient boosting,
+better at every site by 0.51–0.80 m (paired intervals excluding zero).
+The band ratio failed IHO CATZOC C at every depth; gradient boosting met
+it to 2–3 m at two sites. Error rose beyond about 15 m. A model given
+coordinates scored an RMSE 1.8 to 4.3 times smaller on a random split
+than on blocks. Error did not follow the clarity metric across sites,
+but the metric spanned only 0.003 in red reflectance. Mapped reef read
+1.3 to 4.0 m deeper than sediment at the same depth in most bands, and
+the surf coast’s larger error went with its 54% reef cover.
+<strong>Conclusions.</strong> On this coast a single Sentinel-2 scene
+gives a reconnaissance product with errors of about 2–3 m. Site
+screening should weigh reef cover and exposure as heavily as water
+clarity.</p>
+<p><strong>Keywords.</strong> satellite-derived bathymetry; Sentinel-2;
+airborne lidar bathymetry; spatial cross-validation; pre-registration;
+New South Wales</p>
+</section>
+<h2 id="introduction"><span class="secno">1</span> Introduction</h2>
+<p>Empirical satellite-derived bathymetry (SDB) rests on a simple
+physical fact: light reflected from the seabed is attenuated
+exponentially with depth, at a rate that differs between wavebands.
+<span class="citation" data-cites="lyzenga1978">Lyzenga (<a
+href="#ref-lyzenga1978" role="doc-biblioref">1978</a>)</span> related
+log-transformed radiance linearly to depth; <span class="citation"
+data-cites="stumpf2003">Stumpf et al. (<a href="#ref-stumpf2003"
+role="doc-biblioref">2003</a>)</span> replaced the band-by-band fit with
+the ratio of log-transformed blue and green reflectance, a two-parameter
+model that tolerates variation in bottom brightness. Sentinel-2 <span
+class="citation" data-cites="drusch2012">(<a href="#ref-drusch2012"
+role="doc-biblioref">Drusch et al., 2012</a>)</span> supplies 10 m
+imagery of every coast every few days at no cost, with surface
+reflectance from the Sen2Cor processor <span class="citation"
+data-cites="mainknorn2017">(<a href="#ref-mainknorn2017"
+role="doc-biblioref">Main-Knorn et al., 2017</a>)</span>, and
+machine-learning regressions now often replace the linear forms <span
+class="citation" data-cites="ashphaq2021">(<a href="#ref-ashphaq2021"
+role="doc-biblioref">Ashphaq et al., 2021</a>)</span>.</p>
+<p>Published accuracies depend on the water and on how the validation
+was designed. In clear Caribbean water off St Thomas, <span
+class="citation" data-cites="xie2023">Xie et al. (<a href="#ref-xie2023"
+role="doc-biblioref">2023</a>)</span> report a 0–20 m RMSE of 1.28 m for
+random forest, 1.78 m for the Stumpf ratio and 2.19 m for a linear
+model, from an 80/20 split of points whose spatial design is not stated.
+In low-turbidity water off South Florida, <span class="citation"
+data-cites="caballero2019">Caballero &amp; Stumpf (<a
+href="#ref-caballero2019" role="doc-biblioref">2019</a>)</span> report
+median absolute errors of 0.22–0.5 m. In temperate and optically complex
+settings, model inversion on the Irish coast gave mean RMSE of
+1.60–2.43 m <span class="citation" data-cites="casal2020">(<a
+href="#ref-casal2020" role="doc-biblioref">Casal et al.,
+2020</a>)</span>, an Aegean study with spatially independent calibration
+and validation sets reached 1.67 m <span class="citation"
+data-cites="traganos2018">(<a href="#ref-traganos2018"
+role="doc-biblioref">Traganos et al., 2018</a>)</span>, and on the
+exposed, highly dynamic sandy coast at Hasaki, Japan, gradient-boosted
+trees reached R² of 0.84–0.92 to about 15 m on a 70/30 split of survey
+points <span class="citation" data-cites="quang2025">(<a
+href="#ref-quang2025" role="doc-biblioref">Hao Quang et al.,
+2025</a>)</span>. The nearest Australian study, on the low-energy
+Adelaide coast, reports 0.41–0.51 m over 0.5–5 m <span class="citation"
+data-cites="downes2025">(<a href="#ref-downes2025"
+role="doc-biblioref">Downes et al., 2025</a>)</span>. Turbidity is the
+recognised limit, and compositing many scenes is one response to it
+<span class="citation" data-cites="caballero2023">(<a
+href="#ref-caballero2023" role="doc-biblioref">Caballero &amp; Stumpf,
+2023</a>)</span>.</p>
+<p>The design of the validation matters as much as the water.
+Neighbouring pixels share depth, seabed and atmospheric error, so a
+random split places near-identical pixels on both sides of the divide
+and rewards a flexible model for memorising location <span
+class="citation" data-cites="roberts2017 ploton2020">(<a
+href="#ref-ploton2020" role="doc-biblioref">Ploton et al., 2020</a>; <a
+href="#ref-roberts2017" role="doc-biblioref">Roberts et al.,
+2017</a>)</span>. Accuracies obtained that way describe interpolation
+inside a surveyed area at least as much as prediction beyond it, and
+several of the figures above come from splits whose spatial independence
+is not reported.</p>
+<p>The NSW coast is temperate and swell-exposed, with surf zones, rocky
+reefs and estuarine plumes, and the state’s 2018 marine lidar survey
+provides a contemporaneous, openly licensed reference along most of it.
+No published accuracy assessment of SDB on the NSW open coast was found.
+This study asks three questions. How accurate is Sentinel-2 SDB on this
+coast, and to what depth? Does a flexible model’s advantage over the
+band ratio hold out of sample at sites of different character? And does
+the error follow water clarity, between sites and within them? Every
+analysis was pre-registered <span class="citation"
+data-cites="nosek2018">(<a href="#ref-nosek2018"
+role="doc-biblioref">Nosek et al., 2018</a>)</span>: its protocol,
+predictions and decision gate were committed to the project repository
+before the models were fitted.</p>
+<h2 id="study-sites-and-data"><span class="secno">2</span> Study sites
+and data</h2>
+<h3 id="sites"><span class="secno">2.1</span> Sites</h3>
+<p>The three sites were chosen to span water clarity, from a sheltered,
+clear embayment to an estuarine plume (Figure 1, Table 1).
+<strong>Jervis Bay</strong> is a large embayment with a narrow entrance,
+sand-dominated sediments <span class="citation"
+data-cites="anderson2009">(<a href="#ref-anderson2009"
+role="doc-biblioref">Anderson et al., 2009</a>)</span>, seagrass meadows
+and rocky reef along its shores; the open coast outside the entrance is
+included. <strong>Northern Beaches</strong>, from Queenscliff to Palm
+Beach in Sydney, is an open, swell-exposed coast of sandy embayments
+between rock headlands and platforms. <strong>Batemans Bay</strong> is
+the mouth of the Clyde River, whose plume spreads across the inner bay.
+Each site lies within a single lidar survey block flown on one date, so
+its reference is not a mosaic of dates.</p>
+<figure id="fig-sites">
+<a href="figures/f1_sites.png" class="zoom"><img
+src="figures/f1_sites.png" class="wide" loading="lazy"
+alt="Figure 1. The three sites, drawn at one scale on hillshaded lidar. Blue: water 0–20 m deep that was assessed. Grey: water inside the Northern Beaches box that is not joined to the open sea (Pittwater and coastal lagoons), excluded by an amendment made before any model was fitted. The grid shows the 2 km blocks used for validation. Basemap: Natural Earth (public domain)." /></a>
+<figcaption><strong>Figure 1.</strong> The three sites, drawn at one
+scale on hillshaded lidar. Blue: water 0–20 m deep that was assessed.
+Grey: water inside the Northern Beaches box that is not joined to the
+open sea (Pittwater and coastal lagoons), excluded by an amendment made
+before any model was fitted. The grid shows the 2 km blocks used for
+validation. Basemap: Natural Earth (public domain).</figcaption>
+</figure>
+<div class="table-wide">
+<div class="table-scroll">
+<table>
+<caption><strong>Table 1.</strong> Sites, scenes, reference and pairing.
+Pixels are 10 m. The Northern Beaches figures are for the open coast
+only.</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;"></th>
+<th style="text-align: left;">Jervis Bay</th>
+<th style="text-align: left;">Northern Beaches</th>
+<th style="text-align: left;">Batemans Bay</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Setting</td>
+<td style="text-align: left;">Sheltered embayment and its entrance</td>
+<td style="text-align: left;">Open surf coast, headlands and rock
+platforms</td>
+<td style="text-align: left;">Estuary mouth, Clyde River plume</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Sentinel-2 scene</td>
+<td style="text-align: left;">7 Sep 2018, S2A, baseline 00.01</td>
+<td style="text-align: left;">27 Sep 2018, S2A, Collection-1</td>
+<td style="text-align: left;">23 Aug 2018, S2B, Collection-1</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Lidar flown</td>
+<td style="text-align: left;">8–9 Sep 2018</td>
+<td style="text-align: left;">to 18 Sep 2018</td>
+<td style="text-align: left;">24 Aug 2018</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Scene relative to lidar</td>
+<td style="text-align: left;">1 day before</td>
+<td style="text-align: left;">9 days after</td>
+<td style="text-align: left;">1 day before</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Water level at overpass (m AHD) and
+gauge</td>
+<td style="text-align: left;">−0.392, Jervis Bay 216470</td>
+<td style="text-align: left;">+0.501, Sydney 213470 (Patonga
++0.539)</td>
+<td style="text-align: left;">−0.181, Princess Jetty 216410</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Image shift applied, east and north
+(m)</td>
+<td style="text-align: left;">−7.4, −1.0</td>
+<td style="text-align: left;">−0.4, −3.5</td>
+<td style="text-align: left;">+3.0, −4.9</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Assessed water, 0–20 m</td>
+<td style="text-align: left;">93.3 km², 932,838 pixels</td>
+<td style="text-align: left;">21.6 km², 216,258 pixels</td>
+<td style="text-align: left;">27.5 km², 274,689 pixels</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">2 km validation blocks</td>
+<td style="text-align: left;">68</td>
+<td style="text-align: left;">21</td>
+<td style="text-align: left;">20</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="lidar-reference"><span class="secno">2.2</span> Lidar
+reference</h3>
+<p>The reference is the NSW Marine LiDAR Topo-Bathy survey of 2018 <span
+class="citation" data-cites="dcceew2018lidar">(<a
+href="#ref-dcceew2018lidar" role="doc-biblioref">NSW Department of
+Climate Change, Energy, the Environment and Water, 2018</a>)</span>: a
+5 m grid on the Australian Height Datum (AHD), flown between July and
+December 2018, licensed CC BY 4.0, and specified to IHO Order 1b, a
+total vertical uncertainty at 95% confidence of √(0.5² + (0.013 d)²) m,
+about ±0.5 m over 0–20 m <span class="citation"
+data-cites="iho2022s44">(<a href="#ref-iho2022s44"
+role="doc-biblioref">International Hydrographic Organization,
+2022</a>)</span>. Extracts were ordered through the ELVIS portal. While
+the second site was being prepared it emerged that ELVIS averages any
+extract spanning more than one survey block, returning a 4 × 4 mean of
+the native cells displaced by half a cell; native values sit on a
+centimetre lattice and averaged ones do not, which makes the averaging
+detectable. Most of Jervis Bay’s reference is averaged (257 of 299
+one-kilometre tiles), differing from native by about 0.13 m RMS. The
+other two references are native, and the effect of averaging was
+measured directly (Section 4.6).</p>
+<h3 id="imagery"><span class="secno">2.3</span> Imagery</h3>
+<p>Sentinel-2 Level-2A surface reflectance was read from the Earth
+Search catalogue <span class="citation"
+data-cites="element84earthsearch">(<a href="#ref-element84earthsearch"
+role="doc-biblioref">Element 84, 2026</a>)</span>. For each site the
+scene nearest the lidar date whose water over the survey was free of
+cloud, haze and glint on inspection of a water-stretched quicklook was
+taken, with no depth data examined; turbidity was not a criterion. At
+Northern Beaches the two nearer scenes were clouded over the water, so
+the scene is nine days after the survey. One processing trap affects
+other users of this catalogue: Collection-1 items on Earth Search
+already have the −0.1 bottom-of-atmosphere offset <span class="citation"
+data-cites="esa2022offset">(<a href="#ref-esa2022offset"
+role="doc-biblioref">European Space Agency, 2022</a>)</span> removed
+while their band metadata still declare it, so applying the declared
+offset subtracts it twice. The item’s own flag was trusted, and a check
+at fetch that red and near-infrared (NIR) reflectance over water lies
+near zero arbitrates.</p>
+<h3 id="water-level-substrate-and-sea-state"><span
+class="secno">2.4</span> Water level, substrate and sea state</h3>
+<p>Water level at each overpass was interpolated from one-minute records
+of Manly Hydraulics Laboratory gauges in AHD <span class="citation"
+data-cites="mhl2026tides">(<a href="#ref-mhl2026tides"
+role="doc-biblioref">Manly Hydraulics Laboratory, 2026</a>)</span>
+(Table 1). At Northern Beaches the Sydney and Patonga gauges, either
+side of the site, agreed to 0.038 m. An estimate of water level from the
+image shoreline was within 0.10 m of the gauge at two sites but 0.70 m
+too high at Batemans Bay, so no site relied on it. Two habitat layers
+group the errors and never enter a model: the DCCEEW seabed reef extent,
+classified from the same 2018 lidar into reef and unconsolidated
+sediment <span class="citation" data-cites="dcceew2023reef">(<a
+href="#ref-dcceew2023reef" role="doc-biblioref">NSW Department of
+Climate Change, Energy, the Environment and Water, 2023</a>)</span>, and
+the DPI Fisheries estuarine macrophyte map of seagrass <span
+class="citation" data-cites="dpi2023macrophytes">(<a
+href="#ref-dpi2023macrophytes" role="doc-biblioref">NSW Department of
+Primary Industries Fisheries, 2023</a>)</span>, which covers estuaries
+to about 10 m and maps no seagrass on the open coast. The Sydney
+waverider record describes sea state at Northern Beaches between the
+survey and the scene.</p>
+<h2 id="methods"><span class="secno">3</span> Methods</h2>
+<h3 id="pre-registration"><span class="secno">3.1</span>
+Pre-registration</h3>
+<p>The analysis ran in phases, each governed by a protocol committed
+before any model was fitted to the data it covered: the band ratio at
+Jervis Bay (27 September 2026), rules for grouping errors by substrate
+(27 September), gradient boosting (29 September) and the two further
+sites (1 October). Each protocol fixed the model, calibration,
+validation, statistics, predictions and a decision gate. One amendment,
+described below, was made before any fit at the new sites. Any change
+after a run was logged as a deviation with both results kept (Table 4).
+Code was written after each protocol and tested on synthetic data before
+it met real data, and analyses that were not registered were labelled
+exploratory and written to separate outputs.</p>
+<h3 id="reference-grid-and-masks"><span class="secno">3.2</span>
+Reference grid and masks</h3>
+<p>The lidar does not nest in the Sentinel-2 grid, so it was aggregated
+onto each scene’s 10 m grid by exact area weighting after the image’s
+geolocation error had been measured and removed. The shift was measured
+by gradient correlation against NSW orthoimagery over land windows of
+2 km, falling back to 1.5 km where fewer than four windows agreed, and
+applied as a rigid translation of 3.5 to 7.5 m (Table 1). Depth is the
+gauged water level minus the lidar elevation. A pixel was assessed if
+its lidar depth lay between 0 and 20 m with full lidar coverage, and if
+it was free of cloud and shadow and not bright in the NIR, which on this
+coast flags surf, foam and glint. The Northern Beaches box also held
+Pittwater, a sheltered estuary, and two coastal lagoons whose levels are
+not the sea’s: 11.5 of its 32.3 km² of water. Since the site’s
+registered role was the exposed open coast, an amendment made before any
+fit, from the lidar and habitat maps alone, restricted assessment to
+water connected to a named open-sea point (21.6 km² in 21 blocks).</p>
+<h3 id="models"><span class="secno">3.3</span> Models</h3>
+<p>The band ratio follows <span class="citation"
+data-cites="stumpf2003">Stumpf et al. (<a href="#ref-stumpf2003"
+role="doc-biblioref">2003</a>)</span>: pSDB = ln(1000 ρ<sub>blue</sub>)
+/ ln(1000 ρ<sub>green</sub>), and depth = m₁ pSDB − m₀ by ordinary least
+squares, one calibration per site. Inside each training fold the fit
+used a depth-balanced sample (up to 5,000 pixels from each 1 m depth
+bin) below a fitting limit, the depth at which the binned median ratio
+stops rising, or 20 m if it rises throughout. Depth balancing matters
+because most pixels lie deeper than 10 m, where the signal is
+weakest.</p>
+<p>The flexible model is gradient-boosted regression trees <span
+class="citation" data-cites="friedman2001">(<a href="#ref-friedman2001"
+role="doc-biblioref">Friedman, 2001</a>)</span>, as implemented in
+scikit-learn’s HistGradientBoostingRegressor <span class="citation"
+data-cites="pedregosa2011">(<a href="#ref-pedregosa2011"
+role="doc-biblioref">Pedregosa et al., 2011</a>)</span>, with fixed
+settings and no tuning: squared-error loss, 300 iterations, learning
+rate 0.1, 31 leaves, at least 100 samples per leaf and no early
+stopping. Its features are per-pixel and from the image alone: ln(1000
+ρ) for the blue, green, red and NIR bands, the Stumpf ratio and the
+blue-to-red ratio. It is trained on the same depth-balanced sample over
+the whole 0–20 m. No coordinates, neighbourhood or texture features are
+used. A third model adds easting and northing to the same features; it
+was registered solely to show what a random split rewards and is never
+treated as a result.</p>
+<p>No sun-glint correction was applied. Over optically deep water at
+Jervis Bay the covariance between NIR and blue that a deglinting
+regression <span class="citation" data-cites="hedley2005">(<a
+href="#ref-hedley2005" role="doc-biblioref">Hedley et al.,
+2005</a>)</span> would remove was dominated by kilometre-scale structure
+that is water or atmosphere, not glint, and Sentinel-2’s band-to-band
+timing decorrelates glint at the pixel scale <span class="citation"
+data-cites="harmel2018">(<a href="#ref-harmel2018"
+role="doc-biblioref">Harmel et al., 2018</a>)</span>.</p>
+<h3 id="validation-and-statistics"><span class="secno">3.4</span>
+Validation and statistics</h3>
+<p>Validation is spatially blocked: 2 km square blocks aligned to the
+scene grid are dealt at random to five folds, ten times (fold seeds
+0–9), with identical folds for every model. Each pixel’s prediction is
+the mean of its ten out-of-fold predictions, none from a model that saw
+its block. Error is e = SDB − lidar, so positive values read too deep.
+The statistics are pooled RMSE, bias and R², and the depth-balanced
+RMSE, the mean of the RMSEs in five bands (0–2, 2–5, 5–10, 10–15 and
+15–20 m), reported because pooled RMSE depends on each site’s depth
+distribution. Intervals are 95% percentile intervals from a block
+bootstrap (2 km blocks, 1,000 draws), and paired differences between
+models resample both together. A random pixel split, a curve of RMSE
+against block size (random, 0.5, 1, 2 and 4 km) and a residual
+correlogram are reported alongside; the correlation range is the
+shortest lag at which residual correlation falls below 0.1. The
+breakdown depth is the lower edge of the shallowest 1 m bin whose 95th
+percentile of absolute error exceeds IHO CATZOC C, 2.0 m plus 5% of
+depth <span class="citation" data-cites="iho2000s57">(<a
+href="#ref-iho2000s57" role="doc-biblioref">International Hydrographic
+Organization, 2000</a>)</span>. S-57 gives no confidence level for this
+depth accuracy, so the comparison with the 95th percentile is this
+study’s reading of it. The first phase had a gate: pooled RMSE below 4 m
+at Jervis Bay. The decision gates are listed with the predictions in
+Table 3.</p>
+<h3 id="water-clarity"><span class="secno">3.5</span> Water clarity</h3>
+<p>The clarity metric, fixed in advance from the image alone, is the
+median red reflectance (band 4, 665 nm) over assessed pixels 10–20 m
+deep. Red reflectance rises with suspended matter and underlies
+single-band turbidity algorithms <span class="citation"
+data-cites="nechad2010">(<a href="#ref-nechad2010"
+role="doc-biblioref">Nechad et al., 2010</a>)</span>. The 10 m floor
+keeps the seabed’s contribution small, because pure water alone absorbs
+about 0.4 m⁻¹ at this wavelength <span class="citation"
+data-cites="popefry1997">(<a href="#ref-popefry1997"
+role="doc-biblioref">Pope &amp; Fry, 1997</a>)</span>. The protocol
+stated in advance that differences of a few thousandths between sites
+might reflect atmospheric correction rather than water. The fourth
+decision gate asked whether error rises from the clearest site to the
+most turbid. Because three sites cannot separate clarity from everything
+else that differs between them, the registered inferential test works
+within sites: the Spearman correlation between block median red and
+block RMSE over the same pixels, for blocks holding at least 200 of
+them, with intervals from resampling blocks (1,000 draws), averaged
+across sites so that site-level offsets cannot create a correlation.</p>
+<p>After the registered result showed that the depth mix of blocks
+confounds this test, an exploratory version was defined and committed
+before it was run. It compares each block’s error with the error its
+depths alone would predict, taken from the site’s other blocks in 1 m
+bins, and correlates the ratio with block red. The rule for reading it
+was fixed in advance: a link beyond depth is <em>supported</em> only if
+the mean correlation’s interval lies above zero and no site’s
+correlation is negative.</p>
+<h3 id="substrate"><span class="secno">3.6</span> Substrate</h3>
+<p>Each pixel was classed by the majority (at least half) of its area,
+sampled at 2 m, as <em>Posidonia</em>, other seagrass, reef, or sediment
+with no seagrass mapped, the reference class. Within each depth band the
+bias of a class minus that of sediment was compared, with
+block-bootstrap intervals, wherever both held at least 1,000 pixels. At
+Jervis Bay the comparison is inside the bay, as registered; at the other
+sites it covers the whole site. The direction was stated in advance:
+dark seabed reads deeper.</p>
+<h2 id="results"><span class="secno">4</span> Results</h2>
+<h3 id="accuracy-by-site-and-depth"><span class="secno">4.1</span>
+Accuracy by site and depth</h3>
+<p>Pooled RMSE was below the 4 m gate for both models at every site
+(Table 2). Pooled RMSE was 2.68, 3.03 and 2.96 m for the band ratio at
+Jervis Bay, Northern Beaches and Batemans Bay, and 1.88, 2.40 and 2.45 m
+for gradient boosting. Pooled biases were small, but the band ratio’s
+bias is structured by depth: 0.6 to 1.7 m too deep through 0–10 m (3.1 m
+in the top 2 m at Northern Beaches) and 2.1 to 2.5 m too shallow at
+15–20 m, the pattern of a straight line fitted through a noisy,
+saturating relationship. At Jervis Bay the open coast outside the
+entrance carried about twice the error of the bay (band ratio 4.69
+against 2.27 m; gradient boosting 3.08 against 1.65 m).</p>
+<div class="table-wide">
+<div class="table-scroll">
+<table>
+<caption><strong>Table 2.</strong> Results on 2 km blocks, with 95%
+block-bootstrap intervals. Error is satellite minus lidar; a negative
+bias reads too shallow. A breakdown depth of 0 m means that the
+allowance is exceeded from the shallowest bin.</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;"></th>
+<th style="text-align: left;">Jervis Bay</th>
+<th style="text-align: left;">Northern Beaches</th>
+<th style="text-align: left;">Batemans Bay</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Band ratio (Stumpf)</strong></td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;"></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Pooled RMSE (m)</td>
+<td style="text-align: left;">2.68 [2.31, 3.13]</td>
+<td style="text-align: left;">3.03 [2.81, 3.22]</td>
+<td style="text-align: left;">2.96 [2.32, 3.52]</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Bias (m)</td>
+<td style="text-align: left;">−0.42 [−0.95, +0.06]</td>
+<td style="text-align: left;">−0.55 [−1.11, −0.01]</td>
+<td style="text-align: left;">−0.40 [−1.53, +0.67]</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">R²</td>
+<td style="text-align: left;">0.69 [0.57, 0.77]</td>
+<td style="text-align: left;">0.65 [0.56, 0.70]</td>
+<td style="text-align: left;">0.70 [0.45, 0.81]</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Depth-balanced RMSE (m)</td>
+<td style="text-align: left;">2.48</td>
+<td style="text-align: left;">3.02</td>
+<td style="text-align: left;">2.73</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Blocked ÷ random-split RMSE</td>
+<td style="text-align: left;">1.008</td>
+<td style="text-align: left;">1.010</td>
+<td style="text-align: left;">0.982</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Breakdown depth, CATZOC C</td>
+<td style="text-align: left;">0 m</td>
+<td style="text-align: left;">0 m</td>
+<td style="text-align: left;">0 m</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Gradient boosting</strong></td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;"></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Pooled RMSE (m)</td>
+<td style="text-align: left;">1.88 [1.67, 2.13]</td>
+<td style="text-align: left;">2.40 [2.20, 2.58]</td>
+<td style="text-align: left;">2.45 [1.86, 2.95]</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Bias (m)</td>
+<td style="text-align: left;">−0.12 [−0.41, +0.15]</td>
+<td style="text-align: left;">−0.31 [−0.69, +0.08]</td>
+<td style="text-align: left;">−0.15 [−0.93, +0.51]</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">R²</td>
+<td style="text-align: left;">0.85 [0.80, 0.88]</td>
+<td style="text-align: left;">0.78 [0.73, 0.82]</td>
+<td style="text-align: left;">0.79 [0.64, 0.88]</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Depth-balanced RMSE (m)</td>
+<td style="text-align: left;">1.53</td>
+<td style="text-align: left;">2.12</td>
+<td style="text-align: left;">2.10</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Blocked ÷ random-split RMSE</td>
+<td style="text-align: left;">1.060</td>
+<td style="text-align: left;">1.069</td>
+<td style="text-align: left;">1.159</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Breakdown depth, CATZOC C</td>
+<td style="text-align: left;">3 m</td>
+<td style="text-align: left;">0 m</td>
+<td style="text-align: left;">2 m</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Gradient boosting − band ratio, RMSE
+(m)</td>
+<td style="text-align: left;">−0.80 [−1.06, −0.57]</td>
+<td style="text-align: left;">−0.63 [−0.78, −0.50]</td>
+<td style="text-align: left;">−0.51 [−0.90, −0.15]</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Coordinate model (leakage
+demonstration)</strong></td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;"></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Random split → 2 km blocks, RMSE (m)</td>
+<td style="text-align: left;">0.74 → 1.32</td>
+<td style="text-align: left;">0.91 → 2.66</td>
+<td style="text-align: left;">0.51 → 2.16</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Residual correlation range, band
+ratio</td>
+<td style="text-align: left;">4 km</td>
+<td style="text-align: left;">1 km</td>
+<td style="text-align: left;">2 km</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Error by 1 m bin (Figure 2) has the same shape at every site. For the
+band ratio it lies near 2 to 3 m RMSE from about 5 m to 14 m and climbs
+beyond about 15 m, to 4.5 to 5 m in the deepest bin; at Northern Beaches
+it is also high in the top 2 m (3.90 m). Gradient boosting is lower in
+the shallows at every site and climbs from about 16 to 17 m. The band
+ratio’s 95th-percentile error exceeds the CATZOC C allowance from the
+shallowest bin at all three sites. Gradient boosting meets it to 3 m at
+Jervis Bay and 2 m at Batemans Bay, and nowhere at Northern Beaches. As
+a descriptive count, 88%, 78% and 79% of its pixels fall within the
+allowance (band ratio 75%, 63% and 66%).</p>
+<figure id="fig-depth">
+<a href="figures/f2_error_by_depth.png" class="zoom"><img
+src="figures/f2_error_by_depth.png" class="wide" loading="lazy"
+alt="Figure 2. Error against lidar depth in 1 m bins: RMSE (top) and 95th percentile of absolute error against the CATZOC C allowance (bottom). Error is roughly level to about 15 m and climbs beyond; gradient boosting’s advantage lies in the shallows and the deepest bins." /></a>
+<figcaption><strong>Figure 2.</strong> Error against lidar depth in 1 m
+bins: RMSE (top) and 95th percentile of absolute error against the
+CATZOC C allowance (bottom). Error is roughly level to about 15 m and
+climbs beyond; gradient boosting’s advantage lies in the shallows and
+the deepest bins.</figcaption>
+</figure>
+<p>The assessed share of the reference water falls in the shallows,
+where the NIR flag removes surf, foam and glint. In the 0–2 m band, 60%
+of reference water was assessed at Jervis Bay (39% flagged bright), 35%
+on the Northern Beaches open coast (65% flagged) and 82% at Batemans Bay
+(18%). From 2 m down, at least 90% was assessed at every site, and at
+least 97% at Jervis Bay and Batemans Bay.</p>
+<h3 id="gradient-boosting-against-the-band-ratio"><span
+class="secno">4.2</span> Gradient boosting against the band ratio</h3>
+<p>Gradient boosting was more accurate at every site, by 0.80 [0.57,
+1.06] m at Jervis Bay, 0.63 [0.50, 0.78] m at Northern Beaches and 0.51
+[0.15, 0.90] m at Batemans Bay. Its advantage lies at the ends of the
+depth range: in the top 2 m it reduced RMSE by 1.57, 2.39 and 1.44 m,
+and at 15–20 m by 1.35, 1.00 and 1.07 m, all with intervals clear of
+zero. At 5–10 m the difference could not be distinguished from zero at
+any site (−0.19 [−0.61, +0.14], −0.11 [−0.77, +0.30] and +0.21 [−0.08,
++0.52] m). The prediction that its advantage would be smaller at
+Batemans Bay than at Jervis Bay held on the point estimates, but the two
+intervals overlap.</p>
+<h3 id="validation-design"><span class="secno">4.3</span> Validation
+design</h3>
+<p>The band ratio’s random-split and blocked RMSE are almost identical
+(ratios 0.982–1.010) and its block-size curves are flat (Figure 3): a
+two-parameter line cannot memorise location, so it serves as a control.
+Gradient boosting opens a modest gap (1.060–1.159) and its error rises
+steadily with block size, so its 2 km figures are best read as lower
+bounds; on 4 km blocks it still outperforms the band ratio at every site
+(2.06, 2.44 and 2.81 m against 2.72, 3.06 and 3.11 m). The coordinate
+model shows what a random split rewards: its random-split RMSE was 0.74,
+0.91 and 0.51 m, against 1.32, 2.66 and 2.16 m on 2 km blocks, ratios of
+1.77, 2.94 and 4.26. One registered prediction failed here. At Jervis
+Bay the coordinate model beat image-only gradient boosting even on 2 km
+blocks (1.32 against 1.88 m), because depth is correlated over
+kilometres and the model interpolated the surveyed depths of
+neighbouring training blocks. Its advantage drains away as blocks grow,
+to 1.87 against 2.06 m on 4 km blocks. Residuals of the band ratio
+stayed correlated beyond the 2 km blocks at Jervis Bay (to 4 km), so
+intervals there may be somewhat narrow.</p>
+<figure id="fig-design">
+<a href="figures/f3_validation_design.png" class="zoom"><img
+src="figures/f3_validation_design.png" class="wide" loading="lazy"
+alt="Figure 3. RMSE against validation block size for the three models. The band ratio is flat; gradient boosting rises gently; the model given coordinates looks far better under a random split than it is on unseen ground. Points are means of single repeats, so the 2 km values differ slightly from Table 2, which scores the mean of ten predictions." /></a>
+<figcaption><strong>Figure 3.</strong> RMSE against validation block
+size for the three models. The band ratio is flat; gradient boosting
+rises gently; the model given coordinates looks far better under a
+random split than it is on unseen ground. Points are means of single
+repeats, so the 2 km values differ slightly from Table 2, which scores
+the mean of ten predictions.</figcaption>
+</figure>
+<h3 id="seabed-type"><span class="secno">4.4</span> Seabed type</h3>
+<p>Mapped reef read deeper than sediment at the same depth at all three
+sites (Figure 4): at Jervis Bay inside the bay by 1.66, 1.71 and 1.64 m
+in the three bands from 5 to 20 m; at Northern Beaches by 1.84, 2.20 and
+1.27 m from 2 to 15 m, with no difference at 15–20 m (+0.03 [−0.58,
++0.57] m); and at Batemans Bay by 2.47 to 3.95 m in every band, all
+intervals clear of zero. At Jervis Bay in the top 2 m the contrast
+reversed (−2.12 m) because bare shallow sediment itself reads about
+2.2 m too deep. The registered expectation that seagrass would read
+deeper failed: <em>Posidonia</em> differed from sediment by +0.16 m at
+both 2–5 m and 5–10 m, with intervals spanning zero.</p>
+<figure id="fig-reef">
+<a href="figures/f4_reef_vs_sediment.png" class="zoom"><img
+src="figures/f4_reef_vs_sediment.png" class="wide" loading="lazy"
+alt="Figure 4. Bias of reef minus bias of sediment with no seagrass mapped, by depth band, with 95% block-bootstrap intervals (band ratio). Positive values mean reef reads deeper. Jervis Bay is compared inside the bay, as registered; the other sites over the whole site. The share of the assessed seabed mapped as reef is given in each panel." /></a>
+<figcaption><strong>Figure 4.</strong> Bias of reef minus bias of
+sediment with no seagrass mapped, by depth band, with 95%
+block-bootstrap intervals (band ratio). Positive values mean reef reads
+deeper. Jervis Bay is compared inside the bay, as registered; the other
+sites over the whole site. The share of the assessed seabed mapped as
+reef is given in each panel.</figcaption>
+</figure>
+<p>A descriptive breakdown, made after the results were seen, shows what
+the site differences are made of. Reef covers 10%, 54% and 20% of the
+assessed seabed at the three sites. On sediment alone the band ratio’s
+RMSE is 2.42, 2.58 and 2.77 m, within 0.35 m across sites; on reef alone
+it is 4.63, 3.35 and 3.60 m.</p>
+<h3 id="water-clarity-1"><span class="secno">4.5</span> Water
+clarity</h3>
+<p>Gate 4 was not met. Ordered by the clarity metric, the sites run
+Northern Beaches (0.0022), Jervis Bay (0.0037) and Batemans Bay
+(0.0053), yet the site that reads clearest has the largest band-ratio
+error (Figure 5a). The metric spans 0.003, inside the margin the
+protocol attributed in advance to atmospheric correction, and 10% of
+Northern Beaches’ pixels at 10–20 m sit at the product’s floor of
+0.0001.</p>
+<p>Within sites, the registered block test gave Spearman correlations of
++0.52 [+0.25, +0.71] at Jervis Bay (48 blocks), +0.70 [+0.32, +0.89] at
+Northern Beaches (20) and −0.18 [−0.77, +0.51] at Batemans Bay (12), a
+mean of +0.35 [+0.09, +0.59] for the band ratio and +0.31 [+0.05, +0.58]
+for gradient boosting. The prediction for Batemans Bay therefore failed;
+with 12 blocks spanning a narrow range of red, only a strong trend could
+have been detected. The test is confounded by depth. Block mean depth is
+correlated with block error at every site (+0.62, +0.71 and +0.64) and
+with block red in opposite directions at the two new sites (+0.70 at
+Northern Beaches, −0.71 at Batemans Bay). The exploratory
+depth-standardised test removed most of that tie (depth against
+standardised error −0.22 to +0.16) and gave +0.55 [+0.29, +0.74], +0.22
+[−0.31, +0.75] and +0.44 [−0.30, +0.96], a mean of +0.40 [+0.10, +0.66]
+(gradient boosting +0.34 [+0.02, +0.60]). By the rule fixed in advance
+this is <em>supported</em>, but only Jervis Bay’s own interval excludes
+zero (Figure 5b).</p>
+<figure id="fig-clarity">
+<a href="figures/f5_clarity.png" class="zoom"><img
+src="figures/f5_clarity.png" class="wide" loading="lazy"
+alt="Figure 5. (a) Pooled RMSE against the clarity metric: error does not rise with red reflectance across sites. (b) Within sites, the Spearman correlation between block red reflectance and block error, registered (open) and exploratory, standardised for depth (filled), with 95% intervals." /></a>
+<figcaption><strong>Figure 5.</strong> (a) Pooled RMSE against the
+clarity metric: error does not rise with red reflectance across sites.
+(b) Within sites, the Spearman correlation between block red reflectance
+and block error, registered (open) and exploratory, standardised for
+depth (filled), with 95% intervals.</figcaption>
+</figure>
+<h3 id="sensitivity-runs-and-corrections"><span class="secno">4.6</span>
+Sensitivity runs and corrections</h3>
+<p>Rerunning Northern Beaches against an ELVIS-averaged extract of the
+same coast moved pooled RMSE by −0.02 m for both models and no depth
+band by more than 0.07 m, so Jervis Bay’s averaged reference does not
+threaten its headline figures; it does make its breakdown by sub-pixel
+seabed relief unreliable, and that breakdown is not reported. The Jervis
+Bay band-ratio run, made first at a water level estimated from the image
+and repeated at the gauged level as the protocol required, moved from
+2.70 to 2.68 m. One computing error was found after the clarity analysis
+was first run and corrected, with both results kept (Table 4). Table 3
+lists every registered prediction and gate.</p>
+<div class="table-wide" cols="(auto, 2fr, 1.3fr)">
+<div class="table-scroll">
+<table>
+<caption><strong>Table 3.</strong> Predictions scorecard: every decision
+gate and registered prediction, as written before the run it concerns.
+The gradient-boosting predictions were registered at Jervis Bay; P1 also
+held at both new sites.</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Stated in</th>
+<th style="text-align: left;">Prediction or gate</th>
+<th style="text-align: left;">Outcome</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Gate 1</td>
+<td style="text-align: left;">Seabed resolvable in the scene; lidar and
+image align</td>
+<td style="text-align: left;">Passed (7.5 m shift measured and
+removed)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Gate 2</td>
+<td style="text-align: left;">Band-ratio pooled RMSE below about 4 m at
+Jervis Bay</td>
+<td style="text-align: left;">Passed (2.68 m)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Gate 3</td>
+<td style="text-align: left;">Blocked RMSE within about 30% of
+random-split RMSE</td>
+<td style="text-align: left;">Passed (band ratio 1.008; gradient
+boosting 1.060–1.159)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Gate 4</td>
+<td style="text-align: left;">Error rises from the clearest site to the
+most turbid</td>
+<td style="text-align: left;">Not met</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Decisions register</td>
+<td style="text-align: left;">The gauge reads 0.1–0.2 m above the image
+estimate of water level at Jervis Bay</td>
+<td style="text-align: left;">Held (0.104 m)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Substrate addendum</td>
+<td style="text-align: left;">Reef reads deeper than sediment</td>
+<td style="text-align: left;">Held at 5–20 m</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Substrate addendum</td>
+<td style="text-align: left;">Seagrass reads deeper than sediment</td>
+<td style="text-align: left;">Failed (+0.16 m, intervals span zero)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Gradient boosting, P1</td>
+<td style="text-align: left;">Beats the band ratio on blocks</td>
+<td style="text-align: left;">Held (−0.80 m)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Gradient boosting, P2</td>
+<td style="text-align: left;">Opens a larger blocked/random gap than the
+band ratio</td>
+<td style="text-align: left;">Held (1.060 against 1.008)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Gradient boosting, P3</td>
+<td style="text-align: left;">The coordinate model’s random-split RMSE
+is more than 30% below its blocked RMSE</td>
+<td style="text-align: left;">Held (44% below)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Gradient boosting, P4</td>
+<td style="text-align: left;">The coordinate model does no better than
+image-only gradient boosting on blocks</td>
+<td style="text-align: left;">Failed (1.32 against 1.88 m)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Three sites, P1</td>
+<td style="text-align: left;">Batemans Bay has the highest clarity
+metric</td>
+<td style="text-align: left;">Held, weakly (span 0.003)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Three sites, P2</td>
+<td style="text-align: left;">Band-ratio RMSE at both new sites exceeds
+2.68 m</td>
+<td style="text-align: left;">Held on point estimates only</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Three sites, P3</td>
+<td style="text-align: left;">Block error rises with block red at
+Batemans Bay</td>
+<td style="text-align: left;">Failed (−0.18 [−0.77, +0.51])</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Three sites, P4</td>
+<td style="text-align: left;">Gradient boosting wins at every site, by
+less at Batemans Bay</td>
+<td style="text-align: left;">Held; second half on point estimates</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="table-wide" cols="(auto, 2.3fr, 1fr, 1.8fr)">
+<div class="table-scroll">
+<table>
+<caption><strong>Table 4.</strong> Deviations, amendments and
+corrections, from the decisions register in the repository.</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Date (2026)</th>
+<th style="text-align: left;">What changed</th>
+<th style="text-align: left;">Relative to the fit</th>
+<th style="text-align: left;">Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">27 Sep</td>
+<td style="text-align: left;">The two sentences defining the band
+ratio’s fitting limit conflict for a steadily rising curve; implemented
+as written (20 m when the peak is in the deepest bin)</td>
+<td style="text-align: left;">Before</td>
+<td style="text-align: left;">None; the other reading, run as
+exploratory, gave 2.82 m against 2.70 m</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">29 Sep</td>
+<td style="text-align: left;">Jervis Bay band-ratio run repeated at the
+gauged water level (−0.392 m AHD) instead of the image estimate
+(−0.496 m), as the protocol required</td>
+<td style="text-align: left;">After</td>
+<td style="text-align: left;">2.70 → 2.68 m; both reported, the gauged
+run primary</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">1 Oct</td>
+<td style="text-align: left;">Jervis Bay reference found to be mostly
+averaged by the supplying portal; disclosed rather than re-ordered</td>
+<td style="text-align: left;">After</td>
+<td style="text-align: left;">Measured by a sensitivity run: −0.02 m;
+relief strata withdrawn</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">1 Oct</td>
+<td style="text-align: left;">Earth Search Collection-1 offset: the
+item’s flag trusted over its band metadata</td>
+<td style="text-align: left;">Before any fit at the new sites</td>
+<td style="text-align: left;">Jervis Bay (baseline 00.01)
+unaffected</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">1 Oct</td>
+<td style="text-align: left;">Co-registration falls back to 1.5 km
+windows where fewer than four 2 km windows agree</td>
+<td style="text-align: left;">Before any fit at the new sites</td>
+<td style="text-align: left;">Used at Batemans Bay (three windows at
+2 km, seven at 1.5 km)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">16 Nov</td>
+<td style="text-align: left;">Amendment: Northern Beaches assessed on
+the open coast only</td>
+<td style="text-align: left;">Before any fit at the new sites</td>
+<td style="text-align: left;">11.5 km² of estuary and lagoon removed; 21
+blocks remain</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">16 Nov</td>
+<td style="text-align: left;">Clarity analysis: pixels with no red value
+left out of block medians, as they already were from the site metric; 13
+of Northern Beaches’ 20 block medians had been missing values ranked as
+the largest</td>
+<td style="text-align: left;">After; both runs kept</td>
+<td style="text-align: left;">Northern Beaches block correlation −0.16 →
++0.70; mean +0.06 → +0.35; gate 4 and every prediction unchanged</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">19 Nov</td>
+<td style="text-align: left;">Shallow-water exclusion figures: estuary
+and lagoon water had been counted in the 0–2 m denominator at Northern
+Beaches</td>
+<td style="text-align: left;">Documentation only</td>
+<td style="text-align: left;">Assessed share of open-coast water at
+0–2 m 12% → 35%</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h2 id="discussion"><span class="secno">5</span> Discussion</h2>
+<h3 id="against-the-literature"><span class="secno">5.1</span> Against
+the literature</h3>
+<p>The band ratio’s 2.7–3.0 m exceeds the 1.78 m reported for clear
+water at St Thomas <span class="citation" data-cites="xie2023">(<a
+href="#ref-xie2023" role="doc-biblioref">Xie et al., 2023</a>)</span>,
+and gradient boosting’s 1.9–2.5 m exceeds the 1.28 m of random forest
+there. Part of that gap is water and part is design. The St Thomas split
+is of unstated spatial design, and the coordinate model here shows a
+random split lowering RMSE by a factor of 1.8 to 4.3. For image-only
+features the effect is smaller, gradient boosting’s blocked RMSE lying
+6–16% above its random-split RMSE, so it is location, or features that
+stand in for it, that makes the split decisive. The nearest comparisons
+are the Irish coast, at 1.60–2.43 m from model inversion over twelve
+scenes <span class="citation" data-cites="casal2020">(<a
+href="#ref-casal2020" role="doc-biblioref">Casal et al.,
+2020</a>)</span>, and the Aegean, at 1.67 m with spatially independent
+sets <span class="citation" data-cites="traganos2018">(<a
+href="#ref-traganos2018" role="doc-biblioref">Traganos et al.,
+2018</a>)</span>. Gradient boosting at Jervis Bay (1.88 m) lies within
+that range, and the exposed and estuarine sites (2.40 and 2.45 m) at or
+just beyond its upper end. The Hasaki study reached R² of 0.84–0.92 to
+about 15 m on a point split <span class="citation"
+data-cites="quang2025">(<a href="#ref-quang2025"
+role="doc-biblioref">Hao Quang et al., 2025</a>)</span>; gradient
+boosting here reached 0.78 to 0.85 to 20 m on blocks, a different test.
+Gradient boosting’s advantage of 0.5–0.8 m matches the 0.5 m between
+random forest and the band ratio at St Thomas and, unlike that figure,
+holds on spatially independent ground at three sites.</p>
+<h3 id="what-sets-the-error-here"><span class="secno">5.2</span> What
+sets the error here</h3>
+<p>Gate 4 was not met, and two qualifications govern how far that result
+can be taken. The band-ratio errors overlap within their intervals, so
+the only resolved contrast between sites is gradient boosting’s, Jervis
+Bay against Northern Beaches. And the clarity metric spans only 0.003 in
+red reflectance, within the margin attributed in advance to atmospheric
+correction, with 10% of Northern Beaches’ deeper pixels at the lowest
+value the product records. The result therefore shows that no monotonic
+relationship was observed and that this imagery could not establish a
+clarity gradient between the sites. It does not show that clarity is
+immaterial. Each site is also represented by a single scene, so a
+difference between sites is equally a difference in acquisition date,
+sea state, sun geometry and atmosphere. That the two models agree rules
+out an artefact of either model, since they share every pixel and the
+same reference, but not an artefact of the scene.</p>
+<p>The composition of the errors points to the seabed rather than the
+water column. Depth distribution accounts for little: Northern Beaches
+holds the largest share of pixels between 15 and 20 m (42%, against 35%
+and 27%), yet with each depth band weighted equally it still has the
+largest band-ratio error. Substrate accounts for much more. Mapped reef
+makes up 54% of the assessed seabed at Northern Beaches against 10% at
+Jervis Bay and 20% at Batemans Bay, and in most depth bands reef reads
+deeper than sediment at all three sites; on sediment alone the three
+sites lie within 0.35 m of one another. Northern Beaches’ reef is no
+worse than Jervis Bay’s (3.35 against 4.63 m); the site simply has far
+more of it. This breakdown is descriptive and post hoc rather than a
+test, and on this coast it cannot be disentangled from exposure, because
+all of Northern Beaches’ reef lies on an open, swell-dominated
+shoreline. The reef layer records presence, not cover, so whether kelp,
+urchin barren or bare rock produces the bias remains open.</p>
+<p>Exposure leaves a separate mark in the shallows. At Northern Beaches
+the band-ratio error between 0 and 2 m is 3.90 m, against 2.11 m at
+Jervis Bay; 65% of the open-coast water in that band was too bright in
+the NIR to assess, which on this coast means surf; and a 1.8 m swell at
+a 15 s period was running at the overpass. The scene was acquired nine
+days after the lidar survey, with ordinary swell in between, so within
+the surf zone the lidar may not describe the seabed the satellite
+observed. These effects are confined to shallow water, however. The
+bands from 0 to 5 m hold only 11% of Northern Beaches’ assessed pixels,
+and gradient boosting performs worse there than at Jervis Bay in every
+depth band, so surf and seabed change cannot account for the whole
+difference.</p>
+<p>Within each scene the evidence leans the other way. The exploratory
+analysis finds that blocks with higher red reflectance err more than
+their depths alone would suggest, with the same sign at all three sites,
+although only Jervis Bay is resolved on its own. Red reflectance also
+rises with foam and glint, so this is a lead concerning red reflectance
+rather than evidence about turbidity, and it warrants a registered test
+on further scenes.</p>
+<h3 id="practical-reading"><span class="secno">5.3</span> Practical
+reading</h3>
+<p>From a single Sentinel-2 scene, SDB on this coast is a reconnaissance
+product. It shows the form of the seabed, the position of reefs and
+channels, and where a survey would be best directed, but it does not
+meet CATZOC C. A user should expect reef to read 1 to 4 m deeper than
+sand at the same depth, and anything beyond about 15 m to read too
+shallow (Figure 6). For site screening, reef cover and wave exposure
+merit as much scrutiny as water clarity. In the surf zone, where
+colour-based methods lose their pixels, wave-kinematic bathymetry from
+Sentinel-2’s band timing is an alternative, though at much coarser
+accuracy <span class="citation" data-cites="almar2021">(<a
+href="#ref-almar2021" role="doc-biblioref">Almar et al.,
+2021</a>)</span>; compositing many scenes <span class="citation"
+data-cites="caballero2023">(<a href="#ref-caballero2023"
+role="doc-biblioref">Caballero &amp; Stumpf, 2023</a>)</span> would
+address the single-scene limit and allow sea state to vary while the
+seabed stays fixed.</p>
+<figure id="fig-residuals">
+<a href="figures/f6_residual_map.png" class="zoom"><img
+src="figures/f6_residual_map.png" class="wide" loading="lazy"
+alt="Figure 6. Band-ratio error at Northern Beaches on lidar hillshade, with mapped reef outlined. Reef reads too deep (red) and sand at depth too shallow (blue)." /></a>
+<figcaption><strong>Figure 6.</strong> Band-ratio error at Northern
+Beaches on lidar hillshade, with mapped reef outlined. Reef reads too
+deep (red) and sand at depth too shallow (blue).</figcaption>
+</figure>
+<h2 id="limitations"><span class="secno">6</span> Limitations</h2>
+<p><em>Single scene per site.</em> Each site is represented by one
+Sentinel-2 acquisition (23 August, 7 September and 27 September 2018).
+The results describe the methods under those days’ tide, swell, sun
+geometry and atmosphere, not across seasons, floods or river plumes, and
+any difference between sites is equally a difference between scenes.</p>
+<p><em>Clarity not isolated.</em> The clarity metric (median red
+reflectance at 10–20 m) spans 0.0022 to 0.0053 across the sites, within
+the margin attributed in advance to differences in atmospheric
+correction, and 10% of Northern Beaches’ 10–20 m pixels sit at the
+product’s minimum value. With three sites, clarity cannot be separated
+from reef cover, exposure or scene-to-scene atmospheric differences.</p>
+<p><em>Shallow water.</em> Pixels too bright in the near-infrared are
+removed before any depth is estimated. In the 0–2 m band this removes
+65% of Northern Beaches’ open-coast water, where the cause is surf, 39%
+at Jervis Bay and 18% at Batemans Bay, where glint on wavelets or very
+shallow bright sand may also be responsible. Results in the top 2 m
+describe the remaining pixels only.</p>
+<p><em>Seabed change.</em> Jervis Bay and Batemans Bay were imaged one
+day before their lidar surveys, so seabed change is unlikely to matter.
+Northern Beaches’ nearest clear image followed its survey by nine days
+on an active surf coast, with a 1.8 m, 15 s swell at the overpass though
+no storm in between; in the top 5 m, surf and moved sand cannot be
+separated.</p>
+<p><em>Imagery and models.</em> All runs use standard Sentinel-2
+Level-2A surface reflectance, with no sun-glint correction, no
+water-specific atmospheric correction and no model tuning. Purpose-built
+processing and tuned or substrate-aware models may reduce the error;
+none would remove the loss of signal with depth.</p>
+<p><em>Reference uncertainty.</em> The lidar is specified to IHO Order
+1b, about ±0.5 m at 95% confidence over 0–20 m. That is small against
+the satellite error overall, but comparable to gradient boosting’s error
+in the top 2 m at Jervis Bay and Batemans Bay (0.55 and 0.60 m). Jervis
+Bay’s lidar extract was also averaged by the supplying portal where it
+crossed survey blocks (about 0.13 m RMS). The same comparison at
+Northern Beaches moved pooled RMSE by 0.02 m, so the headline figures
+stand, but Jervis Bay’s breakdown by seabed roughness is unreliable.</p>
+<p><em>Spatial dependence.</em> Residual errors stay correlated over
+4 km at Jervis Bay, beyond the 2 km validation blocks, so its intervals
+may be somewhat narrow. Gradient boosting’s error also grows with block
+size, from 1.92 to 2.06 m at Jervis Bay and from 2.53 to 2.81 m at
+Batemans Bay between 2 and 4 km blocks, while Stumpf’s barely changes;
+its 2 km figures are best read as lower bounds. It still outperforms
+Stumpf at every site on 4 km blocks.</p>
+<p><em>Scope.</em> Northern Beaches is assessed on the open coast only,
+by a pre-fit amendment that excluded Pittwater and the coastal lagoons.
+All results are for 0–20 m. The within-site analysis adjusted for depth
+is exploratory: it was defined after the registered result had been
+seen.</p>
+<h2 id="conclusions"><span class="secno">7</span> Conclusions</h2>
+<p>On the NSW coast, depth from a single Sentinel-2 scene had a pooled
+RMSE of 2.7–3.0 m with the Stumpf band ratio and 1.9–2.5 m with
+image-only gradient boosting, over 0–20 m and on spatially independent
+validation. Gradient boosting was the more accurate at every site,
+mainly in the shallows and beyond about 15 m, where a straight line
+through a saturating relationship fails. Neither method meets CATZOC C
+across the range. A model given coordinates scored up to 4.3 times
+better under a random split than on unseen blocks, so accuracy claims
+for SDB need spatially independent validation. Error did not follow the
+clarity metric across the three sites, but that metric could not rank
+them, so the result is silent on clarity rather than against it. The
+site differences go with reef cover and exposure, which on this coast
+coincide. Within scenes, an exploratory test links red reflectance to
+error beyond what depth explains; a registered test on several scenes
+per site would settle whether that is turbidity.</p>
+<h2 class="unnumbered" id="data-and-code">Data and code</h2>
+<p>Code, protocols, the decisions register and every output are at <a
+href="https://github.com/WvR-Spatial/sdbNSW"
+class="uri">https://github.com/WvR-Spatial/sdbNSW</a>, with the protocol
+commits named in each output record. The four lidar extracts used are
+published unmodified, with attribution and checksums, as a release of
+that repository. Sentinel-2 data are from the Copernicus programme; the
+tide and wave records are available from Manly Hydraulics Laboratory on
+request. Code is released under the MIT licence and this paper and its
+figures under CC BY 4.0.</p>
+<h2 class="unnumbered" id="acknowledgements">Acknowledgements</h2>
+<p>Lidar and reef mapping: NSW Department of Climate Change, Energy, the
+Environment and Water. Tide and wave records: Manly Hydraulics
+Laboratory, for the Department. Seagrass mapping: NSW Department of
+Primary Industries Fisheries. Imagery: Copernicus Sentinel-2 data
+(2018), processed by ESA and served by Element 84’s Earth Search.
+Orthoimagery used only as a positional reference: NSW Spatial
+Services.</p>
+<h2 class="unnumbered" id="references">References</h2>
+<div id="refs" class="references csl-bib-body hanging-indent"
+data-line-spacing="2" role="list">
+<div id="ref-almar2021" class="csl-entry" role="listitem">
+Almar, R., Bergsma, E. W. J., Thoumyre, G., Baba, M. W., Cesbron, G.,
+Daly, C., Garlan, T., &amp; Lifermann, A. (2021). Global satellite-based
+coastal bathymetry from waves. <em>Remote Sensing</em>, <em>13</em>(22),
+4628. <a
+href="https://doi.org/10.3390/rs13224628">https://doi.org/10.3390/rs13224628</a>
+</div>
+<div id="ref-anderson2009" class="csl-entry" role="listitem">
+Anderson, T., Brooke, B., Radke, L., McArthur, M., &amp; Hughes, M.
+(2009). <em>Mapping and characterising soft-sediment habitats, and
+evaluating physical variables as surrogates of biodiversity in
+<span>Jervis Bay</span>, <span>NSW</span></em> (Record 2009/10).
+Geoscience Australia. <a
+href="https://www.ga.gov.au/bigobj/GA14300.pdf">https://www.ga.gov.au/bigobj/GA14300.pdf</a>
+</div>
+<div id="ref-ashphaq2021" class="csl-entry" role="listitem">
+Ashphaq, M., Srivastava, P. K., &amp; Mitra, D. (2021). Review of
+near-shore satellite derived bathymetry: Classification and account of
+five decades of coastal bathymetry research. <em>Journal of Ocean
+Engineering and Science</em>, <em>6</em>(4), 340–359. <a
+href="https://doi.org/10.1016/j.joes.2021.02.006">https://doi.org/10.1016/j.joes.2021.02.006</a>
+</div>
+<div id="ref-caballero2019" class="csl-entry" role="listitem">
+Caballero, I., &amp; Stumpf, R. P. (2019). Retrieval of nearshore
+bathymetry from <span>Sentinel-2A</span> and <span>2B</span> satellites
+in <span>South Florida</span> coastal waters. <em>Estuarine, Coastal and
+Shelf Science</em>, <em>226</em>, 106277. <a
+href="https://doi.org/10.1016/j.ecss.2019.106277">https://doi.org/10.1016/j.ecss.2019.106277</a>
+</div>
+<div id="ref-caballero2023" class="csl-entry" role="listitem">
+Caballero, I., &amp; Stumpf, R. P. (2023). Confronting turbidity, the
+major challenge for satellite-derived coastal bathymetry. <em>Science of
+the Total Environment</em>, <em>870</em>, 161898. <a
+href="https://doi.org/10.1016/j.scitotenv.2023.161898">https://doi.org/10.1016/j.scitotenv.2023.161898</a>
+</div>
+<div id="ref-casal2020" class="csl-entry" role="listitem">
+Casal, G., Hedley, J. D., Monteys, X., Harris, P., Cahalane, C., &amp;
+McCarthy, T. (2020). Satellite-derived bathymetry in optically complex
+waters using a model inversion approach and <span>Sentinel-2</span>
+data. <em>Estuarine, Coastal and Shelf Science</em>, <em>241</em>,
+106814. <a
+href="https://doi.org/10.1016/j.ecss.2020.106814">https://doi.org/10.1016/j.ecss.2020.106814</a>
+</div>
+<div id="ref-downes2025" class="csl-entry" role="listitem">
+Downes, J., Bruce, D., Miot da Silva, G., &amp; Hesp, P. A. (2025).
+Optimising satellite-derived bathymetry using optical imagery over the
+<span>Adelaide</span> metropolitan coast. <em>Remote Sensing</em>,
+<em>17</em>(5), 849. <a
+href="https://doi.org/10.3390/rs17050849">https://doi.org/10.3390/rs17050849</a>
+</div>
+<div id="ref-drusch2012" class="csl-entry" role="listitem">
+Drusch, M., Del Bello, U., Carlier, S., Colin, O., Fernandez, V.,
+Gascon, F., Hoersch, B., Isola, C., Laberinti, P., Martimort, P.,
+Meygret, A., Spoto, F., Sy, O., Marchese, F., &amp; Bargellini, P.
+(2012). Sentinel-2: <span>ESA</span>’s optical high-resolution mission
+for <span>GMES</span> operational services. <em>Remote Sensing of
+Environment</em>, <em>120</em>, 25–36. <a
+href="https://doi.org/10.1016/j.rse.2011.11.026">https://doi.org/10.1016/j.rse.2011.11.026</a>
+</div>
+<div id="ref-element84earthsearch" class="csl-entry" role="listitem">
+Element 84. (2026). <em><span>Earth Search</span> <span>STAC</span>
+<span>API</span>, collection sentinel-2-l2a (<span>Collection</span>
+1)</em>. Contains modified Copernicus Sentinel data (2018), processed by
+ESA. <a
+href="https://earth-search.aws.element84.com/v1">https://earth-search.aws.element84.com/v1</a>
+</div>
+<div id="ref-esa2022offset" class="csl-entry" role="listitem">
+European Space Agency. (2022). <em>Introduction of additional
+radiometric offset in <span>PB04.00</span> products</em>. STEP Forum
+notice, 25 March 2022. <a
+href="https://forum.step.esa.int/t/info-introduction-of-additional-radiometric-offset-in-pb04-00-products/35431">https://forum.step.esa.int/t/info-introduction-of-additional-radiometric-offset-in-pb04-00-products/35431</a>
+</div>
+<div id="ref-friedman2001" class="csl-entry" role="listitem">
+Friedman, J. H. (2001). Greedy function approximation: A gradient
+boosting machine. <em>The Annals of Statistics</em>, <em>29</em>(5),
+1189–1232. <a
+href="https://doi.org/10.1214/aos/1013203451">https://doi.org/10.1214/aos/1013203451</a>
+</div>
+<div id="ref-quang2025" class="csl-entry" role="listitem">
+Hao Quang, N., Banno, M., &amp; Ha, N.-T. (2025). Satellite derived
+bathymetry using empirical and machine learning approaches: A case study
+in the highly dynamic coastal water. <em>Coastal Engineering
+Journal</em>, <em>67</em>(2), 232–251. <a
+href="https://doi.org/10.1080/21664250.2024.2445418">https://doi.org/10.1080/21664250.2024.2445418</a>
+</div>
+<div id="ref-harmel2018" class="csl-entry" role="listitem">
+Harmel, T., Chami, M., Tormos, T., Reynaud, N., &amp; Danis, P.-A.
+(2018). Sunglint correction of the <span>Multi-Spectral Instrument
+(MSI)-SENTINEL-2</span> imagery over inland and sea waters from
+<span>SWIR</span> bands. <em>Remote Sensing of Environment</em>,
+<em>204</em>, 308–321. <a
+href="https://doi.org/10.1016/j.rse.2017.10.022">https://doi.org/10.1016/j.rse.2017.10.022</a>
+</div>
+<div id="ref-hedley2005" class="csl-entry" role="listitem">
+Hedley, J. D., Harborne, A. R., &amp; Mumby, P. J. (2005). Simple and
+robust removal of sun glint for mapping shallow-water benthos.
+<em>International Journal of Remote Sensing</em>, <em>26</em>(10),
+2107–2112. <a
+href="https://doi.org/10.1080/01431160500034086">https://doi.org/10.1080/01431160500034086</a>
+</div>
+<div id="ref-iho2000s57" class="csl-entry" role="listitem">
+International Hydrographic Organization. (2000). <em><span>IHO</span>
+transfer standard for digital hydrographic data, <span>S-57</span>
+edition 3.1, <span>Appendix A</span>: Object catalogue (attribute
+<span>CATZOC</span>)</em>. International Hydrographic Organization. <a
+href="https://docs.teledynecaris.com/s-57/S57Cat/S57CatSite/attribut/catzoc.htm">https://docs.teledynecaris.com/s-57/S57Cat/S57CatSite/attribut/catzoc.htm</a>
+</div>
+<div id="ref-iho2022s44" class="csl-entry" role="listitem">
+International Hydrographic Organization. (2022). <em><span>IHO</span>
+standards for hydrographic surveys, <span>S-44</span> edition
+6.1.0</em>. International Hydrographic Organization. <a
+href="https://iho.int/uploads/user/pubs/standards/s-44/S-44_Edition_6.1.0.pdf">https://iho.int/uploads/user/pubs/standards/s-44/S-44_Edition_6.1.0.pdf</a>
+</div>
+<div id="ref-lyzenga1978" class="csl-entry" role="listitem">
+Lyzenga, D. R. (1978). Passive remote sensing techniques for mapping
+water depth and bottom features. <em>Applied Optics</em>,
+<em>17</em>(3), 379–383. <a
+href="https://doi.org/10.1364/AO.17.000379">https://doi.org/10.1364/AO.17.000379</a>
+</div>
+<div id="ref-mainknorn2017" class="csl-entry" role="listitem">
+Main-Knorn, M., Pflug, B., Louis, J., Debaecker, V., Müller-Wilm, U.,
+&amp; Gascon, F. (2017). <span>Sen2Cor</span> for
+<span>Sentinel-2</span>. <em>Image and Signal Processing for Remote
+Sensing XXIII, Proceedings of SPIE</em>, <em>10427</em>, 1042704. <a
+href="https://doi.org/10.1117/12.2278218">https://doi.org/10.1117/12.2278218</a>
+</div>
+<div id="ref-mhl2026tides" class="csl-entry" role="listitem">
+Manly Hydraulics Laboratory. (2026). <em>Ocean tide records, stations
+216470 <span>Jervis Bay</span>, 213470 <span>Sydney</span>, 212440
+<span>Patonga</span> and 216410 <span>Princess Jetty</span>, and
+<span>Sydney</span> waverider record,
+<span>August</span>–<span>September</span> 2018</em>. Supplied on
+request for NSW DCCEEW; licensed under CC BY 4.0. <a
+href="https://www.mhl.nsw.gov.au/">https://www.mhl.nsw.gov.au/</a>
+</div>
+<div id="ref-nechad2010" class="csl-entry" role="listitem">
+Nechad, B., Ruddick, K. G., &amp; Park, Y. (2010). Calibration and
+validation of a generic multisensor algorithm for mapping of total
+suspended matter in turbid waters. <em>Remote Sensing of
+Environment</em>, <em>114</em>(4), 854–866. <a
+href="https://doi.org/10.1016/j.rse.2009.11.022">https://doi.org/10.1016/j.rse.2009.11.022</a>
+</div>
+<div id="ref-nosek2018" class="csl-entry" role="listitem">
+Nosek, B. A., Ebersole, C. R., DeHaven, A. C., &amp; Mellor, D. T.
+(2018). The preregistration revolution. <em>Proceedings of the National
+Academy of Sciences</em>, <em>115</em>(11), 2600–2606. <a
+href="https://doi.org/10.1073/pnas.1708274114">https://doi.org/10.1073/pnas.1708274114</a>
+</div>
+<div id="ref-dcceew2018lidar" class="csl-entry" role="listitem">
+NSW Department of Climate Change, Energy, the Environment and Water.
+(2018). <em><span>NSW Marine LiDAR Topo-Bathy 2018</span>
+(<span>GeoTIFF</span>, 5 m)</em>. SEED and ELVIS; licensed under CC BY
+4.0. <a
+href="https://datasets.seed.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018">https://datasets.seed.nsw.gov.au/dataset/marine-lidar-topo-bathy-2018</a>
+</div>
+<div id="ref-dcceew2023reef" class="csl-entry" role="listitem">
+NSW Department of Climate Change, Energy, the Environment and Water.
+(2023). <em><span>NSW</span> seabed reef extent (map service)</em>.
+ArcGIS REST service; CC BY 4.0. <a
+href="https://mapprod3.environment.nsw.gov.au/arcgis/rest/services/Marine/NSW_seabed_reef_extent/MapServer">https://mapprod3.environment.nsw.gov.au/arcgis/rest/services/Marine/NSW_seabed_reef_extent/MapServer</a>
+</div>
+<div id="ref-dpi2023macrophytes" class="csl-entry" role="listitem">
+NSW Department of Primary Industries Fisheries. (2023). <em>Estuarine
+macrophytes (map service)</em>. ArcGIS REST service; CC BY 4.0 as stated
+by the service. <a
+href="https://spatial.industry.nsw.gov.au/arcgis/rest/services/Fisheries_Portal/Estuarine_Macrophytes/MapServer/0">https://spatial.industry.nsw.gov.au/arcgis/rest/services/Fisheries_Portal/Estuarine_Macrophytes/MapServer/0</a>
+</div>
+<div id="ref-pedregosa2011" class="csl-entry" role="listitem">
+Pedregosa, F., Varoquaux, G., Gramfort, A., Michel, V., Thirion, B.,
+Grisel, O., Blondel, M., Prettenhofer, P., Weiss, R., Dubourg, V.,
+Vanderplas, J., Passos, A., Cournapeau, D., Brucher, M., Perrot, M.,
+&amp; Duchesnay, É. (2011). Scikit-learn: Machine learning in
+<span>Python</span>. <em>Journal of Machine Learning Research</em>,
+<em>12</em>, 2825–2830. <a
+href="https://jmlr.org/papers/v12/pedregosa11a.html">https://jmlr.org/papers/v12/pedregosa11a.html</a>
+</div>
+<div id="ref-ploton2020" class="csl-entry" role="listitem">
+Ploton, P., Mortier, F., Réjou-Méchain, M., Barbier, N., Picard, N.,
+Rossi, V., Dormann, C., Cornu, G., Viennois, G., Bayol, N., Lyapustin,
+A., Gourlet-Fleury, S., &amp; Pélissier, R. (2020). Spatial validation
+reveals poor predictive performance of large-scale ecological mapping
+models. <em>Nature Communications</em>, <em>11</em>, 4540. <a
+href="https://doi.org/10.1038/s41467-020-18321-y">https://doi.org/10.1038/s41467-020-18321-y</a>
+</div>
+<div id="ref-popefry1997" class="csl-entry" role="listitem">
+Pope, R. M., &amp; Fry, E. S. (1997). Absorption spectrum (380–700 nm)
+of pure water. <span>II</span>. <span>Integrating</span> cavity
+measurements. <em>Applied Optics</em>, <em>36</em>(33), 8710–8723. <a
+href="https://doi.org/10.1364/AO.36.008710">https://doi.org/10.1364/AO.36.008710</a>
+</div>
+<div id="ref-roberts2017" class="csl-entry" role="listitem">
+Roberts, D. R., Bahn, V., Ciuti, S., Boyce, M. S., Elith, J.,
+Guillera-Arroita, G., Hauenstein, S., Lahoz-Monfort, J. J., Schröder,
+B., Thuiller, W., Warton, D. I., Wintle, B. A., Hartig, F., &amp;
+Dormann, C. F. (2017). Cross-validation strategies for data with
+temporal, spatial, hierarchical, or phylogenetic structure.
+<em>Ecography</em>, <em>40</em>(8), 913–929. <a
+href="https://doi.org/10.1111/ecog.02881">https://doi.org/10.1111/ecog.02881</a>
+</div>
+<div id="ref-stumpf2003" class="csl-entry" role="listitem">
+Stumpf, R. P., Holderied, K., &amp; Sinclair, M. (2003). Determination
+of water depth with high-resolution satellite imagery over variable
+bottom types. <em>Limnology and Oceanography</em>, <em>48</em>(1, part
+2), 547–556. <a
+href="https://doi.org/10.4319/lo.2003.48.1_part_2.0547">https://doi.org/10.4319/lo.2003.48.1_part_2.0547</a>
+</div>
+<div id="ref-traganos2018" class="csl-entry" role="listitem">
+Traganos, D., Poursanidis, D., Aggarwal, B., Chrysoulakis, N., &amp;
+Reinartz, P. (2018). Estimating satellite-derived bathymetry
+(<span>SDB</span>) with the <span>Google Earth Engine</span> and
+<span>Sentinel-2</span>. <em>Remote Sensing</em>, <em>10</em>(6), 859.
+<a
+href="https://doi.org/10.3390/rs10060859">https://doi.org/10.3390/rs10060859</a>
+</div>
+<div id="ref-xie2023" class="csl-entry" role="listitem">
+Xie, C., Chen, P., Zhang, Z., &amp; Pan, D. (2023). Satellite-derived
+bathymetry combined with <span>Sentinel-2</span> and
+<span>ICESat-2</span> datasets using machine learning. <em>Frontiers in
+Earth Science</em>, <em>11</em>, 1111817. <a
+href="https://doi.org/10.3389/feart.2023.1111817">https://doi.org/10.3389/feart.2023.1111817</a>
+</div>
+</div>
+<section id="how-this-was-built" class="unnumbered web-only built">
+<h2 class="unnumbered">How this was built</h2>
+<p>I built this part-time over about eight weeks, a few of them spent
+waiting for tide-gauge records, using an AI agent as the main means of
+production and organising the work so that everything it produced could
+be checked.</p>
+<p>The agent, Claude, ran in a cloud workspace and reached my
+workstation through MCP connectors: a shell and file bridge into the
+project folder, and a QGIS server that let it query ArcGIS REST services
+and inspect layers. It wrote most of the 10,000 or so lines of Python,
+including 282 tests, and drafted the protocols and documentation. I set
+the question and the sites, ordered the lidar and requested the tide
+records, checked the image registration by eye in QGIS, made each
+methodological decision, ran every step on my own machine and wrote the
+interpretation.</p>
+<p>Three practices made the output checkable. Each analysis was
+pre-registered, so its protocol was committed before any model saw the
+reference data. Every change is logged with its reason, including the
+agent’s mistakes: a site boundary that silently took in an estuary, a
+rule that passed its tests and failed on real data, and a sorting fault
+that reversed one site’s result. And every file moved between machines
+was verified by checksum at its destination.</p>
+<p>The outcome is a study of wider scope than I would have attempted
+alone in the same time, with a record of how each part was made.</p>
+</section>
+</main>
+<footer class="site">
+  <div class="inner">
+    <p>Warren van Ryn, Melbourne,
+Australia. <a href="https://wvr-spatial.github.io/Portfolio/">More work on the portfolio</a>. Text and figures CC BY 4.0; code MIT.</p>
+  </div>
+</footer>
+<script>
+(function () {
+  var toc = document.getElementById("TOC");
+  var start = document.getElementById("paper");
+  if (!toc || !start) return;
+  var links = Array.prototype.slice.call(toc.querySelectorAll("a"));
+  var heads = links.map(function (a) { return document.getElementById(decodeURIComponent(a.hash.slice(1))); });
+  var ticking = false;
+  function update() {
+    ticking = false;
+    toc.classList.toggle("show", start.getBoundingClientRect().top < window.innerHeight * 0.5);
+    var current = -1;
+    heads.forEach(function (h, i) { if (h && h.getBoundingClientRect().top < 140) current = i; });
+    links.forEach(function (a, i) { a.classList.toggle("here", i === current); });
+  }
+  window.addEventListener("scroll", function () {
+    if (!ticking) { ticking = true; window.requestAnimationFrame(update); }
+  }, { passive: true });
+  update();
+})();
+</script>
+</body>
+</html>

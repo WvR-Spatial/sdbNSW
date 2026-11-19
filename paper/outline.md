@@ -1,5 +1,9 @@
 # Outline for approval (19 November 2026)
 
+*Drafted 19 Nov as `paper.md`. Two changes from this outline: the maps (F1,
+F6) are drawn in matplotlib by `scripts/figures.py` rather than by a PyQGIS
+script, and the paper runs to about 10 pages with references.*
+
 Two products from one Markdown source: a web page for the portfolio and a
 conference-layout PDF. The paper is about 4,300 words before tables and
 references; the web page carries it in full beneath a plain-language opening.

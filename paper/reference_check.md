@@ -1,7 +1,7 @@
 # Reference check, 19 November 2026
 
 Every work the paper cites was checked before drafting: bibliographic details
-against Crossref (through an OpenAlex/Crossref lookup service) or the
+against Crossref (through an OpenAlex and Crossref lookup service) or the
 publisher's page, and every figure quoted from it against its abstract or full
 text. `references.bib` holds the checked entries. Status: **checked** (details
 and quoted claim confirmed), **details only** (bibliography confirmed; the
@@ -17,7 +17,7 @@ outstanding, stated).
 | caballero2023 | Crossref; abstract | Multi-scene compositing to suppress turbidity; Caribbean and US east coast; median errors under 1 m to 30 m against lidar | checked |
 | casal2020 | Crossref; abstract | Irish coast, optically complex, model inversion, 12 Sentinel-2 images: mean RMSE 1.60 m (Dublin Bay), 1.66 m (Mulroy Bay), 2.43 m (Brandon Bay) | checked |
 | traganos2018 | Crossref; abstract | Aegean Sea, spatially independent calibration and validation sets; best validation RMSE 1.67 m | checked |
-| quang2025 | Crossref; abstract | Hasaki, Ibaraki, Japan: an exposed, highly dynamic sandy coast. Echo-sounding reference; 70/30 split of survey points per year; CatBoost R² 0.84–0.92 to about 15 m, RMSE under 0.5 m above 7 m. The abstract does not describe a spatial split | checked |
+| quang2025 | Crossref; abstract. Author entered as Crossref records it (family name "Hao Quang"), so the text cites Hao Quang et al. | Hasaki, Ibaraki, Japan: an exposed, highly dynamic sandy coast. Echo-sounding reference; 70/30 split of survey points per year; CatBoost R² 0.84–0.92 to about 15 m, RMSE under 0.5 m above 7 m. The abstract does not describe a spatial split | checked |
 | downes2025 | Crossref; abstract | Adelaide metropolitan coast, South Australia: shallow, mixed bottom, **low wave energy**. Best RMSE 0.41 m at the calibration site (PlanetScope), 0.51 m beyond it over 0.5–5 m; multiband linear beat band ratio | checked |
 | almar2021 | Crossref; abstract | Wave-kinematics bathymetry from Sentinel-2, global atlas, RMSE 6–9 m; an alternative where surf defeats colour-based methods | checked |
 | iho2022s44 | IHO PDF | Order 1b: TVU = √(a² + (b·d)²), a = 0.5 m, b = 0.013, 95% confidence | checked |
@@ -40,8 +40,8 @@ outstanding, stated).
 | friedman2001, pedregosa2011 | gradient boosting; scikit-learn's implementation | details only (JMLR has no DOI; checked on jmlr.org) |
 | hedley2005, harmel2018 | glint corrections not applied here | details only |
 | coxmunk1954, hersbach2020 | wind as a glint screen in scene selection | details only (Cox and Munk pages 838–850 from the publisher) |
-| nechad2010 | red reflectance as an index of suspended matter | **to confirm**: the claim's wording against the paper's text; abstract not retrievable on 19 Nov |
-| popefry1997 | strong absorption of red light by pure water | **to confirm**: end page (Crossref gives the first page only; entry carries 8710) and any figure quoted |
+| nechad2010 | red reflectance as an index of suspended matter | checked (abstract via the VLIZ record, 19 Nov): a single-band algorithm for total suspended matter, lowest validation errors at the red bands (665 to 681 nm) |
+| popefry1997 | strong absorption of red light by pure water | checked: pages 8710–8723 (Oregon Medical Laser Center's record of the paper; Crossref gives the first page only). The paper quotes "about 0.4 m⁻¹" at 665 nm, not a tabulated value |
 | element84earthsearch, dpi2023macrophytes, dcceew2023reef, mhl2026tides | data sources | access dates from the project record |
 
 ## What the check changed
