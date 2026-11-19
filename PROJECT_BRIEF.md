@@ -74,6 +74,14 @@ band-ratio transform, 2.2 m for linear models, over 0–20 m.
 The NSW coast is temperate, swell-exposed, with active surf zones, river
 plumes and seasonal turbidity. Nobody has published the error envelope for it.
 
+*Checked against the literature, 19 Nov (`paper/reference_check.md`): the two
+paragraphs above overstate. The literature leans to clear water, but temperate
+and optically complex sites are published (Irish coast, RMSE 1.6 to 2.4 m;
+Aegean; an exposed sandy coast in Japan; the low-energy Adelaide coast). The
+1.3 / 1.8 / 2.2 m figures are one study (St Thomas, 80/20 split of unstated
+design), not the literature. What holds: no published assessment was found
+for the NSW open coast. The paper uses the corrected framing.*
+
 **The deliverable is a number and an envelope, not a map.** Expected answer:
 "worse than the literature, and here is the depth-and-clarity boundary where
 it fails." That is a finding. A pretty bathymetry raster is not.
@@ -1400,7 +1408,9 @@ exploratory: it was defined after the registered result had been seen.
 - [x] Reference lidar as a GitHub release asset: published 19 Nov as `reference-lidar-2018` (zip md5 `1170eddb15480750a0adf5da849d0616`, sha256 `995b70840fc4d133bf6c6ccb18fce22c8a60c8bb915cfa627501d22e4f9f5bce`)
 - [ ] **Make the repository public before the page goes live.** On 19 Nov the GitHub API returned 404 for the repo and its releases without authentication, so neither is visible to a reader yet
 - [x] Phase 4 conclusion: Warren's draft, revised after review (19 Nov)
-- [ ] AI workflow statement: approve or amend the two drafts (*Write-up plan*)
+- [x] AI workflow statement, conclusion and limitations signed off (19 Nov)
+- [x] Reference check (`paper/reference_check.md`, `paper/references.bib`); two small items to confirm before final
+- [ ] **Paper outline** (`paper/outline.md`): approve, and give the author line and PDF layout
 - [ ] Limitations: Warren's draft of 19 Nov, revised after review into a plain panel and a paper section (*Limitations*); awaiting approval
 - [ ] `README.md` (result first), `site/` page, portfolio card with its number
 - [x] Atmospheric correction — **L2A as supplied** for v1; ACOLITE only as diagnosis if the gate fails
@@ -1505,6 +1515,8 @@ defensible piece of work.
 | 19 Nov | **The repository is private.** The release was published, but an unauthenticated request for the repo and its releases returns 404 | Must be public before the page links to it; the release's sha256 is recorded so a reader can verify the download |
 | 19 Nov | **Correction: the share of Northern Beaches' 0–2 m water lost to surf.** The *Phase 4 result* and the first revision of the conclusion said only 12% of the 0–2 m reference water was assessed, attributing the loss to surf. Recomputed from the mask: 66% of that "reference water" is Pittwater and lagoon shallows removed by the open-coast rule; of the open-coast water, 35% is assessed and 65% flagged bright. Jervis Bay 60% assessed (39% bright), Batemans Bay 82% (18%) | My error, found while checking Warren's limitations panel against the outputs: `validate`'s exclusion table counted water the open-coast rule removes as reference water and did not list the rule as a reason. It now reports `not_sea` (tested); committed records are unchanged and the brief carries the corrected figures |
 | 19 Nov | **Limitations drafted** by Warren and revised after review: a five-point plain panel for layer 1, and his fuller list, corrected, as the paper's Limitations section | Corrections: the shallow-water exclusion figures; the averaging check was made at Northern Beaches, not Jervis Bay; reference uncertainty is comparable only to gradient boosting's shallow error at two sites; reef bias is not beyond correction; the block-size caveat applies to gradient boosting at Batemans Bay as well as Jervis Bay. The navigation warning was checked against the lidar metadata |
+| 19 Nov | **Every reference checked before drafting** (`paper/reference_check.md`); 33 entries in `paper/references.bib`, each against Crossref or the publisher, and every quoted figure against its abstract or text | Two framing claims in *The question* were wrong: SDB validation is not "almost entirely clear tropical water" (Ireland, the Aegean, Japan and Adelaide are published), and the 1.3 / 1.8 / 2.2 m benchmark is one study with an 80/20 split of unstated design. The novelty claim narrows to "no published assessment on the NSW open coast", which the searches support. Corrected before any text depends on it |
+| 19 Nov | **Outline proposed** (`paper/outline.md`): about 4,300 words, six figures plus a hero figure, four tables; Pandoc and Typst build the page and PDF from one Markdown source | Awaiting Warren's approval, author line and PDF layout |
 
 ## Sources
 
